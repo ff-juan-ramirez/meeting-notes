@@ -9,12 +9,12 @@
 
 ### Audio Capture
 
-- [ ] **AUDIO-01**: `meet record` captures system audio (BlackHole, device index 1) and microphone (device index 2) simultaneously using ffmpeg avfoundation with amix filter, saved as WAV (16kHz, mono, pcm_s16le)
-- [ ] **AUDIO-02**: `meet stop` gracefully terminates the ffmpeg subprocess (SIGTERM → wait 5s → SIGKILL) and finalizes the WAV file with a valid header
-- [ ] **AUDIO-03**: Recording state (session ID, PID, output path, start time) is persisted to `~/.config/meeting-notes/state.json` atomically; survives a CLI crash
-- [ ] **AUDIO-04**: `meet record` fails with a clear error message if already recording (prevents duplicate sessions)
+- [x] **AUDIO-01**: `meet record` captures system audio (BlackHole, device index 1) and microphone (device index 2) simultaneously using ffmpeg avfoundation with amix filter, saved as WAV (16kHz, mono, pcm_s16le)
+- [x] **AUDIO-02**: `meet stop` gracefully terminates the ffmpeg subprocess (SIGTERM → wait 5s → SIGKILL) and finalizes the WAV file with a valid header
+- [x] **AUDIO-03**: Recording state (session ID, PID, output path, start time) is persisted to `~/.config/meeting-notes/state.json` atomically; survives a CLI crash
+- [x] **AUDIO-04**: `meet record` fails with a clear error message if already recording (prevents duplicate sessions)
 - [ ] **AUDIO-05**: Audio output is saved to `~/.local/share/meeting-notes/recordings/{timestamp}-{uuid}.wav`
-- [ ] **AUDIO-06**: ffmpeg uses explicit device indices (`:1`, `:2`) — never device names
+- [x] **AUDIO-06**: ffmpeg uses explicit device indices (`:1`, `:2`) — never device names
 
 ### Transcription
 
