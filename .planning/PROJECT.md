@@ -12,17 +12,18 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Audio is captured from system output and microphone simultaneously via ffmpeg + BlackHole 2ch, mixed with amix, saved as WAV — Validated in Phase 01: audio-capture-health-check-design
+- [x] CLI exposes `meet record`, `meet stop`, `meet doctor`, `meet init` commands — Validated in Phase 01: audio-capture-health-check-design
+- [x] `meet doctor` validates BlackHole device, ffmpeg device indices, disk space — Validated in Phase 01: audio-capture-health-check-design
+- [x] `meet init` wizard guides first-time setup (device indices, config) — Validated in Phase 01: audio-capture-health-check-design
 
 ### Active
 
-- [ ] Audio is captured from system output (other participants) and microphone (user voice) simultaneously via ffmpeg + BlackHole 2ch, mixed with amix, saved as WAV
 - [ ] Transcription runs locally using mlx-whisper with mlx-community/whisper-large-v3-turbo
 - [ ] Notes are generated locally using Ollama llama3.1:8b with three templates: meeting, minutes, 1on1
 - [ ] Notes are saved to Notion via notion-client Python SDK
-- [ ] CLI exposes commands: `meet record`, `meet stop`, `meet transcribe`, `meet summarize`, `meet list`
-- [ ] `meet doctor` validates all prerequisites: BlackHole installed, ffmpeg device indices reachable, Ollama running + llama3.1:8b pulled, Notion token set
-- [ ] `meet init` wizard guides first-time setup (Notion token, device indices, output directory)
+- [ ] CLI exposes commands: `meet transcribe`, `meet summarize`, `meet list`
+- [ ] `meet doctor` extended: Ollama running + llama3.1:8b pulled, Notion token set
 - [ ] Project is exportable as a git repo for others to clone and use
 
 ### Out of Scope
@@ -83,4 +84,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-22 after initialization*
+*Last updated: 2026-03-22 — Phase 01 complete (audio capture + health check infrastructure)*
