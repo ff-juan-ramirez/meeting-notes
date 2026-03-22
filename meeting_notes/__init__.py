@@ -1,0 +1,1 @@
+"""Meeting Notes CLI package."""
