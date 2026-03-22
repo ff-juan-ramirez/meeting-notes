@@ -58,10 +58,10 @@
 
 ### Setup & Health Check
 
-- [ ] **SETUP-01**: `meet init` wizard collects: Notion token, target database/page ID, audio device indices (with detection help), and writes `config.json`
-- [ ] **SETUP-02**: `meet init` triggers a short test recording (~1s) to force the macOS microphone permission prompt before the first real meeting
-- [ ] **SETUP-03**: `meet doctor` checks all prerequisites and reports pass/fail per component with actionable fix suggestions
-- [ ] **SETUP-04**: `meet doctor` checks: BlackHole device at index 1 is confirmed BlackHole (not just "any device"), ffmpeg device index 2 is reachable, Ollama running + llama3.1:8b pulled, mlx-whisper installed + model cached locally, Notion token set + valid, disk space >5GB
+- [x] **SETUP-01**: `meet init` wizard collects: Notion token, target database/page ID, audio device indices (with detection help), and writes `config.json`
+- [x] **SETUP-02**: `meet init` triggers a short test recording (~1s) to force the macOS microphone permission prompt before the first real meeting
+- [x] **SETUP-03**: `meet doctor` checks all prerequisites and reports pass/fail per component with actionable fix suggestions
+- [x] **SETUP-04**: `meet doctor` checks: BlackHole device at index 1 is confirmed BlackHole (not just "any device"), ffmpeg device index 2 is reachable, Ollama running + llama3.1:8b pulled, mlx-whisper installed + model cached locally, Notion token set + valid, disk space >5GB
 - [ ] **SETUP-05**: `meet doctor` checks Python version (>=3.11, <3.14) and warns if `openai-whisper` is installed alongside `mlx-whisper`
 - [ ] **SETUP-06**: `meet doctor` exits with code 1 if any check fails (ERROR level), code 0 if all pass or only warnings
 

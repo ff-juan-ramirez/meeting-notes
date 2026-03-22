@@ -13,12 +13,12 @@
 
 **Requirements covered:** AUDIO-01 to AUDIO-06, SETUP-01 to SETUP-04 (design + partial impl)
 
-**Plans:** 1/3 plans executed
+**Plans:** 3/3 plans executed
 
 Plans:
-- [ ] 01-01-PLAN.md — Project scaffold, core infrastructure (config, storage, state), Wave 0 test stubs
+- [x] 01-01-PLAN.md — Project scaffold, core infrastructure (config, storage, state), Wave 0 test stubs
 - [x] 01-02-PLAN.md — Audio capture pipeline (process manager, audio service, record/stop commands)
-- [ ] 01-03-PLAN.md — Health check architecture, Phase 1 checks, meet doctor and meet init commands
+- [x] 01-03-PLAN.md — Health check architecture, Phase 1 checks, meet doctor and meet init commands
 
 **Pitfalls to address in this phase:**
 - P1: Validate device at index 1 IS BlackHole (not just any device)
