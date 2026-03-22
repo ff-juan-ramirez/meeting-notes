@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to plan
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-22T20:47:10.446Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-03-22T21:12:54.956Z"
 progress:
   total_phases: 6
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  completed_phases: 2
+  total_plans: 5
+  completed_plans: 5
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** Phase 01 — audio-capture-health-check-design (Plan 03 complete)
+**Current focus:** Phase 02 — local-transcription
 
 ## Current Status
 
@@ -39,7 +39,7 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 
 ## Last Session
 
-**Stopped at:** Phase 2 context gathered
+**Stopped at:** Completed 02-02-PLAN.md
 **Date:** 2026-03-22T20:23:53Z
 **Duration:** ~4 minutes
 
@@ -53,6 +53,11 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 - BlackHoleCheck checks device NAME at index (not just index reachability) per pitfall P1
 - DiskSpaceCheck returns WARNING (not ERROR) below 5GB — non-fatal advisory
 - meet init triggers 1-second avfoundation test recording to force macOS mic permission prompt (SETUP-02)
+- [Phase 02]: Language auto-detect: omit language kwarg entirely when None — passing None causes mlx-whisper to default to en
+- [Phase 02]: run_with_spinner uses threading.Thread for background mlx-whisper; Rich Live spinner renders in main thread
+- [Phase 02]: Session stem derived from wav_path.stem not a stored UUID for correct --session round-trip
+- [Phase 02]: WhisperModelCheck returns WARNING not ERROR when model not cached — model auto-downloads on first meet transcribe (D-08)
+- [Phase 02]: No version pin on mlx-whisper in pyproject.toml — already installed and API is stable
 
 ## Performance Metrics
 
@@ -60,6 +65,8 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 |-------|------|-------------|-------|-------|
 | 01    | 02   | 244         | 2     | 20    |
 | 01    | 03   | 225         | 2     | 7     |
+| Phase 02 P01 | 3 | 2 tasks | 6 files |
+| Phase 02 P02 | 78 | 2 tasks | 4 files |
 
 ## Key Context for Future Sessions
 

@@ -40,10 +40,10 @@ Plans:
 
 **Requirements covered:** TRANS-01 to TRANS-05
 
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 02-01-PLAN.md — Transcription service + meet transcribe CLI command
+- [x] 02-01-PLAN.md — Transcription service + meet transcribe CLI command
 - [ ] 02-02-PLAN.md — Phase 2 health checks (MlxWhisperCheck, WhisperModelCheck) + pyproject.toml update
 
 **Pitfalls to address:**
