@@ -40,16 +40,11 @@ Plans:
 
 **Requirements covered:** TRANS-01 to TRANS-05
 
-### Plans
+**Plans:** 2 plans
 
-**2.1 — Transcription service**
-- Implement `services/transcription.py`: mlx-whisper wrapper; call `mlx_whisper.transcribe(path, path_or_hf_repo="mlx-community/whisper-large-v3-turbo")`; handle empty/short transcripts (warn if <50 words)
-- Implement `cli/commands/transcribe.py`: `meet transcribe [--session UUID]`; session resolution (last_recording or explicit UUID); save transcript to `transcripts/{uuid}.txt`; update session metadata JSON
-
-**2.2 — Progress and model validation**
-- Add Rich spinner with elapsed time during transcription (no silent wait)
-- Add Phase 2 health check: `MlxWhisperCheck` (import succeeds), `WhisperModelCheck` (model files cached in `~/.cache/huggingface/hub/`; if not cached, warn to run `meet doctor --download-models`)
-- Register new checks with `meet doctor`
+Plans:
+- [ ] 02-01-PLAN.md — Transcription service + meet transcribe CLI command
+- [ ] 02-02-PLAN.md — Phase 2 health checks (MlxWhisperCheck, WhisperModelCheck) + pyproject.toml update
 
 **Pitfalls to address:**
 - P6: `meet doctor` warns if model not cached; shows download command
@@ -201,4 +196,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-03-22*
-*Last updated: 2026-03-22 after Phase 1 planning*
+*Last updated: 2026-03-22 after Phase 2 planning*
