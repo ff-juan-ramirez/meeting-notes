@@ -40,11 +40,12 @@ Plans:
 
 **Requirements covered:** TRANS-01 to TRANS-05
 
-**Plans:** 1/2 plans executed
+**Plans:** 3 plans (1/2 executed + 1 gap closure)
 
 Plans:
 - [x] 02-01-PLAN.md — Transcription service + meet transcribe CLI command
 - [ ] 02-02-PLAN.md — Phase 2 health checks (MlxWhisperCheck, WhisperModelCheck) + pyproject.toml update
+- [ ] 02-03-PLAN.md — Gap closure: fix silent exit on fresh system (ensure_dirs + OSError handler)
 
 **Pitfalls to address:**
 - P6: `meet doctor` warns if model not cached; shows download command
@@ -196,4 +197,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-03-22*
-*Last updated: 2026-03-22 after Phase 2 planning*
+*Last updated: 2026-03-22 after Phase 2 gap closure planning*
