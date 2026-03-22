@@ -17,12 +17,17 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 - [x] `meet doctor` validates BlackHole device, ffmpeg device indices, disk space — Validated in Phase 01: audio-capture-health-check-design
 - [x] `meet init` wizard guides first-time setup (device indices, config) — Validated in Phase 01: audio-capture-health-check-design
 
+### Validated
+
+- [x] Transcription runs locally using mlx-whisper with mlx-community/whisper-large-v3-turbo — Validated in Phase 02: local-transcription
+- [x] CLI exposes `meet transcribe` command with session resolution, metadata, and spinner — Validated in Phase 02: local-transcription
+- [x] `meet doctor` extended with mlx-whisper import check and model cache check — Validated in Phase 02: local-transcription
+
 ### Active
 
-- [ ] Transcription runs locally using mlx-whisper with mlx-community/whisper-large-v3-turbo
 - [ ] Notes are generated locally using Ollama llama3.1:8b with three templates: meeting, minutes, 1on1
 - [ ] Notes are saved to Notion via notion-client Python SDK
-- [ ] CLI exposes commands: `meet transcribe`, `meet summarize`, `meet list`
+- [ ] CLI exposes commands: `meet summarize`, `meet list`
 - [ ] `meet doctor` extended: Ollama running + llama3.1:8b pulled, Notion token set
 - [ ] Project is exportable as a git repo for others to clone and use
 
@@ -84,4 +89,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-22 — Phase 01 complete (audio capture + health check infrastructure)*
+*Last updated: 2026-03-22 — Phase 02 complete (local transcription via mlx-whisper, `meet transcribe` command, doctor health checks)*
