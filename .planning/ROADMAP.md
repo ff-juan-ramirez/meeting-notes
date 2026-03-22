@@ -13,24 +13,12 @@
 
 **Requirements covered:** AUDIO-01 to AUDIO-06, SETUP-01 to SETUP-04 (design + partial impl)
 
-### Plans
+**Plans:** 3 plans
 
-**1.1 — Core infrastructure**
-- Create project scaffold: `meeting_notes/` package, `pyproject.toml`, entry point `meet`
-- Implement `core/config.py`: load/save `~/.config/meeting-notes/config.json`; dataclass with Notion token, device indices, LLM endpoint, storage path
-- Implement `core/storage.py`: XDG Base Directory paths (`~/.config`, `~/.local/share`); directory creation
-- Implement `core/state.py`: atomic read/write of `state.json`; session ID, PID, timestamps, output path
-
-**1.2 — Audio capture**
-- Implement `core/process_manager.py`: ffmpeg subprocess with `start_new_session=True`; SIGTERM → wait 5s → SIGKILL; `os.killpg()` on process group
-- Implement `services/audio.py`: build ffmpeg command (two avfoundation devices by index, amix filter, WAV output); start/stop recording; signal handlers (SIGINT, SIGTERM)
-- Implement `cli/commands/record.py`: `meet record` and `meet stop` commands; crash recovery (detect stale PID in state.json); Rich status output
-
-**1.3 — Health check architecture + meet init/doctor (Phase 1 scope)**
-- Implement `core/health_check.py`: abstract `HealthCheck` base class; `HealthCheckSuite` with pluggable checks; `CheckResult` dataclass (ok/warning/error + message + fix suggestion)
-- Implement Phase 1 checks: `BlackHoleCheck` (confirm device at index 1 is BlackHole via ffmpeg list); `FFmpegDeviceCheck` (both indices reachable); `DiskSpaceCheck` (>5GB free)
-- Implement `cli/commands/doctor.py`: `meet doctor` — runs all registered checks, Rich-formatted output, exits 1 on error
-- Implement `cli/commands/init.py`: `meet init` wizard — detects audio devices, writes config.json, triggers ~1s test recording to force microphone permission prompt
+Plans:
+- [ ] 01-01-PLAN.md — Project scaffold, core infrastructure (config, storage, state), Wave 0 test stubs
+- [ ] 01-02-PLAN.md — Audio capture pipeline (process manager, audio service, record/stop commands)
+- [ ] 01-03-PLAN.md — Health check architecture, Phase 1 checks, meet doctor and meet init commands
 
 **Pitfalls to address in this phase:**
 - P1: Validate device at index 1 IS BlackHole (not just any device)
@@ -213,4 +201,4 @@
 
 ---
 *Roadmap created: 2026-03-22*
-*Last updated: 2026-03-22 after initial definition*
+*Last updated: 2026-03-22 after Phase 1 planning*
