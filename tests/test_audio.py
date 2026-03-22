@@ -1,31 +1,40 @@
 import pytest
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+from meeting_notes.services.audio import build_ffmpeg_command
 
 
-@pytest.mark.skip(reason="Wave 0 stub")
 def test_build_ffmpeg_command_structure():
-    """Returns list with correct ffmpeg args."""
-    pass
+    """build_ffmpeg_command returns a list starting with 'ffmpeg' ending with output path."""
+    cmd = build_ffmpeg_command(1, 2, "/tmp/out.wav")
+    assert isinstance(cmd, list)
+    assert cmd[0] == "ffmpeg"
+    assert cmd[-1] == "/tmp/out.wav"
 
 
-@pytest.mark.skip(reason="Wave 0 stub")
 def test_build_ffmpeg_command_uses_indices():
-    """Command contains \":1\" and \":2\" (not device names)."""
-    pass
+    """build_ffmpeg_command uses device indices :1 and :2, not device names."""
+    cmd = build_ffmpeg_command(1, 2, "/tmp/out.wav")
+    joined = " ".join(cmd)
+    assert ":1" in joined
+    assert ":2" in joined
 
 
-@pytest.mark.skip(reason="Wave 0 stub")
 def test_build_ffmpeg_command_has_aresample():
-    """Command contains \"aresample=16000\"."""
-    pass
+    """build_ffmpeg_command includes aresample=16000 filter."""
+    cmd = build_ffmpeg_command(1, 2, "/tmp/out.wav")
+    assert any("aresample=16000" in arg for arg in cmd)
 
 
-@pytest.mark.skip(reason="Wave 0 stub")
 def test_build_ffmpeg_command_has_amix():
-    """Command contains \"amix\"."""
-    pass
+    """build_ffmpeg_command includes amix filter to mix both audio sources."""
+    cmd = build_ffmpeg_command(1, 2, "/tmp/out.wav")
+    assert any("amix" in arg for arg in cmd)
 
 
-@pytest.mark.skip(reason="Wave 0 stub")
 def test_build_ffmpeg_command_wav_output():
-    """Command contains \"pcm_s16le\" and output ends with .wav."""
-    pass
+    """build_ffmpeg_command uses pcm_s16le codec and .wav output."""
+    cmd = build_ffmpeg_command(1, 2, "/tmp/out.wav")
+    assert any("pcm_s16le" in arg for arg in cmd)
+    assert cmd[-1].endswith(".wav")

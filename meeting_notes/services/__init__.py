@@ -1,1 +1,1 @@
-"""Services for meeting notes."""
+"""Services package for meeting notes."""

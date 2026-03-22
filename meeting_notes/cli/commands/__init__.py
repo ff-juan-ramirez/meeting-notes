@@ -1,1 +1,1 @@
-"""CLI commands for meeting notes."""
+"""CLI commands package."""
