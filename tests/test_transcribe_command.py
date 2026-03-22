@@ -307,3 +307,40 @@ def test_existing_transcript_overwritten(runner, tmp_path):
 
     assert result.exit_code == 0
     assert existing_transcript.read_text() == new_text.strip()
+
+
+# ---------------------------------------------------------------------------
+# Fresh system / no recordings directory tests (regression for silent-exit bug)
+# ---------------------------------------------------------------------------
+
+def test_transcribe_no_recordings_dir_shows_error(runner, tmp_path):
+    """transcribe command prints red error and exits 1 when recordings dir does not exist (no --session)."""
+    from meeting_notes.cli.commands.transcribe import transcribe
+
+    # tmp_path has no subdirectories — simulates a fresh system before ensure_dirs() was ever called
+    config_dir = tmp_path / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+
+    with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir):
+        result = runner.invoke(transcribe, [])
+
+    assert result.exit_code == 1
+    assert "Error:" in result.output
+    assert "No recordings found" in result.output
+
+
+def test_transcribe_no_recordings_dir_with_session_shows_error(runner, tmp_path):
+    """transcribe command prints red error and exits 1 when recordings dir does not exist (with --session)."""
+    from meeting_notes.cli.commands.transcribe import transcribe
+
+    config_dir = tmp_path / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+
+    with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir):
+        result = runner.invoke(transcribe, ["--session", "some-stem"])
+
+    assert result.exit_code == 1
+    assert "Error:" in result.output
+    assert "No recording found for session" in result.output

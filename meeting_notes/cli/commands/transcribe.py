@@ -8,7 +8,7 @@ from rich.console import Console
 
 from meeting_notes.core.config import Config
 from meeting_notes.core.state import write_state
-from meeting_notes.core.storage import get_config_dir, get_data_dir
+from meeting_notes.core.storage import ensure_dirs, get_config_dir, get_data_dir
 from meeting_notes.services.transcription import (
     WARN_DURATION_SECONDS,
     WARN_WORD_COUNT,
@@ -54,6 +54,7 @@ def resolve_wav_by_stem(recordings_dir: Path, stem: str) -> Path:
 @click.option("--session", default=None, help="WAV filename stem (e.g. 20260322-143000-abc12345)")
 def transcribe(session: str | None) -> None:
     """Transcribe a WAV recording to text using mlx-whisper."""
+    ensure_dirs()
     recordings_dir = get_data_dir() / "recordings"
     transcripts_dir = get_data_dir() / "transcripts"
     metadata_dir = get_data_dir() / "metadata"
@@ -64,7 +65,7 @@ def transcribe(session: str | None) -> None:
             wav_path = resolve_latest_wav(recordings_dir)
         else:
             wav_path = resolve_wav_by_stem(recordings_dir, session)
-    except FileNotFoundError as exc:
+    except (FileNotFoundError, OSError) as exc:
         console.print(f"[red]Error:[/red] {exc}")
         sys.exit(1)
 
