@@ -1,6 +1,7 @@
 import re
 import shutil
 import subprocess
+from pathlib import Path
 
 from meeting_notes.core.health_check import CheckResult, CheckStatus, HealthCheck
 
@@ -120,4 +121,43 @@ class DiskSpaceCheck(HealthCheck):
         return CheckResult(
             status=CheckStatus.OK,
             message=f"Disk space OK: {free_gb:.1f} GB free",
+        )
+
+
+HF_HUB_CACHE = Path.home() / ".cache" / "huggingface" / "hub"
+MODEL_CACHE_DIR = HF_HUB_CACHE / "models--mlx-community--whisper-large-v3-turbo"
+
+
+class MlxWhisperCheck(HealthCheck):
+    """Verify that mlx-whisper is importable."""
+
+    name = "mlx-whisper"
+
+    def check(self) -> CheckResult:
+        try:
+            import mlx_whisper  # noqa: F401
+            return CheckResult(status=CheckStatus.OK, message="mlx-whisper importable")
+        except ImportError:
+            return CheckResult(
+                status=CheckStatus.ERROR,
+                message="mlx-whisper not installed",
+                fix_suggestion="pip install mlx-whisper",
+            )
+
+
+class WhisperModelCheck(HealthCheck):
+    """Verify that whisper-large-v3-turbo model is cached locally."""
+
+    name = "Whisper Model Cache"
+
+    def check(self) -> CheckResult:
+        if MODEL_CACHE_DIR.exists():
+            return CheckResult(
+                status=CheckStatus.OK,
+                message=f"Whisper model cached at {MODEL_CACHE_DIR}",
+            )
+        return CheckResult(
+            status=CheckStatus.WARNING,
+            message="Whisper model not cached — will download on first use (run: meet transcribe)",
+            fix_suggestion="Run: meet transcribe (auto-downloads on first use)",
         )

@@ -120,3 +120,52 @@ def test_ffmpeg_device_check_reachable(monkeypatch):
     result = FFmpegDeviceCheck(device_index=2).check()
     assert result.status == CheckStatus.OK
     assert "MacBook Pro Microphone" in result.message
+
+
+from meeting_notes.services.checks import MlxWhisperCheck, WhisperModelCheck
+
+
+def test_mlx_whisper_check_ok():
+    """MlxWhisperCheck returns OK when mlx_whisper is importable."""
+    result = MlxWhisperCheck().check()
+    assert result.status == CheckStatus.OK
+    assert "mlx-whisper importable" in result.message
+
+
+def test_mlx_whisper_check_error(monkeypatch):
+    """MlxWhisperCheck returns ERROR when mlx_whisper cannot be imported."""
+    import builtins
+    original_import = builtins.__import__
+    def mock_import(name, *args, **kwargs):
+        if name == "mlx_whisper":
+            raise ImportError("No module named 'mlx_whisper'")
+        return original_import(name, *args, **kwargs)
+    monkeypatch.setattr(builtins, "__import__", mock_import)
+    result = MlxWhisperCheck().check()
+    assert result.status == CheckStatus.ERROR
+    assert "not installed" in result.message
+    assert result.fix_suggestion == "pip install mlx-whisper"
+
+
+def test_whisper_model_check_ok(tmp_path, monkeypatch):
+    """WhisperModelCheck returns OK when model cache directory exists."""
+    fake_cache = tmp_path / "models--mlx-community--whisper-large-v3-turbo"
+    fake_cache.mkdir()
+    monkeypatch.setattr(
+        "meeting_notes.services.checks.MODEL_CACHE_DIR", fake_cache
+    )
+    result = WhisperModelCheck().check()
+    assert result.status == CheckStatus.OK
+    assert "Whisper model cached at" in result.message
+
+
+def test_whisper_model_check_warning(tmp_path, monkeypatch):
+    """WhisperModelCheck returns WARNING (not ERROR) when model not cached — per D-08."""
+    fake_cache = tmp_path / "nonexistent-model-dir"
+    monkeypatch.setattr(
+        "meeting_notes.services.checks.MODEL_CACHE_DIR", fake_cache
+    )
+    result = WhisperModelCheck().check()
+    assert result.status == CheckStatus.WARNING  # NOT ERROR — per D-08
+    assert "not cached" in result.message
+    assert "meet transcribe" in result.fix_suggestion
