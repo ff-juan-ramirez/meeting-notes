@@ -11,6 +11,8 @@ from meeting_notes.services.checks import (
     BlackHoleCheck,
     DiskSpaceCheck,
     FFmpegDeviceCheck,
+    MlxWhisperCheck,
+    WhisperModelCheck,
 )
 
 console = Console()
@@ -32,6 +34,8 @@ def doctor():
     suite.register(BlackHoleCheck(config.audio.system_device_index))
     suite.register(FFmpegDeviceCheck(config.audio.microphone_device_index))
     suite.register(DiskSpaceCheck())
+    suite.register(MlxWhisperCheck())
+    suite.register(WhisperModelCheck())
 
     console.print(Panel("[bold]Meeting Notes - System Check[/bold]"))
     console.print()

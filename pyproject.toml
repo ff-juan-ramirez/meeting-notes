@@ -5,6 +5,7 @@ description = "Local meeting capture, transcription, and Notion notes"
 requires-python = ">=3.11,<3.15"
 dependencies = [
     "click>=8.1",
+    "mlx-whisper",
     "rich>=13.0",
 ]
 
