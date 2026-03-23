@@ -91,15 +91,11 @@ Plans:
 
 **Requirements covered:** NOTION-01 to NOTION-07
 
-### Plans
+**Plans:** 2 plans
 
-**4.1 — Notion service**
-- Implement `services/notion.py`: notion-client wrapper; `create_page(title, sections, template_type)` — creates page with correct block structure; text splitting into ≤1,900-char blocks; exponential backoff on HTTP 429
-
-**4.2 — Integrate into summarize + Notion health checks**
-- Update `cli/commands/summarize.py`: after notes generation, call `NotionService.create_page()`; store returned page URL in session metadata JSON; display Notion URL in CLI output
-- Add Phase 4 health check: `NotionTokenCheck` (env var set + API call succeeds), `NotionDatabaseCheck` (target database/page accessible + has expected properties)
-- Register new checks with `meet doctor`
+Plans:
+- [ ] 04-01-PLAN.md — Notion service module (create_page, extract_title, markdown_to_blocks, text splitting, retry logic) + NotionConfig + tests
+- [ ] 04-02-PLAN.md — Integrate Notion push into summarize command + NotionTokenCheck/NotionDatabaseCheck health checks + doctor registration + tests
 
 **Pitfalls to address:**
 - P14: Split all text into ≤1,900-char blocks before sending to Notion
@@ -189,4 +185,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-03-22*
-*Last updated: 2026-03-22 after Phase 3 planning*
+*Last updated: 2026-03-22 after Phase 4 planning*
