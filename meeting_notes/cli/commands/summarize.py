@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import click
-from rich.console import Console
 
+from meeting_notes.cli.ui import console
 from meeting_notes.core.config import Config
 from meeting_notes.core.state import read_state, write_state
 from meeting_notes.core.storage import ensure_dirs, get_data_dir, get_config_dir
@@ -21,8 +21,6 @@ from meeting_notes.services.llm import (
 )
 from meeting_notes.services.notion import create_page, extract_title
 from meeting_notes.services.transcription import run_with_spinner
-
-console = Console()
 
 
 # ---------------------------------------------------------------------------
@@ -53,8 +51,10 @@ def resolve_transcript_by_stem(transcripts_dir: Path, stem: str) -> Path:
 @click.option("--template", default="meeting", type=click.Choice(["meeting", "minutes", "1on1"]),
               help="Note template (default: meeting)")
 @click.option("--session", default=None, help="Transcript filename stem (e.g. 20260322-143000-abc12345)")
-def summarize(template: str, session: str | None) -> None:
+@click.pass_context
+def summarize(ctx: click.Context, template: str, session: str | None) -> None:
     """Generate structured notes from a transcript using Ollama llama3.1:8b."""
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
     ensure_dirs()
     transcripts_dir = get_data_dir() / "transcripts"
     notes_dir = get_data_dir() / "notes"
@@ -86,13 +86,14 @@ def summarize(template: str, session: str | None) -> None:
     try:
         if token_count > MAX_TOKENS_BEFORE_CHUNKING:
             # Map-reduce path: chunk, summarize each, combine
-            notes = _map_reduce_summarize(transcript_text, template_text, template)
+            notes = _map_reduce_summarize(transcript_text, template_text, template, quiet=quiet)
         else:
             # Single-pass path
             prompt = build_prompt(template_text, transcript_text)
             notes = run_with_spinner(
                 lambda: generate_notes(prompt),
                 "Generating notes...",
+                quiet=quiet,
             )
     except TimeoutError as exc:
         console.print(f"[red]Error:[/red] {exc}")
@@ -122,7 +123,8 @@ def summarize(template: str, session: str | None) -> None:
     write_state(metadata_path, existing)
 
     # --- Success output (per D-05, D-06) ---
-    console.print(f"Notes saved: {notes_path} ({word_count} words)")
+    if not quiet:
+        console.print(f"Notes saved: {notes_path} ({word_count} words)")
 
     # --- Notion push (per D-01, D-02, D-03, D-04, D-10, D-11) ---
     config_path = get_config_dir() / "config.json"
@@ -130,7 +132,8 @@ def summarize(template: str, session: str | None) -> None:
 
     notion_url = None
     if config.notion.token is None or config.notion.parent_page_id is None:
-        console.print("[dim]Notion not configured — run meet init to set up.[/dim]")
+        if not quiet:
+            console.print("[dim]Notion not configured — run meet init to set up.[/dim]")
     else:
         fallback_ts = datetime.now(timezone.utc).strftime("Meeting Notes — %Y-%m-%d %H:%M")
         title = extract_title(notes, fallback_ts)
@@ -143,8 +146,10 @@ def summarize(template: str, session: str | None) -> None:
                     notes_markdown=notes,
                 ),
                 "Saving to Notion...",
+                quiet=quiet,
             )
-            console.print(f"Notion: {notion_url}")
+            if not quiet:
+                console.print(f"Notion: {notion_url}")
         except Exception as exc:
             from rich.panel import Panel
             console.print(Panel(
@@ -157,10 +162,11 @@ def summarize(template: str, session: str | None) -> None:
     existing["notion_url"] = notion_url
     write_state(metadata_path, existing)
 
-    console.print(f"Session: {stem}")
+    if not quiet:
+        console.print(f"Session: {stem}")
 
 
-def _map_reduce_summarize(transcript_text: str, template_text: str, template_name: str) -> str:
+def _map_reduce_summarize(transcript_text: str, template_text: str, template_name: str, quiet: bool = False) -> str:
     """Map-reduce summarization for long transcripts (per D-13).
 
     1. Chunk transcript into ~6,000-token pieces
@@ -176,6 +182,7 @@ def _map_reduce_summarize(transcript_text: str, template_text: str, template_nam
         summary = run_with_spinner(
             lambda p=prompt: generate_notes(p),
             f"Generating notes (chunk {i}/{len(chunks)})...",
+            quiet=quiet,
         )
         chunk_summaries.append(summary)
 
@@ -190,5 +197,6 @@ def _map_reduce_summarize(transcript_text: str, template_text: str, template_nam
     final_notes = run_with_spinner(
         lambda: generate_notes(combine_prompt),
         "Combining summaries...",
+        quiet=quiet,
     )
     return final_notes

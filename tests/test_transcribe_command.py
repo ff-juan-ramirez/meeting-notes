@@ -120,7 +120,7 @@ def test_transcribe_command_no_session(runner, tmp_path):
     stem = "20260322-143000-abc12345"
     wav = _create_fake_wav(recordings, stem)
 
-    def fake_run_with_spinner(fn, message):
+    def fake_run_with_spinner(fn, message, **kw):
         return fn()
 
     with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \
@@ -142,7 +142,7 @@ def test_transcribe_command_with_session(runner, tmp_path):
     stem = "20260322-143000-abc12345"
     _create_fake_wav(recordings, stem)
 
-    def fake_run_with_spinner(fn, message):
+    def fake_run_with_spinner(fn, message, **kw):
         return fn()
 
     with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \
@@ -165,7 +165,7 @@ def test_transcript_saved_to_correct_path(runner, tmp_path):
     _create_fake_wav(recordings, stem)
     expected_text = "This is the transcript content with many words so we do not get a warning about short transcripts"
 
-    def fake_run_with_spinner(fn, message):
+    def fake_run_with_spinner(fn, message, **kw):
         return fn()
 
     with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \
@@ -190,7 +190,7 @@ def test_metadata_json(runner, tmp_path):
     wav = _create_fake_wav(recordings, stem)
     transcript_text = "This is a long enough transcript with many words to avoid short transcript warning"
 
-    def fake_run_with_spinner(fn, message):
+    def fake_run_with_spinner(fn, message, **kw):
         return fn()
 
     with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \
@@ -222,7 +222,7 @@ def test_short_transcript_warning(runner, tmp_path):
     stem = "20260322-143000-abc12345"
     _create_fake_wav(recordings, stem)
 
-    def fake_run_with_spinner(fn, message):
+    def fake_run_with_spinner(fn, message, **kw):
         return fn()
 
     with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \
@@ -247,7 +247,7 @@ def test_long_recording_warning(runner, tmp_path):
     wav = recordings / f"{stem}.wav"
     wav.write_bytes(b"\x00" * big_size)
 
-    def fake_run_with_spinner(fn, message):
+    def fake_run_with_spinner(fn, message, **kw):
         return fn()
 
     with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \
@@ -268,7 +268,7 @@ def test_session_stem_displayed(runner, tmp_path):
     stem = "20260322-143000-abc12345"
     _create_fake_wav(recordings, stem)
 
-    def fake_run_with_spinner(fn, message):
+    def fake_run_with_spinner(fn, message, **kw):
         return fn()
 
     with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \
@@ -295,7 +295,7 @@ def test_existing_transcript_overwritten(runner, tmp_path):
 
     new_text = "This is the new transcript content with enough words to avoid the short transcript warning check"
 
-    def fake_run_with_spinner(fn, message):
+    def fake_run_with_spinner(fn, message, **kw):
         return fn()
 
     with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \

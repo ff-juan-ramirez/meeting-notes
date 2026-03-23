@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import click
-from rich.console import Console
 
+from meeting_notes.cli.ui import console
 from meeting_notes.core.config import Config
 from meeting_notes.core.state import write_state
 from meeting_notes.core.storage import ensure_dirs, get_config_dir, get_data_dir
@@ -17,8 +17,6 @@ from meeting_notes.services.transcription import (
     run_with_spinner,
     transcribe_audio,
 )
-
-console = Console()
 
 # HuggingFace Hub model cache path for download detection
 _MODEL_CACHE_DIR = (
@@ -52,8 +50,10 @@ def resolve_wav_by_stem(recordings_dir: Path, stem: str) -> Path:
 
 @click.command()
 @click.option("--session", default=None, help="WAV filename stem (e.g. 20260322-143000-abc12345)")
-def transcribe(session: str | None) -> None:
+@click.pass_context
+def transcribe(ctx: click.Context, session: str | None) -> None:
     """Transcribe a WAV recording to text using mlx-whisper."""
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
     ensure_dirs()
     recordings_dir = get_data_dir() / "recordings"
     transcripts_dir = get_data_dir() / "transcripts"
@@ -88,7 +88,7 @@ def transcribe(session: str | None) -> None:
     else:
         spinner_message = "Downloading model and transcribing..."
 
-    text = run_with_spinner(lambda: transcribe_audio(wav_path, config), spinner_message)
+    text = run_with_spinner(lambda: transcribe_audio(wav_path, config), spinner_message, quiet=quiet)
     text = text.strip()
 
     # --- Word count warning ---
@@ -116,5 +116,6 @@ def transcribe(session: str | None) -> None:
     write_state(metadata_path, metadata)
 
     # --- Success output ---
-    console.print(f"[green]Transcription complete[/green] ({word_count} words)")
-    console.print(f"Session: {stem}")
+    if not quiet:
+        console.print(f"[green]Transcription complete[/green] ({word_count} words)")
+        console.print(f"Session: {stem}")

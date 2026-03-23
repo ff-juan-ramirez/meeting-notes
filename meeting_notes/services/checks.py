@@ -282,3 +282,62 @@ class NotionDatabaseCheck(HealthCheck):
                 message=f"Notion parent page inaccessible: {exc}",
                 fix_suggestion="Check page ID and that the integration has access.",
             )
+
+
+class PythonVersionCheck(HealthCheck):
+    """Verify Python version is >=3.11 and <3.14."""
+
+    name = "Python Version"
+
+    def check(self) -> CheckResult:
+        import sys
+        major, minor = sys.version_info[:2]
+        version_str = f"{major}.{minor}.{sys.version_info[2]}"
+        if major < 3 or (major == 3 and minor < 11):
+            return CheckResult(
+                status=CheckStatus.ERROR,
+                message=f"Python {version_str} — requires >=3.11, <3.14",
+                fix_suggestion="Install Python 3.11-3.13 from python.org or via pyenv",
+            )
+        if major == 3 and minor >= 14:
+            return CheckResult(
+                status=CheckStatus.WARNING,
+                message=f"Python {version_str} — not officially tested with >=3.14",
+                fix_suggestion="Consider Python 3.11-3.13 for best compatibility",
+            )
+        return CheckResult(
+            status=CheckStatus.OK,
+            message=f"Python {version_str}",
+        )
+
+
+class OpenaiWhisperConflictCheck(HealthCheck):
+    """Verify that openai-whisper is not installed alongside mlx-whisper."""
+
+    name = "OpenAI Whisper Conflict"
+
+    def check(self) -> CheckResult:
+        try:
+            import importlib.util
+            spec = importlib.util.find_spec("whisper")
+            if spec is not None:
+                # Check if it's openai-whisper (not mlx-whisper)
+                origin = str(spec.origin) if spec.origin else ""
+                if "openai" in origin or "whisper" in origin:
+                    # Try to distinguish: openai-whisper has whisper.load_model
+                    try:
+                        import importlib.metadata as im
+                        im.version("openai-whisper")
+                        return CheckResult(
+                            status=CheckStatus.WARNING,
+                            message="openai-whisper is installed alongside mlx-whisper",
+                            fix_suggestion="Run: pip uninstall openai-whisper",
+                        )
+                    except im.PackageNotFoundError:
+                        pass
+        except Exception:
+            pass
+        return CheckResult(
+            status=CheckStatus.OK,
+            message="No openai-whisper conflict detected",
+        )

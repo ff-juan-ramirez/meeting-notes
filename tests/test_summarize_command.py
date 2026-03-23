@@ -120,7 +120,7 @@ def test_summarize_command_default_template(runner, tmp_path):
     _create_fake_transcript(transcripts, stem)
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()):
         result = runner.invoke(summarize, [])
 
@@ -138,7 +138,7 @@ def test_template_flag_1on1(runner, tmp_path):
     _create_fake_transcript(transcripts, stem)
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()):
         result = runner.invoke(summarize, ["--template", "1on1"])
 
@@ -156,7 +156,7 @@ def test_template_flag_minutes(runner, tmp_path):
     _create_fake_transcript(transcripts, stem)
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()):
         result = runner.invoke(summarize, ["--template", "minutes"])
 
@@ -174,7 +174,7 @@ def test_notes_saved_correct_path(runner, tmp_path):
     _create_fake_transcript(transcripts, stem)
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()):
         result = runner.invoke(summarize, [])
 
@@ -192,7 +192,7 @@ def test_output_shows_path_and_word_count(runner, tmp_path):
     _create_fake_transcript(transcripts, stem)
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()):
         result = runner.invoke(summarize, [])
 
@@ -210,7 +210,7 @@ def test_session_stem_displayed(runner, tmp_path):
     _create_fake_transcript(transcripts, stem)
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()):
         result = runner.invoke(summarize, [])
 
@@ -230,7 +230,7 @@ def test_existing_notes_overwritten(runner, tmp_path):
     existing_notes.write_text("old notes that should be replaced")
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()):
         result = runner.invoke(summarize, [])
 
@@ -259,7 +259,7 @@ def test_metadata_extended(runner, tmp_path):
     write_state(metadata_path, phase2_data)
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()):
         result = runner.invoke(summarize, [])
 
@@ -291,7 +291,7 @@ def test_timeout_error_message(runner, tmp_path):
     stem = "20260322-143000-abc12345"
     _create_fake_transcript(transcripts, stem)
 
-    def raise_timeout(fn, msg):
+    def raise_timeout(fn, msg, **kw):
         raise TimeoutError("Ollama timed out after 120s. The model may be overloaded — try again or increase timeout.")
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
@@ -310,7 +310,7 @@ def test_connection_error_message(runner, tmp_path):
     stem = "20260322-143000-abc12345"
     _create_fake_transcript(transcripts, stem)
 
-    def raise_connection_error(fn, msg):
+    def raise_connection_error(fn, msg, **kw):
         raise ConnectionError("Ollama is not running. Run: ollama serve")
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
@@ -344,7 +344,7 @@ def test_long_transcript_uses_chunking(runner, tmp_path):
         return "extra chunk summary"
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.generate_notes", side_effect=fake_generate_notes), \
          patch("meeting_notes.cli.commands.summarize.generate_notes", side_effect=fake_generate_notes):
         result = runner.invoke(summarize, [])
@@ -379,7 +379,7 @@ def test_summarize_with_session(runner, tmp_path):
     _create_fake_transcript(transcripts, other_stem, "transcript for stem two")
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()):
         result = runner.invoke(summarize, ["--session", stem])
 
@@ -441,7 +441,7 @@ def test_summarize_notion_not_configured(runner, tmp_path):
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
          patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
          patch("meeting_notes.cli.commands.summarize.create_page") as mock_create_page:
         result = runner.invoke(summarize, [])
@@ -462,7 +462,7 @@ def test_summarize_notion_success(runner, tmp_path):
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
          patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
          patch("meeting_notes.cli.commands.summarize.create_page", return_value="https://notion.so/abc123"):
         result = runner.invoke(summarize, [])
@@ -482,7 +482,7 @@ def test_summarize_stores_notion_url(runner, tmp_path):
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
          patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
          patch("meeting_notes.cli.commands.summarize.create_page", return_value="https://notion.so/abc123"):
         result = runner.invoke(summarize, [])
@@ -504,7 +504,7 @@ def test_summarize_notion_url_null_when_not_configured(runner, tmp_path):
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
          patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()):
         result = runner.invoke(summarize, [])
 
@@ -525,7 +525,7 @@ def test_summarize_notion_failure_warns(runner, tmp_path):
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
          patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
          patch("meeting_notes.cli.commands.summarize.create_page", side_effect=RuntimeError("API error")):
         result = runner.invoke(summarize, [])
@@ -548,7 +548,7 @@ def test_summarize_notion_spinner(runner, tmp_path):
 
     spinner_messages = []
 
-    def fake_spinner(fn, msg):
+    def fake_spinner(fn, msg, **kw):
         spinner_messages.append(msg)
         return fn()
 
@@ -586,7 +586,7 @@ def test_summarize_preserves_phase3_metadata(runner, tmp_path):
 
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
          patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
          patch("meeting_notes.cli.commands.summarize.create_page", return_value="https://notion.so/abc123"):
         result = runner.invoke(summarize, [])

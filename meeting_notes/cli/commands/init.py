@@ -2,31 +2,34 @@ import subprocess
 import tempfile
 
 import click
-from rich.console import Console
 
+from meeting_notes.cli.ui import console
 from meeting_notes.core.config import AudioConfig, Config
 from meeting_notes.core.storage import ensure_dirs, get_config_dir
 
-console = Console()
-
 
 @click.command()
-def init():
+@click.pass_context
+def init(ctx: click.Context):
     """Initialize meeting-notes configuration."""
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
     config_path = get_config_dir() / "config.json"
 
-    console.print("[bold]Meeting Notes Setup[/bold]")
-    console.print()
+    if not quiet:
+        console.print("[bold]Meeting Notes Setup[/bold]")
+        console.print()
 
     # Detect audio devices
-    console.print("Detecting audio devices...")
+    if not quiet:
+        console.print("Detecting audio devices...")
     try:
         result = subprocess.run(
             ["ffmpeg", "-f", "avfoundation", "-list_devices", "true", "-i", ""],
             capture_output=True,
             text=True,
         )
-        console.print("[dim]" + result.stderr + "[/dim]")
+        if not quiet:
+            console.print("[dim]" + result.stderr + "[/dim]")
     except FileNotFoundError:
         console.print("[red]ffmpeg not found. Install with: brew install ffmpeg[/red]")
         return
@@ -56,11 +59,13 @@ def init():
 
     # Save config
     config.save(config_path)
-    console.print(f"[green]Config saved to {config_path}[/green]")
+    if not quiet:
+        console.print(f"[green]Config saved to {config_path}[/green]")
 
     # Test recording to trigger mic permission prompt (SETUP-02)
-    console.print()
-    console.print("Running 1-second test recording to trigger microphone permission...")
+    if not quiet:
+        console.print()
+        console.print("Running 1-second test recording to trigger microphone permission...")
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=True) as tmp:
         try:
             subprocess.run(
@@ -75,11 +80,13 @@ def init():
                 capture_output=True,
                 timeout=10,
             )
-            console.print("[green]Microphone access confirmed.[/green]")
+            if not quiet:
+                console.print("[green]Microphone access confirmed.[/green]")
         except subprocess.TimeoutExpired:
             console.print("[yellow]Test recording timed out. You may need to grant microphone access manually.[/yellow]")
         except Exception as e:
             console.print(f"[yellow]Test recording failed: {e}[/yellow]")
 
-    console.print()
-    console.print("[green]Setup complete![/green] Run [bold]meet doctor[/bold] to verify your setup.")
+    if not quiet:
+        console.print()
+        console.print("[green]Setup complete![/green] Run [bold]meet doctor[/bold] to verify your setup.")

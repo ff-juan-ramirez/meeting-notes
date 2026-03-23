@@ -2,11 +2,12 @@ import os
 import signal
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import uuid4
 
 import click
-from rich.console import Console
 
+from meeting_notes.cli.ui import console
 from meeting_notes.core.config import Config
 from meeting_notes.core.state import (
     check_for_stale_session,
@@ -14,10 +15,8 @@ from meeting_notes.core.state import (
     read_state,
     write_state,
 )
-from meeting_notes.core.storage import get_config_dir
+from meeting_notes.core.storage import get_config_dir, get_data_dir
 from meeting_notes.services.audio import start_recording, stop_recording
-
-console = Console()
 
 
 def _get_state_path():
@@ -29,8 +28,10 @@ def _get_config_path():
 
 
 @click.command()
-def record():
+@click.pass_context
+def record(ctx: click.Context):
     """Start a recording session."""
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
     state_path = _get_state_path()
     config_path = _get_config_path()
 
@@ -57,14 +58,17 @@ def record():
     }
     write_state(state_path, state)
 
-    console.print(f"[green]Recording started[/green] (PID: {proc.pid})")
-    console.print(f"Output: {output_path}")
-    console.print("Run [bold]meet stop[/bold] to finish recording.")
+    if not quiet:
+        console.print(f"[green]Recording started[/green] (PID: {proc.pid})")
+        console.print(f"Output: {output_path}")
+        console.print("Run [bold]meet stop[/bold] to finish recording.")
 
 
 @click.command()
-def stop():
+@click.pass_context
+def stop(ctx: click.Context):
     """Stop the active recording session."""
+    quiet = ctx.obj.get("quiet", False) if ctx.obj else False
     state_path = _get_state_path()
 
     existing = read_state(state_path)
@@ -88,8 +92,33 @@ def stop():
     except Exception as e:
         console.print(f"[yellow]Warning:[/yellow] Error stopping ffmpeg: {e}")
 
-    output_path = existing.get("output_path", "unknown")
+    output_path_str = existing.get("output_path")
+
+    # Compute duration and write metadata (per D-01, D-04, D-05)
+    if output_path_str:
+        stem = Path(output_path_str).stem
+        metadata_dir = get_data_dir() / "metadata"
+        metadata_dir.mkdir(parents=True, exist_ok=True)
+        metadata_path = metadata_dir / f"{stem}.json"
+
+        meta = read_state(metadata_path) or {}
+
+        # Compute duration from start_time (per D-01)
+        start_time_str = existing.get("start_time")
+        if start_time_str:
+            start = datetime.fromisoformat(start_time_str)
+            now = datetime.now(timezone.utc)
+            duration_seconds = int((now - start).total_seconds())
+            meta["duration_seconds"] = duration_seconds
+        # Per D-04: if start_time missing, omit duration_seconds entirely
+
+        # Also write wav_path for sessions that may never reach transcription
+        meta["wav_path"] = str(Path(output_path_str).resolve())
+
+        write_state(metadata_path, meta)
+
     clear_state(state_path)
 
-    console.print("[green]Recording stopped.[/green]")
-    console.print(f"Saved: {output_path}")
+    if not quiet:
+        console.print("[green]Recording stopped.[/green]")
+        console.print(f"Saved: {output_path_str or 'unknown'}")
