@@ -3,6 +3,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import requests
+
 from meeting_notes.core.health_check import CheckResult, CheckStatus, HealthCheck
 
 
@@ -161,3 +163,53 @@ class WhisperModelCheck(HealthCheck):
             message="Whisper model not cached — will download on first use (run: meet transcribe)",
             fix_suggestion="Run: meet transcribe (auto-downloads on first use)",
         )
+
+
+class OllamaRunningCheck(HealthCheck):
+    """Verify that Ollama server is running at localhost:11434."""
+
+    name = "Ollama Service"
+
+    def check(self) -> CheckResult:
+        try:
+            resp = requests.get("http://localhost:11434", timeout=5)
+            if resp.status_code == 200:
+                return CheckResult(status=CheckStatus.OK, message="Ollama is running")
+        except requests.exceptions.ConnectionError:
+            pass
+        except requests.exceptions.Timeout:
+            pass
+        return CheckResult(
+            status=CheckStatus.ERROR,
+            message="Ollama is not running",
+            fix_suggestion="Run: ollama serve",
+        )
+
+
+class OllamaModelCheck(HealthCheck):
+    """Verify that llama3.1:8b model is available in Ollama."""
+
+    name = "Ollama Model (llama3.1:8b)"
+
+    def check(self) -> CheckResult:
+        try:
+            result = subprocess.run(
+                ["ollama", "list"],
+                capture_output=True, text=True, timeout=10,
+            )
+            if "llama3.1:8b" in result.stdout:
+                return CheckResult(
+                    status=CheckStatus.OK,
+                    message="llama3.1:8b model is available",
+                )
+            return CheckResult(
+                status=CheckStatus.ERROR,
+                message="llama3.1:8b model not found in ollama list",
+                fix_suggestion="Run: ollama pull llama3.1:8b",
+            )
+        except FileNotFoundError:
+            return CheckResult(
+                status=CheckStatus.ERROR,
+                message="ollama CLI not found",
+                fix_suggestion="Install Ollama: https://ollama.com",
+            )
