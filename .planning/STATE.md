@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to plan
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-03-23T04:09:36.212Z"
+status: In Progress
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-03-23T00:00:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 13
+  completed_plans: 12
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** Phase 04 — notion-integration
+**Current focus:** Phase 05 — integrated-cli
 
 ## Current Status
 
@@ -35,13 +35,14 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 - [ ] Phase 3: Note Generation
 - [ ] Phase 4: Notion Integration
 - [ ] Phase 5: Integrated CLI
+  - [x] Plan 01: Shared console, --quiet/--version, duration metadata, new doctor checks
 - [ ] Phase 6: Exportable Git Repo
 
 ## Last Session
 
-**Stopped at:** Completed 04-02-PLAN.md
-**Date:** 2026-03-22T20:23:53Z
-**Duration:** ~4 minutes
+**Stopped at:** Completed 05-01-PLAN.md
+**Date:** 2026-03-23T00:00:00Z
+**Duration:** ~6 minutes
 
 ## Decisions
 
@@ -71,6 +72,11 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 - [Phase 04]: Notion push placed after local notes save — local save never fails due to Notion issues
 - [Phase 04]: [Phase 04-02]: Both NotionTokenCheck and NotionDatabaseCheck return WARNING severity — Notion is optional for meet summarize to work
 - [Phase 04]: [Phase 04-02]: notion_url stored in metadata JSON as full URL on success, null on skip/failure — Phase 5 meet list reads this field
+- [Phase 05-01]: Shared Console in cli/ui.py uses force_terminal=sys.stdout.isatty() — single source of truth for all CLI output
+- [Phase 05-01]: run_with_spinner quiet=True early-returns fn() directly — no threading overhead in quiet mode
+- [Phase 05-01]: meet stop writes duration_seconds from start_time ISO string before clearing state — preserves timing across session
+- [Phase 05-01]: PythonVersionCheck uses >=3.14 as WARNING not ERROR — Python 3.14 is untested but may work
+- [Phase 05-01]: list_sessions import wrapped in try/except ImportError in main.py for forward-compat with Plan 02
 
 ## Performance Metrics
 
@@ -86,6 +92,7 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 | Phase 03 P03 | 127 | 2 tasks | 3 files |
 | Phase 04 P01 | 147 | 2 tasks | 5 files |
 | Phase 04 P02 | 270 | 2 tasks | 7 files |
+| Phase 05 P01 | 352 | 2 tasks | 12 files |
 
 ## Key Context for Future Sessions
 
