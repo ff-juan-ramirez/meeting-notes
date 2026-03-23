@@ -133,27 +133,16 @@ Plans:
 
 ## Phase 6: Exportable Git Repo
 
-**Goal:** Package the project as a clean, cloneable git repo. Implement `meet doctor` in full — integrating all per-phase health checks. Implement `meet init` wizard completely.
+**Goal:** Package the project as a clean, cloneable git repo. Implement `meet doctor --verbose` flag. Rewrite `meet init` as full interactive wizard. Write README.md and clean up repo for distribution.
 
 **Requirements covered:** PKG-01 to PKG-03, SETUP-01 to SETUP-06 (full implementation)
 
-### Plans
+**Plans:** 3 plans
 
-**6.1 — Full meet doctor**
-- Integrate ALL phase health checks into `meet doctor`: Phase 1 (BlackHole, ffmpeg, disk), Phase 2 (mlx-whisper, model cache), Phase 3 (Ollama, model), Phase 4 (Notion token, database properties), Phase 5 (Python version, no openai-whisper conflict)
-- Add `--verbose` flag: show versions, file sizes, model locations
-- Each failed check shows specific fix suggestion (e.g., "Install BlackHole: `brew install blackhole-2ch`")
-- Exit code 1 on any ERROR; exit code 0 on all OK (warnings allowed)
-
-**6.2 — Full meet init wizard**
-- Interactive wizard: detect audio devices and present choices, test each device index, collect Notion token + database ID, write config.json, trigger test recording for mic permissions, run `meet doctor` at end to verify setup
-- Handle first-time vs. reconfigure flows
-
-**6.3 — Project packaging**
-- Finalize `pyproject.toml`: all dependencies pinned, `python_requires = ">=3.11,<3.14"`, entry point `meet`
-- Write `README.md`: prerequisites (BlackHole, Audio MIDI Setup config, Ollama, Notion), installation (`pip install .` or `pip install -e .`), quick-start guide, all commands with examples
-- Add `.gitignore`: `__pycache__`, `*.pyc`, `.env`, `recordings/`, `transcripts/`, `notes/` (user data stays local)
-- Final git cleanup: meaningful commit history, no secrets in repo
+Plans:
+- [ ] 06-01-PLAN.md — meet doctor --verbose: verbose_detail() on all checks, --verbose flag wiring, STATUS_ICONS to ui.py
+- [ ] 06-02-PLAN.md — meet init full wizard: device menu, Notion validation, reconfigure/update, inline doctor
+- [ ] 06-03-PLAN.md — README.md, LICENSE, .gitignore updates
 
 **Pitfalls to address:**
 - P19: `pyproject.toml` with `python_requires`; doctor checks Python version
@@ -179,4 +168,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-03-22*
-*Last updated: 2026-03-23 after Phase 5 planning*
+*Last updated: 2026-03-23 after Phase 6 planning*
