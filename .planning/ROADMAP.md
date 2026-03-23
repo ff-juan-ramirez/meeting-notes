@@ -65,20 +65,12 @@ Plans:
 
 **Requirements covered:** LLM-01 to LLM-07
 
-### Plans
+**Plans:** 3 plans
 
-**3.1 — LLM service + templates**
-- Create `templates/meeting.txt`, `templates/minutes.txt`, `templates/1on1.txt` — LLM prompt templates with strict grounding rule
-- Implement `services/llm.py`: Ollama HTTP API wrapper (`POST localhost:11434/api/generate`); configurable timeout (default 120s); no streaming (wait for full response)
-- Token estimation: estimate transcript token count (chars / 4); if >8,000 tokens, use chunked map-reduce path
-
-**3.2 — Summarize command + chunking**
-- Implement `cli/commands/summarize.py`: `meet summarize [--template meeting|minutes|1on1] [--session UUID]`; load transcript; call LLM service; save notes to `notes/{uuid}-{template}.md`; Rich spinner during generation
-- Implement map-reduce chunking: split transcript into ~6,000-token chunks; summarize each; combine summaries into final notes
-
-**3.3 — LLM health checks**
-- Add Phase 3 health check: `OllamaRunningCheck` (GET localhost:11434 returns 200), `OllamaModelCheck` (model listed in `ollama list` output)
-- Register new checks with `meet doctor`
+Plans:
+- [ ] 03-01-PLAN.md — LLM service module, three prompt templates (meeting/minutes/1on1), unit tests, requests dependency
+- [ ] 03-02-PLAN.md — Ollama health checks (OllamaRunningCheck, OllamaModelCheck), meet doctor registration, tests
+- [ ] 03-03-PLAN.md — meet summarize CLI command with session resolution, map-reduce chunking, metadata extension, tests
 
 **Pitfalls to address:**
 - P10: `meet doctor` checks Ollama is running; shows `ollama serve` fix
@@ -197,4 +189,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-03-22*
-*Last updated: 2026-03-22 after Phase 2 gap closure planning*
+*Last updated: 2026-03-22 after Phase 3 planning*
