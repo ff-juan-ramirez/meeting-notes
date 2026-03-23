@@ -1,3 +1,4 @@
+import importlib.metadata
 import re
 import shutil
 import subprocess
@@ -71,6 +72,14 @@ class BlackHoleCheck(HealthCheck):
             message=f"BlackHole found at index {self.device_index}: {device_name}",
         )
 
+    def verbose_detail(self) -> str | None:
+        try:
+            devices = _parse_audio_devices()
+            device_name = devices.get(self.device_index)
+            return device_name
+        except Exception:
+            return None
+
 
 class FFmpegDeviceCheck(HealthCheck):
     """Verify that the microphone device at configured index is reachable."""
@@ -103,6 +112,19 @@ class FFmpegDeviceCheck(HealthCheck):
             message=f"Microphone device found at index {self.device_index}: {device_name}",
         )
 
+    def verbose_detail(self) -> str | None:
+        try:
+            result = subprocess.run(
+                ["ffmpeg", "-version"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            first_line = result.stdout.splitlines()[0] if result.stdout.splitlines() else None
+            return first_line
+        except Exception:
+            return None
+
 
 class DiskSpaceCheck(HealthCheck):
     """Verify sufficient disk space for recordings (>5GB)."""
@@ -127,6 +149,10 @@ class DiskSpaceCheck(HealthCheck):
             message=f"Disk space OK: {free_gb:.1f} GB free",
         )
 
+    def verbose_detail(self) -> str | None:
+        usage = shutil.disk_usage("/")
+        return f"{usage.free / (1024**3):.1f} GB free"
+
 
 HF_HUB_CACHE = Path.home() / ".cache" / "huggingface" / "hub"
 MODEL_CACHE_DIR = HF_HUB_CACHE / "models--mlx-community--whisper-large-v3-turbo"
@@ -148,6 +174,13 @@ class MlxWhisperCheck(HealthCheck):
                 fix_suggestion="pip install mlx-whisper",
             )
 
+    def verbose_detail(self) -> str | None:
+        try:
+            ver = importlib.metadata.version("mlx-whisper")
+            return f"mlx-whisper {ver}"
+        except Exception:
+            return None
+
 
 class WhisperModelCheck(HealthCheck):
     """Verify that whisper-large-v3-turbo model is cached locally."""
@@ -165,6 +198,21 @@ class WhisperModelCheck(HealthCheck):
             message="Whisper model not cached — will download on first use (run: meet transcribe)",
             fix_suggestion="Run: meet transcribe (auto-downloads on first use)",
         )
+
+    def verbose_detail(self) -> str | None:
+        if not MODEL_CACHE_DIR.exists():
+            return None
+        try:
+            total_bytes = sum(
+                f.stat().st_size for f in MODEL_CACHE_DIR.rglob("*") if f.is_file()
+            )
+            if total_bytes >= 1024**3:
+                size_str = f"{total_bytes / (1024**3):.1f} GB"
+            else:
+                size_str = f"{total_bytes / (1024**2):.0f} MB"
+            return f"{MODEL_CACHE_DIR} ({size_str})"
+        except Exception:
+            return None
 
 
 class OllamaRunningCheck(HealthCheck):
@@ -186,6 +234,16 @@ class OllamaRunningCheck(HealthCheck):
             message="Ollama is not running",
             fix_suggestion="Run: ollama serve",
         )
+
+    def verbose_detail(self) -> str | None:
+        try:
+            resp = requests.get("http://localhost:11434/api/version", timeout=5)
+            if resp.status_code == 200:
+                version = resp.json().get("version", "unknown")
+                return f"Ollama {version}"
+        except Exception:
+            pass
+        return None
 
 
 class OllamaModelCheck(HealthCheck):
@@ -215,6 +273,18 @@ class OllamaModelCheck(HealthCheck):
                 message="ollama CLI not found",
                 fix_suggestion="Install Ollama: https://ollama.com",
             )
+
+    def verbose_detail(self) -> str | None:
+        try:
+            result = subprocess.run(
+                ["ollama", "list"],
+                capture_output=True, text=True, timeout=10,
+            )
+            if "llama3.1:8b" in result.stdout:
+                return "llama3.1:8b confirmed in local library"
+        except Exception:
+            pass
+        return None
 
 
 class NotionTokenCheck(HealthCheck):
@@ -248,6 +318,13 @@ class NotionTokenCheck(HealthCheck):
                 message=f"Notion API unreachable: {exc}",
                 fix_suggestion="Check network or Notion token.",
             )
+
+    def verbose_detail(self) -> str | None:
+        if not self.token:
+            return None
+        if len(self.token) > 7:
+            return f"Token: {self.token[:4]}***{self.token[-3:]}"
+        return "Token: ***"
 
 
 class NotionDatabaseCheck(HealthCheck):
@@ -309,6 +386,10 @@ class PythonVersionCheck(HealthCheck):
             status=CheckStatus.OK,
             message=f"Python {version_str}",
         )
+
+    def verbose_detail(self) -> str | None:
+        import sys
+        return f"{sys.version} ({sys.executable})"
 
 
 class OpenaiWhisperConflictCheck(HealthCheck):

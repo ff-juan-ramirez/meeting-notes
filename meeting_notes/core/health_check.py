@@ -25,6 +25,10 @@ class HealthCheck(ABC):
     def check(self) -> CheckResult:
         pass
 
+    def verbose_detail(self) -> str | None:
+        """Override to return inline detail text for --verbose mode."""
+        return None
+
 
 class HealthCheckSuite:
     """Registry and runner for health checks."""
