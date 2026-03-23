@@ -12,6 +12,8 @@ from meeting_notes.services.checks import (
     DiskSpaceCheck,
     FFmpegDeviceCheck,
     MlxWhisperCheck,
+    OllamaModelCheck,
+    OllamaRunningCheck,
     WhisperModelCheck,
 )
 
@@ -36,6 +38,8 @@ def doctor():
     suite.register(DiskSpaceCheck())
     suite.register(MlxWhisperCheck())
     suite.register(WhisperModelCheck())
+    suite.register(OllamaRunningCheck())
+    suite.register(OllamaModelCheck())
 
     console.print(Panel("[bold]Meeting Notes - System Check[/bold]"))
     console.print()

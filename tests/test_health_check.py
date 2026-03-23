@@ -122,7 +122,7 @@ def test_ffmpeg_device_check_reachable(monkeypatch):
     assert "MacBook Pro Microphone" in result.message
 
 
-from meeting_notes.services.checks import MlxWhisperCheck, WhisperModelCheck
+from meeting_notes.services.checks import MlxWhisperCheck, OllamaModelCheck, OllamaRunningCheck, WhisperModelCheck
 
 
 def test_mlx_whisper_check_ok():
@@ -169,3 +169,71 @@ def test_whisper_model_check_warning(tmp_path, monkeypatch):
     assert result.status == CheckStatus.WARNING  # NOT ERROR — per D-08
     assert "not cached" in result.message
     assert "meet transcribe" in result.fix_suggestion
+
+
+def test_ollama_running_check_ok(monkeypatch):
+    """OllamaRunningCheck returns OK when localhost:11434 responds 200."""
+    mock_resp = type("Response", (), {"status_code": 200})()
+    monkeypatch.setattr(
+        "meeting_notes.services.checks.requests.get",
+        lambda *a, **kw: mock_resp,
+    )
+    result = OllamaRunningCheck().check()
+    assert result.status == CheckStatus.OK
+    assert "running" in result.message
+
+
+def test_ollama_running_check_error(monkeypatch):
+    """OllamaRunningCheck returns ERROR when Ollama is not reachable."""
+    import requests as req
+    monkeypatch.setattr(
+        "meeting_notes.services.checks.requests.get",
+        lambda *a, **kw: (_ for _ in ()).throw(req.exceptions.ConnectionError()),
+    )
+    result = OllamaRunningCheck().check()
+    assert result.status == CheckStatus.ERROR
+    assert "not running" in result.message
+    assert result.fix_suggestion == "Run: ollama serve"
+
+
+def test_ollama_model_check_ok(monkeypatch):
+    """OllamaModelCheck returns OK when llama3.1:8b in ollama list."""
+    mock_result = type("R", (), {
+        "stdout": "NAME               ID              SIZE      MODIFIED\nllama3.1:8b        46e0c10c039e    4.9 GB    32 hours ago\n"
+    })()
+    monkeypatch.setattr(
+        "meeting_notes.services.checks.subprocess.run",
+        lambda *a, **kw: mock_result,
+    )
+    result = OllamaModelCheck().check()
+    assert result.status == CheckStatus.OK
+    assert "llama3.1:8b" in result.message
+
+
+def test_ollama_model_check_error(monkeypatch):
+    """OllamaModelCheck returns ERROR when model not in ollama list."""
+    mock_result = type("R", (), {
+        "stdout": "NAME               ID              SIZE      MODIFIED\nllama3.2:latest    a80c4f17acd5    2.0 GB    34 hours ago\n"
+    })()
+    monkeypatch.setattr(
+        "meeting_notes.services.checks.subprocess.run",
+        lambda *a, **kw: mock_result,
+    )
+    result = OllamaModelCheck().check()
+    assert result.status == CheckStatus.ERROR
+    assert "not found" in result.message
+    assert result.fix_suggestion == "Run: ollama pull llama3.1:8b"
+
+
+def test_ollama_model_check_cli_not_found(monkeypatch):
+    """OllamaModelCheck returns ERROR when ollama CLI is not installed."""
+    def raise_fnf(*a, **kw):
+        raise FileNotFoundError("ollama not found")
+    monkeypatch.setattr(
+        "meeting_notes.services.checks.subprocess.run",
+        raise_fnf,
+    )
+    result = OllamaModelCheck().check()
+    assert result.status == CheckStatus.ERROR
+    assert "not found" in result.message
+    assert "ollama.com" in result.fix_suggestion
