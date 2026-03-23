@@ -137,9 +137,21 @@ def test_create_page_overflow_blocks():
 # _call_with_retry
 # ---------------------------------------------------------------------------
 
+def _make_api_error(status: int) -> "APIResponseError":
+    """Create a real APIResponseError instance with the given status code."""
+    import httpx
+    from notion_client.errors import APIResponseError
+    return APIResponseError(
+        code="rate_limited" if status == 429 else "unauthorized",
+        status=status,
+        message="Test error",
+        headers=httpx.Headers(),
+        raw_body_text="",
+    )
+
+
 def test_call_with_retry_429():
     from meeting_notes.services.notion import _call_with_retry
-    from notion_client.errors import APIResponseError
 
     call_count = 0
 
@@ -147,12 +159,11 @@ def test_call_with_retry_429():
         nonlocal call_count
         call_count += 1
         if call_count < 3:
-            error = MagicMock(spec=APIResponseError)
-            error.status = 429
-            raise error
+            raise _make_api_error(429)
         return "success"
 
     with patch("meeting_notes.services.notion.time") as mock_time:
+        mock_time.sleep = MagicMock()
         result = _call_with_retry(mock_fn)
 
     assert result == "success"
@@ -163,11 +174,8 @@ def test_call_with_retry_non_429_raises():
     from meeting_notes.services.notion import _call_with_retry
     from notion_client.errors import APIResponseError
 
-    error = MagicMock(spec=APIResponseError)
-    error.status = 403
-
     def mock_fn():
-        raise error
+        raise _make_api_error(403)
 
-    with pytest.raises(Exception):
+    with pytest.raises(APIResponseError):
         _call_with_retry(mock_fn)
