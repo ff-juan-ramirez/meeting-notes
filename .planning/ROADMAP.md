@@ -40,11 +40,11 @@ Plans:
 
 **Requirements covered:** TRANS-01 to TRANS-05
 
-**Plans:** 3 plans (1/2 executed + 1 gap closure)
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 02-01-PLAN.md — Transcription service + meet transcribe CLI command
-- [ ] 02-02-PLAN.md — Phase 2 health checks (MlxWhisperCheck, WhisperModelCheck) + pyproject.toml update
+- [x] 02-02-PLAN.md — Phase 2 health checks (MlxWhisperCheck, WhisperModelCheck) + pyproject.toml update
 - [ ] 02-03-PLAN.md — Gap closure: fix silent exit on fresh system (ensure_dirs + OSError handler)
 
 **Pitfalls to address:**
