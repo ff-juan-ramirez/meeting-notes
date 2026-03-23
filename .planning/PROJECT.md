@@ -34,9 +34,14 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 - [x] Notes are saved to Notion via notion-client Python SDK — `meet summarize` auto-pushes when token+page_id configured, stores `notion_url` in metadata — Validated in Phase 04: notion-integration
 - [x] `meet doctor` extended with NotionTokenCheck and NotionDatabaseCheck (both WARNING severity) — Validated in Phase 04: notion-integration
 
+### Validated
+
+- [x] CLI exposes `meet list` command with Rich table, `--status` filter, `--json` output, duration/title derivation — Validated in Phase 05: integrated-cli
+- [x] Shared `cli/ui.py` console with TTY detection, `--quiet` and `--version` flags, all commands use shared console — Validated in Phase 05: integrated-cli
+- [x] `meet stop` writes `duration_seconds` metadata; `meet doctor` includes PythonVersionCheck and OpenaiWhisperConflictCheck — Validated in Phase 05: integrated-cli
+
 ### Active
 
-- [ ] CLI exposes `meet list` command
 - [ ] Project is exportable as a git repo for others to clone and use
 
 ### Out of Scope
@@ -81,7 +86,7 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 
 ## Evolution
 
-**Last updated:** 2026-03-23 — Phase 04 complete: notion-integration
+**Last updated:** 2026-03-23 — Phase 05 complete: integrated-cli
 
 This document evolves at phase transitions and milestone boundaries.
 
@@ -99,4 +104,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-23 — Phase 04 complete (Notion integration: auto-push from summarize, NotionTokenCheck/NotionDatabaseCheck, notion_url in metadata)*
+*Last updated: 2026-03-23 — Phase 05 complete (Integrated CLI: shared console, --quiet/--version, meet list with Rich table/JSON, duration metadata, 2 new doctor checks, 176 tests passing)*
