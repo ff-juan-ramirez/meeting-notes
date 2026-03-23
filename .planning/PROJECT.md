@@ -29,11 +29,14 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 - [x] CLI exposes `meet summarize` command with session resolution, template selection, map-reduce chunking, spinner, metadata extension — Validated in Phase 03: note-generation
 - [x] `meet doctor` extended with OllamaRunningCheck and OllamaModelCheck (llama3.1:8b) — Validated in Phase 03: note-generation
 
+### Validated
+
+- [x] Notes are saved to Notion via notion-client Python SDK — `meet summarize` auto-pushes when token+page_id configured, stores `notion_url` in metadata — Validated in Phase 04: notion-integration
+- [x] `meet doctor` extended with NotionTokenCheck and NotionDatabaseCheck (both WARNING severity) — Validated in Phase 04: notion-integration
+
 ### Active
 
-- [ ] Notes are saved to Notion via notion-client Python SDK
 - [ ] CLI exposes `meet list` command
-- [ ] `meet doctor` extended: Notion token set
 - [ ] Project is exportable as a git repo for others to clone and use
 
 ### Out of Scope
@@ -78,7 +81,7 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 
 ## Evolution
 
-**Last updated:** 2026-03-23 — Phase 03 complete: note-generation
+**Last updated:** 2026-03-23 — Phase 04 complete: notion-integration
 
 This document evolves at phase transitions and milestone boundaries.
 
@@ -96,4 +99,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-22 — Phase 02 complete (local transcription via mlx-whisper, `meet transcribe` command, doctor health checks)*
+*Last updated: 2026-03-23 — Phase 04 complete (Notion integration: auto-push from summarize, NotionTokenCheck/NotionDatabaseCheck, notion_url in metadata)*
