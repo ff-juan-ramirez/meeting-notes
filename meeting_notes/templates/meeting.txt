@@ -1,0 +1,15 @@
+Base your notes ONLY on what is said in the transcript. Only include decisions and next steps if EXPLICITLY mentioned.
+
+Generate structured meeting notes with these sections:
+
+## Summary
+[bullet points summarizing key topics discussed]
+
+## Decisions
+[bullet points listing decisions made — only if explicitly stated in the transcript]
+
+## Action Items
+[bullet points listing action items — only if explicitly stated in the transcript]
+
+Transcript:
+{transcript}

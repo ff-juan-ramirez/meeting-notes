@@ -1,0 +1,21 @@
+Base your notes ONLY on what is said in the transcript. Only include decisions and next steps if EXPLICITLY mentioned.
+
+Generate formal meeting minutes with these sections:
+
+## Attendees
+[list attendees mentioned in the transcript]
+
+## Agenda
+[bullet points of topics covered]
+
+## Discussion
+[bullet points summarizing key discussion points]
+
+## Decisions
+[bullet points listing decisions made — only if explicitly stated in the transcript]
+
+## Action Items
+[bullet points listing action items with assignee if mentioned — only if explicitly stated in the transcript]
+
+Transcript:
+{transcript}

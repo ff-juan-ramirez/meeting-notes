@@ -6,6 +6,7 @@ requires-python = ">=3.11,<3.15"
 dependencies = [
     "click>=8.1",
     "mlx-whisper",
+    "requests>=2.28",
     "rich>=13.0",
 ]
 
