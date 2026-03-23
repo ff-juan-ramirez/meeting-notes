@@ -98,7 +98,7 @@ Plans:
 - [ ] 04-02-PLAN.md — Integrate Notion push into summarize command + NotionTokenCheck/NotionDatabaseCheck health checks + doctor registration + tests
 
 **Pitfalls to address:**
-- P14: Split all text into ≤1,900-char blocks before sending to Notion
+- P14: Split all text into <=1,900-char blocks before sending to Notion
 - P15: Retry with exponential backoff on HTTP 429
 - P16: `meet doctor` validates database has required properties
 - P17: Full transcript stored locally only; Notion page gets structured notes + local path reference
@@ -114,25 +114,19 @@ Plans:
 
 **Goal:** Wire all commands into a cohesive CLI with full UX polish.
 
-**Requirements covered:** CLI-01 to CLI-09
+**Requirements covered:** CLI-01 to CLI-09, SETUP-05, SETUP-06
 
-### Plans
+**Plans:** 2 plans
 
-**5.1 — CLI wiring + meet list**
-- Implement `cli/main.py`: Click group registering all commands; `--version` flag; global `--quiet` flag
-- Implement `cli/commands/list.py`: `meet list` — scan `metadata/*.json`, display Rich table (date, duration, title, status, Notion URL); `--status` filter; `--json` output without ANSI codes
-- Implement session metadata JSON (`metadata/{uuid}.json`): date, duration, wav path, transcript path, notes path, notion_url, template, model_version
-
-**5.2 — UX polish**
-- Implement `cli/ui.py`: shared Rich console; spinners, progress bars, panels, error formatting; TTY detection (`sys.stdout.isatty()`) — suppress Rich formatting in non-TTY contexts
-- Ensure `--json` on `meet list` produces clean JSON (no ANSI codes regardless of TTY)
-- Add consistent error messages across all commands: missing config, missing recording, Ollama down, Notion error
+Plans:
+- [ ] 05-01-PLAN.md — Shared console (cli/ui.py), --quiet/--version flags, retrofit all commands, meet stop duration metadata, PythonVersionCheck + OpenaiWhisperConflictCheck
+- [ ] 05-02-PLAN.md — meet list command with Rich table, --status filter, --json output, duration/title derivation
 
 **Pitfalls to address:**
 - P18: TTY detection in `cli/ui.py`; `--quiet` flag globally available
 
 **Deliverables:**
-- All 5 commands work end-to-end in sequence: `meet record` → `meet stop` → `meet transcribe` → `meet summarize` → `meet list`
+- All 5 commands work end-to-end in sequence: `meet record` -> `meet stop` -> `meet transcribe` -> `meet summarize` -> `meet list`
 - Full UX polish (spinners, progress, errors, TTY-safe output)
 
 ---
@@ -185,4 +179,4 @@ Plans:
 
 ---
 *Roadmap created: 2026-03-22*
-*Last updated: 2026-03-22 after Phase 4 planning*
+*Last updated: 2026-03-23 after Phase 5 planning*
