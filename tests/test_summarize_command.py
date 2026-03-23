@@ -408,3 +408,203 @@ def test_spinner_shown(runner, tmp_path):
     # The second positional arg (message) of the first call must contain "Generating notes..."
     first_call_message = mock_spinner.call_args_list[0][0][1]
     assert "Generating notes..." in first_call_message
+
+
+# ---------------------------------------------------------------------------
+# Helpers for Notion tests
+# ---------------------------------------------------------------------------
+
+def _create_config(config_dir, token=None, parent_page_id=None):
+    """Create a config.json in config_dir with optional notion section."""
+    config = {"version": 1, "audio": {}, "whisper": {}}
+    if token or parent_page_id:
+        config["notion"] = {}
+        if token:
+            config["notion"]["token"] = token
+        if parent_page_id:
+            config["notion"]["parent_page_id"] = parent_page_id
+    (config_dir / "config.json").write_text(json.dumps(config))
+
+
+# ---------------------------------------------------------------------------
+# Notion integration tests
+# ---------------------------------------------------------------------------
+
+def test_summarize_notion_not_configured(runner, tmp_path):
+    """When config has no notion token, output contains 'Notion not configured', exit code 0, no API call."""
+    from meeting_notes.cli.commands.summarize import summarize
+
+    transcripts, notes, metadata = _make_env_dirs(tmp_path)
+    stem = "20260322-143000-abc12345"
+    _create_fake_transcript(transcripts, stem)
+    _create_config(tmp_path)  # no notion section
+
+    with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
+         patch("meeting_notes.cli.commands.summarize.create_page") as mock_create_page:
+        result = runner.invoke(summarize, [])
+
+    assert result.exit_code == 0
+    assert "Notion not configured" in result.output
+    mock_create_page.assert_not_called()
+
+
+def test_summarize_notion_success(runner, tmp_path):
+    """When config has token+page_id and create_page succeeds, output contains Notion URL, exit code 0."""
+    from meeting_notes.cli.commands.summarize import summarize
+
+    transcripts, notes, metadata = _make_env_dirs(tmp_path)
+    stem = "20260322-143000-abc12345"
+    _create_fake_transcript(transcripts, stem)
+    _create_config(tmp_path, token="secret_test", parent_page_id="page123")
+
+    with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
+         patch("meeting_notes.cli.commands.summarize.create_page", return_value="https://notion.so/abc123"):
+        result = runner.invoke(summarize, [])
+
+    assert result.exit_code == 0
+    assert "Notion: https://notion.so/abc123" in result.output
+
+
+def test_summarize_stores_notion_url(runner, tmp_path):
+    """After successful Notion push, metadata JSON contains notion_url with the URL."""
+    from meeting_notes.cli.commands.summarize import summarize
+
+    transcripts, notes, metadata = _make_env_dirs(tmp_path)
+    stem = "20260322-143000-abc12345"
+    _create_fake_transcript(transcripts, stem)
+    _create_config(tmp_path, token="secret_test", parent_page_id="page123")
+
+    with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
+         patch("meeting_notes.cli.commands.summarize.create_page", return_value="https://notion.so/abc123"):
+        result = runner.invoke(summarize, [])
+
+    assert result.exit_code == 0
+    metadata_path = metadata / f"{stem}.json"
+    data = json.loads(metadata_path.read_text())
+    assert data["notion_url"] == "https://notion.so/abc123"
+
+
+def test_summarize_notion_url_null_when_not_configured(runner, tmp_path):
+    """When Notion not configured, metadata JSON contains notion_url: null."""
+    from meeting_notes.cli.commands.summarize import summarize
+
+    transcripts, notes, metadata = _make_env_dirs(tmp_path)
+    stem = "20260322-143000-abc12345"
+    _create_fake_transcript(transcripts, stem)
+    _create_config(tmp_path)  # no notion section
+
+    with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()):
+        result = runner.invoke(summarize, [])
+
+    assert result.exit_code == 0
+    metadata_path = metadata / f"{stem}.json"
+    data = json.loads(metadata_path.read_text())
+    assert data["notion_url"] is None
+
+
+def test_summarize_notion_failure_warns(runner, tmp_path):
+    """When create_page raises Exception, output contains 'Notion upload failed', exit code 0."""
+    from meeting_notes.cli.commands.summarize import summarize
+
+    transcripts, notes, metadata = _make_env_dirs(tmp_path)
+    stem = "20260322-143000-abc12345"
+    _create_fake_transcript(transcripts, stem)
+    _create_config(tmp_path, token="secret_test", parent_page_id="page123")
+
+    with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
+         patch("meeting_notes.cli.commands.summarize.create_page", side_effect=RuntimeError("API error")):
+        result = runner.invoke(summarize, [])
+
+    assert result.exit_code == 0
+    assert "Notion upload failed" in result.output
+    metadata_path = metadata / f"{stem}.json"
+    data = json.loads(metadata_path.read_text())
+    assert data["notion_url"] is None
+
+
+def test_summarize_notion_spinner(runner, tmp_path):
+    """run_with_spinner is called with message containing 'Saving to Notion...'."""
+    from meeting_notes.cli.commands.summarize import summarize
+
+    transcripts, notes, metadata = _make_env_dirs(tmp_path)
+    stem = "20260322-143000-abc12345"
+    _create_fake_transcript(transcripts, stem)
+    _create_config(tmp_path, token="secret_test", parent_page_id="page123")
+
+    spinner_messages = []
+
+    def fake_spinner(fn, msg):
+        spinner_messages.append(msg)
+        return fn()
+
+    with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=fake_spinner), \
+         patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
+         patch("meeting_notes.cli.commands.summarize.create_page", return_value="https://notion.so/abc123"):
+        result = runner.invoke(summarize, [])
+
+    assert result.exit_code == 0
+    assert any("Saving to Notion" in m for m in spinner_messages)
+
+
+def test_summarize_preserves_phase3_metadata(runner, tmp_path):
+    """After Notion push, metadata still contains notes_path, template, summarized_at, llm_model."""
+    from meeting_notes.cli.commands.summarize import summarize
+    from meeting_notes.core.state import write_state
+
+    transcripts, notes, metadata = _make_env_dirs(tmp_path)
+    stem = "20260322-143000-abc12345"
+    _create_fake_transcript(transcripts, stem)
+    _create_config(tmp_path, token="secret_test", parent_page_id="page123")
+
+    # Pre-populate with Phase 2 metadata fields
+    metadata_path = metadata / f"{stem}.json"
+    phase2_data = {
+        "wav_path": f"/home/user/.local/share/meeting-notes/recordings/{stem}.wav",
+        "transcript_path": f"/home/user/.local/share/meeting-notes/transcripts/{stem}.txt",
+        "transcribed_at": "2026-03-22T14:30:01Z",
+        "word_count": 250,
+        "whisper_model": "mlx-community/whisper-large-v3-turbo",
+    }
+    write_state(metadata_path, phase2_data)
+
+    with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg: fn()), \
+         patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
+         patch("meeting_notes.cli.commands.summarize.create_page", return_value="https://notion.so/abc123"):
+        result = runner.invoke(summarize, [])
+
+    assert result.exit_code == 0
+    data = json.loads(metadata_path.read_text())
+
+    # Phase 3 fields must be present
+    assert "notes_path" in data
+    assert "template" in data
+    assert "summarized_at" in data
+    assert "llm_model" in data
+    assert "notion_url" in data
+    assert data["notion_url"] == "https://notion.so/abc123"
+
+    # Phase 2 fields must be preserved
+    assert "wav_path" in data
+    assert "transcript_path" in data
+    assert "transcribed_at" in data
+    assert "word_count" in data
+    assert "whisper_model" in data

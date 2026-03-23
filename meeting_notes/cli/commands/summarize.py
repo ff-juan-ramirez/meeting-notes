@@ -6,8 +6,9 @@ from pathlib import Path
 import click
 from rich.console import Console
 
+from meeting_notes.core.config import Config
 from meeting_notes.core.state import read_state, write_state
-from meeting_notes.core.storage import ensure_dirs, get_data_dir
+from meeting_notes.core.storage import ensure_dirs, get_data_dir, get_config_dir
 from meeting_notes.services.llm import (
     OLLAMA_MODEL,
     MAX_TOKENS_BEFORE_CHUNKING,
@@ -18,6 +19,7 @@ from meeting_notes.services.llm import (
     generate_notes,
     load_template,
 )
+from meeting_notes.services.notion import create_page, extract_title
 from meeting_notes.services.transcription import run_with_spinner
 
 console = Console()
@@ -108,7 +110,7 @@ def summarize(template: str, session: str | None) -> None:
 
     word_count = len(notes.split())
 
-    # --- Extend metadata (read-merge-write per D-08, avoiding Pitfall 4) ---
+    # --- Extend metadata with Phase 3 fields (read-merge-write per D-08, avoiding Pitfall 4) ---
     metadata_path = metadata_dir / f"{stem}.json"
     existing = read_state(metadata_path) or {}
     existing.update({
@@ -121,6 +123,40 @@ def summarize(template: str, session: str | None) -> None:
 
     # --- Success output (per D-05, D-06) ---
     console.print(f"Notes saved: {notes_path} ({word_count} words)")
+
+    # --- Notion push (per D-01, D-02, D-03, D-04, D-10, D-11) ---
+    config_path = get_config_dir() / "config.json"
+    config = Config.load(config_path)
+
+    notion_url = None
+    if config.notion.token is None or config.notion.parent_page_id is None:
+        console.print("[dim]Notion not configured — run meet init to set up.[/dim]")
+    else:
+        fallback_ts = datetime.now(timezone.utc).strftime("Meeting Notes — %Y-%m-%d %H:%M")
+        title = extract_title(notes, fallback_ts)
+        try:
+            notion_url = run_with_spinner(
+                lambda: create_page(
+                    token=config.notion.token,
+                    parent_page_id=config.notion.parent_page_id,
+                    title=title,
+                    notes_markdown=notes,
+                ),
+                "Saving to Notion...",
+            )
+            console.print(f"Notion: {notion_url}")
+        except Exception as exc:
+            from rich.panel import Panel
+            console.print(Panel(
+                f"[yellow]Notion upload failed: {exc}[/yellow]\nNotes saved locally: {notes_path}",
+                style="yellow",
+            ))
+
+    # --- Extend metadata with notion_url (read-merge-write per Pitfall 4) ---
+    existing = read_state(metadata_path) or {}
+    existing["notion_url"] = notion_url
+    write_state(metadata_path, existing)
+
     console.print(f"Session: {stem}")
 
 
