@@ -65,11 +65,11 @@ Plans:
 
 **Requirements covered:** LLM-01 to LLM-07
 
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
-- [ ] 03-01-PLAN.md — LLM service module, three prompt templates (meeting/minutes/1on1), unit tests, requests dependency
-- [ ] 03-02-PLAN.md — Ollama health checks (OllamaRunningCheck, OllamaModelCheck), meet doctor registration, tests
+- [x] 03-01-PLAN.md — LLM service module, three prompt templates (meeting/minutes/1on1), unit tests, requests dependency
+- [x] 03-02-PLAN.md — Ollama health checks (OllamaRunningCheck, OllamaModelCheck), meet doctor registration, tests
 - [ ] 03-03-PLAN.md — meet summarize CLI command with session resolution, map-reduce chunking, metadata extension, tests
 
 **Pitfalls to address:**
