@@ -116,10 +116,10 @@ Plans:
 
 **Requirements covered:** CLI-01 to CLI-09, SETUP-05, SETUP-06
 
-**Plans:** 0/2 plans executed
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 05-01-PLAN.md — Shared console (cli/ui.py), --quiet/--version flags, retrofit all commands, meet stop duration metadata, PythonVersionCheck + OpenaiWhisperConflictCheck
+- [x] 05-01-PLAN.md — Shared console (cli/ui.py), --quiet/--version flags, retrofit all commands, meet stop duration metadata, PythonVersionCheck + OpenaiWhisperConflictCheck
 - [ ] 05-02-PLAN.md — meet list command with Rich table, --status filter, --json output, duration/title derivation
 
 **Pitfalls to address:**
