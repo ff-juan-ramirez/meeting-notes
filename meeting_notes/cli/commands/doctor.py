@@ -12,6 +12,8 @@ from meeting_notes.services.checks import (
     DiskSpaceCheck,
     FFmpegDeviceCheck,
     MlxWhisperCheck,
+    NotionDatabaseCheck,
+    NotionTokenCheck,
     OllamaModelCheck,
     OllamaRunningCheck,
     WhisperModelCheck,
@@ -40,6 +42,8 @@ def doctor():
     suite.register(WhisperModelCheck())
     suite.register(OllamaRunningCheck())
     suite.register(OllamaModelCheck())
+    suite.register(NotionTokenCheck(config.notion.token))
+    suite.register(NotionDatabaseCheck(config.notion.token, config.notion.parent_page_id))
 
     console.print(Panel("[bold]Meeting Notes - System Check[/bold]"))
     console.print()

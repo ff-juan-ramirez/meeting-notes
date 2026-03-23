@@ -4,6 +4,8 @@ import subprocess
 from pathlib import Path
 
 import requests
+from notion_client import Client as NotionClient
+from notion_client.errors import APIResponseError
 
 from meeting_notes.core.health_check import CheckResult, CheckStatus, HealthCheck
 
@@ -212,4 +214,71 @@ class OllamaModelCheck(HealthCheck):
                 status=CheckStatus.ERROR,
                 message="ollama CLI not found",
                 fix_suggestion="Install Ollama: https://ollama.com",
+            )
+
+
+class NotionTokenCheck(HealthCheck):
+    """Verify Notion token is set in config and API call succeeds."""
+
+    name = "Notion Token"
+
+    def __init__(self, token: str | None) -> None:
+        self.token = token
+
+    def check(self) -> CheckResult:
+        if not self.token:
+            return CheckResult(
+                status=CheckStatus.WARNING,
+                message="Notion token not configured",
+                fix_suggestion="Run: meet init to configure Notion.",
+            )
+        try:
+            client = NotionClient(auth=self.token)
+            client.users.me()
+            return CheckResult(status=CheckStatus.OK, message="Notion token valid")
+        except APIResponseError as exc:
+            return CheckResult(
+                status=CheckStatus.WARNING,
+                message=f"Notion token invalid: {exc}",
+                fix_suggestion="Run: meet init to configure Notion.",
+            )
+        except Exception as exc:
+            return CheckResult(
+                status=CheckStatus.WARNING,
+                message=f"Notion API unreachable: {exc}",
+                fix_suggestion="Check network or Notion token.",
+            )
+
+
+class NotionDatabaseCheck(HealthCheck):
+    """Verify parent page ID is set and accessible."""
+
+    name = "Notion Parent Page"
+
+    def __init__(self, token: str | None, parent_page_id: str | None) -> None:
+        self.token = token
+        self.parent_page_id = parent_page_id
+
+    def check(self) -> CheckResult:
+        if not self.parent_page_id:
+            return CheckResult(
+                status=CheckStatus.WARNING,
+                message="Notion parent page ID not configured",
+                fix_suggestion="Run: meet init to configure Notion.",
+            )
+        if not self.token:
+            return CheckResult(
+                status=CheckStatus.WARNING,
+                message="Notion token not set — cannot verify parent page",
+                fix_suggestion="Run: meet init to configure Notion.",
+            )
+        try:
+            client = NotionClient(auth=self.token)
+            client.pages.retrieve(page_id=self.parent_page_id)
+            return CheckResult(status=CheckStatus.OK, message="Notion parent page accessible")
+        except APIResponseError as exc:
+            return CheckResult(
+                status=CheckStatus.WARNING,
+                message=f"Notion parent page inaccessible: {exc}",
+                fix_suggestion="Check page ID and that the integration has access.",
             )
