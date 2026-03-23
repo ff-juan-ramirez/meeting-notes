@@ -50,8 +50,8 @@
 - [x] **CLI-02**: `meet stop` stops the active recording session
 - [x] **CLI-03**: `meet transcribe [--session UUID]` transcribes the last or specified recording
 - [x] **CLI-04**: `meet summarize [--template meeting|minutes|1on1] [--session UUID]` generates notes and saves to Notion
-- [ ] **CLI-05**: `meet list` displays all recordings with: date, duration, title (or filename), status (not-transcribed / transcribed / summarized), and Notion URL if available
-- [ ] **CLI-06**: `meet list` supports `--status` filter and `--json` output flag
+- [x] **CLI-05**: `meet list` displays all recordings with: date, duration, title (or filename), status (not-transcribed / transcribed / summarized), and Notion URL if available
+- [x] **CLI-06**: `meet list` supports `--status` filter and `--json` output flag
 - [x] **CLI-07**: All commands display Rich-formatted output with color, spinners, and progress bars
 - [x] **CLI-08**: Rich output is suppressed when stdout is not a TTY (piped output is clean)
 - [x] **CLI-09**: `--quiet` flag suppresses all progress output for scripting
@@ -67,9 +67,9 @@
 
 ### Packaging & Distribution
 
-- [ ] **PKG-01**: Project uses `pyproject.toml` (PEP 621) with entry point `meet = "meeting_notes.cli.main:main"`
-- [ ] **PKG-02**: Project is a clean git repo with `README.md`, `pyproject.toml`, `.gitignore`
-- [ ] **PKG-03**: `README.md` includes prerequisites (BlackHole, Audio MIDI Setup, Ollama, Notion integration setup) and usage examples
+- [x] **PKG-01**: Project uses `pyproject.toml` (PEP 621) with entry point `meet = "meeting_notes.cli.main:main"`
+- [x] **PKG-02**: Project is a clean git repo with `README.md`, `pyproject.toml`, `.gitignore`
+- [x] **PKG-03**: `README.md` includes prerequisites (BlackHole, Audio MIDI Setup, Ollama, Notion integration setup) and usage examples
 
 ---
 
@@ -123,7 +123,7 @@
 | LLM-01 to LLM-07 | Phase 3 | Pending |
 | NOTION-01 to NOTION-07 | Phase 4 | Pending |
 | CLI-01 to CLI-09 | Phase 5 | Pending |
-| PKG-01 to PKG-03 | Phase 6 | Pending |
+| PKG-01 to PKG-03 | Phase 6 | Complete |
 
 **Coverage:**
 - v1 requirements: 40 total

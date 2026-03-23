@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to plan
-stopped_at: Completed 05-02-PLAN.md
-last_updated: "2026-03-23T20:34:24.822Z"
+status: All Phases Complete (v1.0)
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-03-23T22:00:00.000Z"
 progress:
   total_phases: 6
-  completed_phases: 5
-  total_plans: 13
-  completed_plans: 13
+  completed_phases: 6
+  total_plans: 16
+  completed_plans: 16
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** Phase 05 — integrated-cli
+**Current focus:** Phase 06 — exportable-git-repo
 
 ## Current Status
 
@@ -36,13 +36,16 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 - [ ] Phase 4: Notion Integration
 - [ ] Phase 5: Integrated CLI
   - [x] Plan 01: Shared console, --quiet/--version, duration metadata, new doctor checks
-- [ ] Phase 6: Exportable Git Repo
+- [x] Phase 6: Exportable Git Repo
+  - [x] Plan 01: meet doctor --verbose, verbose_detail() on all checks, STATUS_ICONS to ui.py
+  - [x] Plan 02: meet init full interactive wizard (device menu, Notion validation, reconfigure)
+  - [x] Plan 03: README.md, LICENSE, .gitignore updates
 
 ## Last Session
 
-**Stopped at:** Completed 05-02-PLAN.md
-**Date:** 2026-03-23T00:00:00Z
-**Duration:** ~6 minutes
+**Stopped at:** Completed 06-03-PLAN.md
+**Date:** 2026-03-23T22:00:00Z
+**Duration:** ~15 minutes
 
 ## Decisions
 
@@ -79,6 +82,13 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 - [Phase 05-01]: list_sessions import wrapped in try/except ImportError in main.py for forward-compat with Plan 02
 - [Phase 05]: list_sessions registered directly in main.py (try/except ImportError guard removed — Plan 02 complete)
 - [Phase 05]: [Phase 05-02]: Wide console (width=200) patched in tests to prevent Rich table truncation in CliRunner narrow terminal
+- [Phase 06]: STATUS_ICONS moved to cli/ui.py for reuse by Plan 02 (meet init) without circular imports
+- [Phase 06]: verbose_detail() returns None on base HealthCheck; subclasses opt in; OpenaiWhisperConflictCheck deliberately has no override (D-03)
+- [Phase 06]: quiet wins over verbose (D-06): if quiet: verbose = False applied before output loop in doctor command
+- [Phase 06]: fix_suggestion guard fixed to result.status != CheckStatus.OK (D-04) — never shown on OK results
+- [Phase 06-03]: MIT License with year 2026 and "meeting-notes contributors" as copyright holder
+- [Phase 06-03]: README uses device indices :1 (BlackHole) and :2 (MacBook Mic) throughout — never device names per AUDIO-06
+- [Phase 06-03]: .gitignore adds defensive patterns for recordings/, transcripts/, notes/, .env even though XDG dirs normally outside repo
 
 ## Performance Metrics
 
@@ -96,6 +106,8 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 | Phase 04 P02 | 270 | 2 tasks | 7 files |
 | Phase 05 P01 | 352 | 2 tasks | 12 files |
 | Phase 05 P02 | 232 | 1 tasks | 3 files |
+| Phase 06 P01 | 163 | 2 tasks | 5 files |
+| Phase 06 P03 | 900 | 2 tasks | 3 files |
 
 ## Key Context for Future Sessions
 

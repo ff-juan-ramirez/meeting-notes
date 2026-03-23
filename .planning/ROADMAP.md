@@ -137,12 +137,12 @@ Plans:
 
 **Requirements covered:** PKG-01 to PKG-03, SETUP-01 to SETUP-06 (full implementation)
 
-**Plans:** 3 plans
+**Plans:** 3/3 plans executed
 
 Plans:
-- [ ] 06-01-PLAN.md — meet doctor --verbose: verbose_detail() on all checks, --verbose flag wiring, STATUS_ICONS to ui.py
-- [ ] 06-02-PLAN.md — meet init full wizard: device menu, Notion validation, reconfigure/update, inline doctor
-- [ ] 06-03-PLAN.md — README.md, LICENSE, .gitignore updates
+- [x] 06-01-PLAN.md — meet doctor --verbose: verbose_detail() on all checks, --verbose flag wiring, STATUS_ICONS to ui.py
+- [x] 06-02-PLAN.md — meet init full wizard: device menu, Notion validation, reconfigure/update, inline doctor
+- [x] 06-03-PLAN.md — README.md, LICENSE, .gitignore updates
 
 **Pitfalls to address:**
 - P19: `pyproject.toml` with `python_requires`; doctor checks Python version
