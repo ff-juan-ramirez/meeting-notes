@@ -5,11 +5,11 @@ from pathlib import Path
 from typing import Any, Callable
 
 import mlx_whisper
-from rich.console import Console
 from rich.live import Live
 from rich.text import Text
 
 from meeting_notes.core.config import Config
+from meeting_notes.cli.ui import console as _console
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -19,8 +19,6 @@ WAV_HEADER_BYTES = 44
 WARN_DURATION_SECONDS = 90 * 60  # 5400
 WARN_WORD_COUNT = 50
 MODEL_REPO = "mlx-community/whisper-large-v3-turbo"
-
-_console = Console()
 
 
 # ---------------------------------------------------------------------------
@@ -57,12 +55,16 @@ def estimate_wav_duration_seconds(wav_path: Path) -> float:
     return audio_bytes / BYTES_PER_SECOND
 
 
-def run_with_spinner(fn: Callable[[], Any], message: str) -> Any:
+def run_with_spinner(fn: Callable[[], Any], message: str, quiet: bool = False) -> Any:
     """Run fn() in a background thread while showing a Rich spinner with elapsed time.
 
+    When quiet=True, fn() is called directly in the current thread with no spinner.
     Returns the result of fn(). Re-raises any exception raised by fn() in the
     calling thread.
     """
+    if quiet:
+        return fn()
+
     result: dict[str, Any] = {}
     exc_holder: dict[str, BaseException] = {}
 

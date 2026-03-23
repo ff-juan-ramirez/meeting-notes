@@ -2,9 +2,13 @@ import click
 
 
 @click.group()
-def main() -> None:
+@click.version_option(package_name="meeting-notes")
+@click.option("--quiet", is_flag=True, default=False, help="Suppress all progress output.")
+@click.pass_context
+def main(ctx: click.Context, quiet: bool) -> None:
     """Meeting notes - local capture, transcription, and Notion export."""
-    pass
+    ctx.ensure_object(dict)
+    ctx.obj["quiet"] = quiet
 
 
 from meeting_notes.cli.commands.record import record, stop
@@ -19,3 +23,9 @@ main.add_command(doctor)
 main.add_command(init)
 main.add_command(transcribe)
 main.add_command(summarize)
+
+try:
+    from meeting_notes.cli.commands.list import list_sessions
+    main.add_command(list_sessions)
+except ImportError:
+    pass
