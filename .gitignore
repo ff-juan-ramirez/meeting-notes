@@ -6,3 +6,9 @@ __pycache__/
 dist/
 build/
 *.egg
+
+# User data directories (defensive — these live in XDG data dir, not repo)
+recordings/
+transcripts/
+notes/
+.env
