@@ -18,43 +18,43 @@
 
 ### Transcription
 
-- [ ] **TRANS-01**: `meet transcribe` runs mlx-whisper (mlx-community/whisper-large-v3-turbo) on the last or specified recording and produces a plain text transcript
-- [ ] **TRANS-02**: Transcript is saved to `~/.local/share/meeting-notes/transcripts/{uuid}.txt`
-- [ ] **TRANS-03**: `meet transcribe` shows a Rich progress indicator (spinner or progress bar) while running — does not appear frozen
-- [ ] **TRANS-04**: If transcript is empty or fewer than 50 words, warn the user ("Transcript may be empty — check audio routing")
-- [ ] **TRANS-05**: Whisper language detection is automatic (no hardcoded language); user can pin language via config
+- [x] **TRANS-01**: `meet transcribe` runs mlx-whisper (mlx-community/whisper-large-v3-turbo) on the last or specified recording and produces a plain text transcript
+- [x] **TRANS-02**: Transcript is saved to `~/.local/share/meeting-notes/transcripts/{uuid}.txt`
+- [x] **TRANS-03**: `meet transcribe` shows a Rich progress indicator (spinner or progress bar) while running — does not appear frozen
+- [x] **TRANS-04**: If transcript is empty or fewer than 50 words, warn the user ("Transcript may be empty — check audio routing")
+- [x] **TRANS-05**: Whisper language detection is automatic (no hardcoded language); user can pin language via config
 
 ### Note Generation
 
-- [ ] **LLM-01**: `meet summarize` generates structured notes from the transcript using Ollama llama3.1:8b via HTTP API (localhost:11434/api/generate)
-- [ ] **LLM-02**: Three templates are supported: `meeting` (default), `minutes`, `1on1` — selected via `--template` flag
-- [ ] **LLM-03**: LLM prompt enforces strict grounding: "Base your notes ONLY on what is said in the transcript. Only include decisions and next steps if EXPLICITLY mentioned."
-- [ ] **LLM-04**: Notes are saved to `~/.local/share/meeting-notes/notes/{uuid}-{template}.md`
-- [ ] **LLM-05**: All Ollama HTTP requests have a configurable timeout (default: 120s); timeout shows an actionable error message
-- [ ] **LLM-06**: If transcript exceeds 8,000 tokens, it is chunked, each chunk summarized, then summaries are combined ("map-reduce")
-- [ ] **LLM-07**: `meet summarize` shows a Rich spinner while waiting for LLM response
+- [x] **LLM-01**: `meet summarize` generates structured notes from the transcript using Ollama llama3.1:8b via HTTP API (localhost:11434/api/generate)
+- [x] **LLM-02**: Three templates are supported: `meeting` (default), `minutes`, `1on1` — selected via `--template` flag
+- [x] **LLM-03**: LLM prompt enforces strict grounding: "Base your notes ONLY on what is said in the transcript. Only include decisions and next steps if EXPLICITLY mentioned."
+- [x] **LLM-04**: Notes are saved to `~/.local/share/meeting-notes/notes/{uuid}-{template}.md`
+- [x] **LLM-05**: All Ollama HTTP requests have a configurable timeout (default: 120s); timeout shows an actionable error message
+- [x] **LLM-06**: If transcript exceeds 8,000 tokens, it is chunked, each chunk summarized, then summaries are combined ("map-reduce")
+- [x] **LLM-07**: `meet summarize` shows a Rich spinner while waiting for LLM response
 
 ### Notion Integration
 
-- [ ] **NOTION-01**: `meet summarize` (or `meet summarize --save`) creates a Notion page with the structured notes after generation
-- [ ] **NOTION-02**: Notion page title is LLM-generated from the transcript summary
-- [ ] **NOTION-03**: Page content uses template structure as Notion blocks (heading + bullet blocks per section)
-- [ ] **NOTION-04**: Long text sections are split into ≤1,900-character Notion blocks to avoid API limits
-- [ ] **NOTION-05**: All Notion API calls include retry logic with exponential backoff on HTTP 429 (rate limiting)
-- [ ] **NOTION-06**: Notion token and target database/page ID are stored in `~/.config/meeting-notes/config.json`
-- [ ] **NOTION-07**: `meet summarize` stores the created Notion page URL in the session metadata JSON
+- [x] **NOTION-01**: `meet summarize` (or `meet summarize --save`) creates a Notion page with the structured notes after generation
+- [x] **NOTION-02**: Notion page title is LLM-generated from the transcript summary
+- [x] **NOTION-03**: Page content uses template structure as Notion blocks (heading + bullet blocks per section)
+- [x] **NOTION-04**: Long text sections are split into ≤1,900-character Notion blocks to avoid API limits
+- [x] **NOTION-05**: All Notion API calls include retry logic with exponential backoff on HTTP 429 (rate limiting)
+- [x] **NOTION-06**: Notion token and target database/page ID are stored in `~/.config/meeting-notes/config.json`
+- [x] **NOTION-07**: `meet summarize` stores the created Notion page URL in the session metadata JSON
 
 ### CLI Commands
 
-- [ ] **CLI-01**: `meet record` starts a recording session
-- [ ] **CLI-02**: `meet stop` stops the active recording session
-- [ ] **CLI-03**: `meet transcribe [--session UUID]` transcribes the last or specified recording
-- [ ] **CLI-04**: `meet summarize [--template meeting|minutes|1on1] [--session UUID]` generates notes and saves to Notion
+- [x] **CLI-01**: `meet record` starts a recording session
+- [x] **CLI-02**: `meet stop` stops the active recording session
+- [x] **CLI-03**: `meet transcribe [--session UUID]` transcribes the last or specified recording
+- [x] **CLI-04**: `meet summarize [--template meeting|minutes|1on1] [--session UUID]` generates notes and saves to Notion
 - [ ] **CLI-05**: `meet list` displays all recordings with: date, duration, title (or filename), status (not-transcribed / transcribed / summarized), and Notion URL if available
 - [ ] **CLI-06**: `meet list` supports `--status` filter and `--json` output flag
-- [ ] **CLI-07**: All commands display Rich-formatted output with color, spinners, and progress bars
-- [ ] **CLI-08**: Rich output is suppressed when stdout is not a TTY (piped output is clean)
-- [ ] **CLI-09**: `--quiet` flag suppresses all progress output for scripting
+- [x] **CLI-07**: All commands display Rich-formatted output with color, spinners, and progress bars
+- [x] **CLI-08**: Rich output is suppressed when stdout is not a TTY (piped output is clean)
+- [x] **CLI-09**: `--quiet` flag suppresses all progress output for scripting
 
 ### Setup & Health Check
 
@@ -62,8 +62,8 @@
 - [x] **SETUP-02**: `meet init` triggers a short test recording (~1s) to force the macOS microphone permission prompt before the first real meeting
 - [x] **SETUP-03**: `meet doctor` checks all prerequisites and reports pass/fail per component with actionable fix suggestions
 - [x] **SETUP-04**: `meet doctor` checks: BlackHole device at index 1 is confirmed BlackHole (not just "any device"), ffmpeg device index 2 is reachable, Ollama running + llama3.1:8b pulled, mlx-whisper installed + model cached locally, Notion token set + valid, disk space >5GB
-- [ ] **SETUP-05**: `meet doctor` checks Python version (>=3.11, <3.14) and warns if `openai-whisper` is installed alongside `mlx-whisper`
-- [ ] **SETUP-06**: `meet doctor` exits with code 1 if any check fails (ERROR level), code 0 if all pass or only warnings
+- [x] **SETUP-05**: `meet doctor` checks Python version (>=3.11, <3.14) and warns if `openai-whisper` is installed alongside `mlx-whisper`
+- [x] **SETUP-06**: `meet doctor` exits with code 1 if any check fails (ERROR level), code 0 if all pass or only warnings
 
 ### Packaging & Distribution
 
