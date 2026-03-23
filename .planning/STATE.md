@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Ready to plan
-stopped_at: Completed 03-03-PLAN.md
-last_updated: "2026-03-23T03:15:57.612Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-03-23T04:09:36.212Z"
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
+  completed_phases: 4
+  total_plans: 11
+  completed_plans: 11
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** Phase 03 — note-generation
+**Current focus:** Phase 04 — notion-integration
 
 ## Current Status
 
@@ -39,7 +39,7 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 
 ## Last Session
 
-**Stopped at:** Completed 03-03-PLAN.md
+**Stopped at:** Completed 04-02-PLAN.md
 **Date:** 2026-03-22T20:23:53Z
 **Duration:** ~4 minutes
 
@@ -66,6 +66,11 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 - [Phase 03]: [Phase 03-03]: Session resolution for transcripts mirrors transcribe.py pattern (latest .txt by mtime or exact stem)
 - [Phase 03]: [Phase 03-03]: Map-reduce chunking triggered when estimate_tokens > 8000 (>32000 chars) per D-13
 - [Phase 03]: [Phase 03-03]: Metadata uses read-merge-write pattern to preserve Phase 2 fields per D-08
+- [Phase 04]: APIResponseError requires real constructor args (code, status, message, headers, raw_body_text) — MagicMock(spec=APIResponseError) cannot be raised, use real instances
+- [Phase 04]: All heading levels (H1, H2, H3) convert to heading_2 blocks per RESEARCH.md guidance
+- [Phase 04]: Notion push placed after local notes save — local save never fails due to Notion issues
+- [Phase 04]: [Phase 04-02]: Both NotionTokenCheck and NotionDatabaseCheck return WARNING severity — Notion is optional for meet summarize to work
+- [Phase 04]: [Phase 04-02]: notion_url stored in metadata JSON as full URL on success, null on skip/failure — Phase 5 meet list reads this field
 
 ## Performance Metrics
 
@@ -79,6 +84,8 @@ See: .planning/PROJECT.md (updated 2026-03-22)
 | Phase 03 P02 | 84 | 2 tasks | 3 files |
 | Phase 03 P01 | 141 | 2 tasks | 7 files |
 | Phase 03 P03 | 127 | 2 tasks | 3 files |
+| Phase 04 P01 | 147 | 2 tasks | 5 files |
+| Phase 04 P02 | 270 | 2 tasks | 7 files |
 
 ## Key Context for Future Sessions
 

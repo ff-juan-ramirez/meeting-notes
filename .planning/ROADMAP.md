@@ -91,7 +91,7 @@ Plans:
 
 **Requirements covered:** NOTION-01 to NOTION-07
 
-**Plans:** 2 plans
+**Plans:** 0/2 plans executed
 
 Plans:
 - [ ] 04-01-PLAN.md — Notion service module (create_page, extract_title, markdown_to_blocks, text splitting, retry logic) + NotionConfig + tests
