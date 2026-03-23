@@ -3,7 +3,7 @@ import sys
 import click
 from rich.panel import Panel
 
-from meeting_notes.cli.ui import console
+from meeting_notes.cli.ui import console, STATUS_ICONS
 from meeting_notes.core.config import Config
 from meeting_notes.core.health_check import CheckStatus, HealthCheckSuite
 from meeting_notes.core.storage import get_config_dir
@@ -21,18 +21,15 @@ from meeting_notes.services.checks import (
     WhisperModelCheck,
 )
 
-STATUS_ICONS = {
-    CheckStatus.OK: "[green]\u2713[/green]",
-    CheckStatus.WARNING: "[yellow]![/yellow]",
-    CheckStatus.ERROR: "[red]\u2717[/red]",
-}
-
 
 @click.command()
+@click.option("--verbose", is_flag=True, help="Show detailed check information.")
 @click.pass_context
-def doctor(ctx: click.Context):
+def doctor(ctx: click.Context, verbose: bool):
     """Check system prerequisites for meeting-notes."""
     quiet = ctx.obj.get("quiet", False) if ctx.obj else False
+    if quiet:
+        verbose = False
     config_path = get_config_dir() / "config.json"
     config = Config.load(config_path)
 
@@ -60,7 +57,11 @@ def doctor(ctx: click.Context):
         icon = STATUS_ICONS[result.status]
         if not quiet:
             console.print(f"  {icon} {check.name}: {result.message}")
-            if result.fix_suggestion:
+            if verbose:
+                detail = check.verbose_detail()
+                if detail:
+                    console.print(f"    [dim]{detail}[/dim]")
+            if result.fix_suggestion and result.status != CheckStatus.OK:
                 console.print(f"    [dim]Fix: {result.fix_suggestion}[/dim]")
         if result.status == CheckStatus.ERROR:
             has_error = True

@@ -292,3 +292,75 @@ def test_openai_whisper_conflict_check_has_no_verbose_detail_override():
     check = OpenaiWhisperConflictCheck()
     # Should return None (base class behavior)
     assert check.verbose_detail() is None
+
+
+# ── --verbose flag wiring tests ───────────────────────────────────────────────
+
+def _make_mock_check_with_detail(name: str, detail: str | None):
+    """Create a mock check object with a verbose_detail() returning detail."""
+    mock_check = MagicMock()
+    mock_check.name = name
+    mock_check.verbose_detail.return_value = detail
+    return mock_check
+
+
+def test_doctor_verbose_shows_detail(monkeypatch):
+    """doctor --verbose shows inline detail lines from verbose_detail()."""
+    mock_check = _make_mock_check_with_detail("Test Check", "some detail info")
+    monkeypatch.setattr(
+        "meeting_notes.cli.commands.doctor.HealthCheckSuite.run_all",
+        lambda self: [(mock_check, CheckResult(status=CheckStatus.OK, message="ok"))],
+    )
+    runner = CliRunner()
+    result = runner.invoke(doctor, ["--verbose"], obj={"quiet": False})
+    assert result.exit_code == 0
+    assert "some detail info" in result.output
+
+
+def test_doctor_verbose_quiet_wins(monkeypatch):
+    """doctor --verbose with quiet=True suppresses all output (quiet wins)."""
+    mock_check = _make_mock_check_with_detail("Test Check", "should not appear")
+    monkeypatch.setattr(
+        "meeting_notes.cli.commands.doctor.HealthCheckSuite.run_all",
+        lambda self: [(mock_check, CheckResult(status=CheckStatus.OK, message="ok"))],
+    )
+    runner = CliRunner()
+    result = runner.invoke(doctor, ["--verbose"], obj={"quiet": True})
+    assert result.exit_code == 0
+    assert "should not appear" not in result.output
+    assert "Test Check" not in result.output
+
+
+def test_doctor_no_verbose_hides_detail(monkeypatch):
+    """doctor without --verbose does not show verbose detail strings."""
+    mock_check = _make_mock_check_with_detail("Test Check", "verbose only detail")
+    monkeypatch.setattr(
+        "meeting_notes.cli.commands.doctor.HealthCheckSuite.run_all",
+        lambda self: [(mock_check, CheckResult(status=CheckStatus.OK, message="ok"))],
+    )
+    runner = CliRunner()
+    result = runner.invoke(doctor, [], obj={"quiet": False})
+    assert result.exit_code == 0
+    assert "verbose only detail" not in result.output
+
+
+def test_doctor_fix_suggestion_only_on_warning_or_error(monkeypatch):
+    """Fix suggestions do NOT appear for OK-status checks (D-04)."""
+    mock_check = _make_mock_check_with_detail("Test Check", None)
+    monkeypatch.setattr(
+        "meeting_notes.cli.commands.doctor.HealthCheckSuite.run_all",
+        lambda self: [
+            (
+                mock_check,
+                CheckResult(
+                    status=CheckStatus.OK,
+                    message="everything is fine",
+                    fix_suggestion="you should not see this",
+                ),
+            )
+        ],
+    )
+    runner = CliRunner()
+    result = runner.invoke(doctor, [], obj={"quiet": False})
+    assert result.exit_code == 0
+    assert "you should not see this" not in result.output
