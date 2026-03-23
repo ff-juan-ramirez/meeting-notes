@@ -137,7 +137,7 @@ Plans:
 
 **Requirements covered:** PKG-01 to PKG-03, SETUP-01 to SETUP-06 (full implementation)
 
-**Plans:** 3/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 06-01-PLAN.md — meet doctor --verbose: verbose_detail() on all checks, --verbose flag wiring, STATUS_ICONS to ui.py
