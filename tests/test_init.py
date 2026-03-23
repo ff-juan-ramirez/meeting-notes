@@ -39,10 +39,13 @@ FAKE_CONFIG_DIR = "/tmp/test-meet-config"
 
 def _fake_notion_error():
     """Create a real APIResponseError for mocking."""
+    import httpx
     return APIResponseError(
-        body={"status": 401, "code": "unauthorized", "message": "Invalid token"},
+        code="unauthorized",
         status=401,
-        headers={},
+        message="Invalid token",
+        headers=httpx.Headers({}),
+        raw_body_text='{"status": 401, "code": "unauthorized", "message": "Invalid token"}',
     )
 
 
