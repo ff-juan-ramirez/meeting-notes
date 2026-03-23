@@ -24,8 +24,6 @@ main.add_command(init)
 main.add_command(transcribe)
 main.add_command(summarize)
 
-try:
-    from meeting_notes.cli.commands.list import list_sessions
-    main.add_command(list_sessions)
-except ImportError:
-    pass
+from meeting_notes.cli.commands.list import list_sessions
+
+main.add_command(list_sessions)
