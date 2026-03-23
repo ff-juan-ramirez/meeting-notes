@@ -23,12 +23,17 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 - [x] CLI exposes `meet transcribe` command with session resolution, metadata, and spinner — Validated in Phase 02: local-transcription
 - [x] `meet doctor` extended with mlx-whisper import check and model cache check — Validated in Phase 02: local-transcription
 
+### Validated
+
+- [x] Notes are generated locally using Ollama llama3.1:8b with three templates: meeting, minutes, 1on1 — Validated in Phase 03: note-generation
+- [x] CLI exposes `meet summarize` command with session resolution, template selection, map-reduce chunking, spinner, metadata extension — Validated in Phase 03: note-generation
+- [x] `meet doctor` extended with OllamaRunningCheck and OllamaModelCheck (llama3.1:8b) — Validated in Phase 03: note-generation
+
 ### Active
 
-- [ ] Notes are generated locally using Ollama llama3.1:8b with three templates: meeting, minutes, 1on1
 - [ ] Notes are saved to Notion via notion-client Python SDK
-- [ ] CLI exposes commands: `meet summarize`, `meet list`
-- [ ] `meet doctor` extended: Ollama running + llama3.1:8b pulled, Notion token set
+- [ ] CLI exposes `meet list` command
+- [ ] `meet doctor` extended: Notion token set
 - [ ] Project is exportable as a git repo for others to clone and use
 
 ### Out of Scope
@@ -72,6 +77,8 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 | meet doctor designed in Phase 1 | All later phases depend on prerequisites it validates; architecture decisions affect every phase | — Pending |
 
 ## Evolution
+
+**Last updated:** 2026-03-23 — Phase 03 complete: note-generation
 
 This document evolves at phase transitions and milestone boundaries.
 
