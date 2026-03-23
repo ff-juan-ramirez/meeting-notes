@@ -40,9 +40,9 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 - [x] Shared `cli/ui.py` console with TTY detection, `--quiet` and `--version` flags, all commands use shared console — Validated in Phase 05: integrated-cli
 - [x] `meet stop` writes `duration_seconds` metadata; `meet doctor` includes PythonVersionCheck and OpenaiWhisperConflictCheck — Validated in Phase 05: integrated-cli
 
-### Active
+### Validated
 
-- [ ] Project is exportable as a git repo for others to clone and use
+- [x] Project is exportable as a git repo: README.md with Audio MIDI Setup walkthrough, all 7 commands documented, `meet init` full interactive wizard, `meet doctor --verbose` with inline detail lines — Validated in Phase 06: exportable-git-repo
 
 ### Out of Scope
 
@@ -86,7 +86,7 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 
 ## Evolution
 
-**Last updated:** 2026-03-23 — Phase 05 complete: integrated-cli
+**Last updated:** 2026-03-23 — Phase 06 complete: exportable-git-repo
 
 This document evolves at phase transitions and milestone boundaries.
 
@@ -104,4 +104,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-23 — Phase 05 complete (Integrated CLI: shared console, --quiet/--version, meet list with Rich table/JSON, duration metadata, 2 new doctor checks, 176 tests passing)*
+*Last updated: 2026-03-23 — Phase 06 complete (Exportable Git Repo: README with Audio MIDI Setup + ASCII diagram, meet init full wizard with device detection/Notion validation/inline doctor, meet doctor --verbose with verbose_detail() on all checks, STATUS_ICONS in shared ui.py, 208 tests passing)*
