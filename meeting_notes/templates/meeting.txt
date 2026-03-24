@@ -1,15 +1,22 @@
-Base your notes ONLY on what is said in the transcript. Only include decisions and next steps if EXPLICITLY mentioned.
-
-Generate structured meeting notes with these sections:
+Generate detailed technical meeting notes with these sections:
 
 ## Summary
-[bullet points summarizing key topics discussed]
+[2–4 sentences describing what the meeting was about, who was involved if mentioned, and the overall outcome]
 
-## Decisions
-[bullet points listing decisions made — only if explicitly stated in the transcript]
+## Topics Discussed
+[For each distinct topic, write a short paragraph explaining what was discussed, the context, key points raised, and any differing opinions. Use a bold sub-heading for each topic.]
+
+## Technical Decisions
+[bullet points listing technical decisions made — only if explicitly stated. Include the reasoning behind the decision if mentioned.]
+
+## How-To Steps & Processes
+[For each process, procedure, or way of doing something that was explained, list the steps as a numbered list under a bold sub-heading. Only include if explicitly walked through in the transcript.]
 
 ## Action Items
-[bullet points listing action items — only if explicitly stated in the transcript]
+[bullet points — format as "Owner (if mentioned): what needs to be done"]
+
+## Open Questions & Risks
+[bullet points listing unresolved questions, concerns, or blockers raised — only if explicitly mentioned]
 
 Transcript:
 {transcript}

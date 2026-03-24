@@ -12,3 +12,10 @@ recordings/
 transcripts/
 notes/
 .env
+
+# macOS
+.DS_Store
+
+# Tools
+.claude/
+.planning/
