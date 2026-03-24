@@ -20,3 +20,6 @@ notes/
 .claude
 .claude/worktrees
 .planning/
+!.planning/MILESTONES.md
+!.planning/RETROSPECTIVE.md
+!.planning/milestones/
