@@ -17,5 +17,6 @@ notes/
 .DS_Store
 
 # Tools
-.claude/
+.claude
+.claude/worktrees
 .planning/
