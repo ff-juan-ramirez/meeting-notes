@@ -91,6 +91,7 @@ def _update_specific_fields(config: Config, config_path: Path) -> None:
         ("Notion token", mask_token(config.notion.token)),
         ("Notion database/page ID", config.notion.parent_page_id or "[not set]"),
         ("Whisper language", config.whisper.language or "auto"),
+        ("Storage path", config.storage_path or "~/Documents/meeting-notes (default)"),
     ]
     for i, (name, value) in enumerate(fields):
         console.print(f"  [{i + 1}] {name}: {value}")
@@ -144,6 +145,12 @@ def _update_specific_fields(config: Config, config_path: Path) -> None:
             default=config.whisper.language or "",
         )
         config.whisper.language = lang if lang else None
+    if 6 in selected:
+        path = click.prompt(
+            "Storage path for recordings and transcripts (leave blank for default ~/Documents/meeting-notes)",
+            default=config.storage_path or "",
+        )
+        config.storage_path = path if path else None
 
     config.save(config_path)
     console.print("[green]Config updated.[/green]")
@@ -231,21 +238,30 @@ def init(ctx: click.Context):
     # Step 1: Audio device selection (D-10)
     system_idx, mic_idx = _select_audio_devices()
 
-    # Step 2: Notion credentials (D-07, D-11)
+    # Step 2: Storage path
+    console.print("\nWhere should recordings and transcripts be saved?")
+    storage_input = click.prompt(
+        "Storage path (leave blank for default ~/Documents/meeting-notes)",
+        default="",
+    )
+    storage_path = storage_input if storage_input else None
+
+    # Step 3: Notion credentials (D-07, D-11)
     token, page_id = _collect_notion_credentials()
 
-    # Step 3: Build and save config
+    # Step 4: Build and save config
     config = Config(
+        storage_path=storage_path,
         audio=AudioConfig(system_device_index=system_idx, microphone_device_index=mic_idx),
         notion=NotionConfig(token=token, parent_page_id=page_id),
     )
     config.save(config_path)
     console.print(f"\n[green]Config saved to {config_path}[/green]")
 
-    # Step 4: Test recording (D-13, SETUP-02) — after config write, before doctor
+    # Step 5: Test recording (D-13, SETUP-02) — after config write, before doctor
     _run_test_recording(mic_idx)
 
-    # Step 5: Inline doctor (D-12) — last step
+    # Step 6: Inline doctor (D-12) — last step
     _run_inline_doctor(config)
 
     console.print("\n[green]Setup complete![/green]")

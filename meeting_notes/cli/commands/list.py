@@ -9,8 +9,9 @@ import click
 from rich.table import Table
 
 from meeting_notes.cli.ui import console
+from meeting_notes.core.config import Config
 from meeting_notes.core.state import read_state
-from meeting_notes.core.storage import get_data_dir
+from meeting_notes.core.storage import get_config_dir, get_data_dir
 from meeting_notes.services.notion import extract_title
 
 
@@ -114,7 +115,8 @@ def _sort_key(metadata_path: Path) -> str:
 def list_sessions(ctx: click.Context, filter_status: str | None, output_json: bool) -> None:
     """List all recorded sessions."""
     quiet = ctx.obj.get("quiet", False) if ctx.obj else False
-    metadata_dir = get_data_dir() / "metadata"
+    config = Config.load(get_config_dir() / "config.json")
+    metadata_dir = get_data_dir(config.storage_path) / "metadata"
 
     if not metadata_dir.exists():
         if output_json:

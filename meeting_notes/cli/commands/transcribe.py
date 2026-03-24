@@ -54,10 +54,14 @@ def resolve_wav_by_stem(recordings_dir: Path, stem: str) -> Path:
 def transcribe(ctx: click.Context, session: str | None) -> None:
     """Transcribe a WAV recording to text using mlx-whisper."""
     quiet = ctx.obj.get("quiet", False) if ctx.obj else False
-    ensure_dirs()
-    recordings_dir = get_data_dir() / "recordings"
-    transcripts_dir = get_data_dir() / "transcripts"
-    metadata_dir = get_data_dir() / "metadata"
+
+    # --- Load config first so storage_path is available ---
+    config = Config.load(get_config_dir() / "config.json")
+
+    ensure_dirs(config.storage_path)
+    recordings_dir = get_data_dir(config.storage_path) / "recordings"
+    transcripts_dir = get_data_dir(config.storage_path) / "transcripts"
+    metadata_dir = get_data_dir(config.storage_path) / "metadata"
 
     # --- Resolve WAV file ---
     try:
@@ -78,9 +82,6 @@ def transcribe(ctx: click.Context, session: str | None) -> None:
             "[yellow]Warning:[/yellow] Recording is over 90 minutes. "
             "Transcription may cause memory pressure on Apple Silicon."
         )
-
-    # --- Load config ---
-    config = Config.load(get_config_dir() / "config.json")
 
     # --- Run transcription with spinner ---
     if _MODEL_CACHE_DIR.exists():

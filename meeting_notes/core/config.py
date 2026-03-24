@@ -23,6 +23,7 @@ class NotionConfig:
 @dataclass
 class Config:
     version: int = 1
+    storage_path: str | None = None
     audio: AudioConfig = field(default_factory=AudioConfig)
     whisper: WhisperConfig = field(default_factory=WhisperConfig)
     notion: NotionConfig = field(default_factory=NotionConfig)
@@ -40,7 +41,13 @@ class Config:
             token=notion_data.get("token", None),
             parent_page_id=notion_data.get("parent_page_id", None),
         )
-        return cls(version=data.get("version", 1), audio=audio, whisper=whisper, notion=notion)
+        return cls(
+            version=data.get("version", 1),
+            storage_path=data.get("storage_path", None),
+            audio=audio,
+            whisper=whisper,
+            notion=notion,
+        )
 
     def save(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)

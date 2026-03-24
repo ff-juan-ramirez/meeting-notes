@@ -55,10 +55,15 @@ def resolve_transcript_by_stem(transcripts_dir: Path, stem: str) -> Path:
 def summarize(ctx: click.Context, template: str, session: str | None) -> None:
     """Generate structured notes from a transcript using Ollama llama3.1:8b."""
     quiet = ctx.obj.get("quiet", False) if ctx.obj else False
-    ensure_dirs()
-    transcripts_dir = get_data_dir() / "transcripts"
-    notes_dir = get_data_dir() / "notes"
-    metadata_dir = get_data_dir() / "metadata"
+
+    # --- Load config first so storage_path is available ---
+    config_path = get_config_dir() / "config.json"
+    config = Config.load(config_path)
+
+    ensure_dirs(config.storage_path)
+    transcripts_dir = get_data_dir(config.storage_path) / "transcripts"
+    notes_dir = get_data_dir(config.storage_path) / "notes"
+    metadata_dir = get_data_dir(config.storage_path) / "metadata"
 
     # --- Resolve transcript file ---
     try:
@@ -127,8 +132,6 @@ def summarize(ctx: click.Context, template: str, session: str | None) -> None:
         console.print(f"Notes saved: {notes_path} ({word_count} words)")
 
     # --- Notion push (per D-01, D-02, D-03, D-04, D-10, D-11) ---
-    config_path = get_config_dir() / "config.json"
-    config = Config.load(config_path)
 
     notion_url = None
     if config.notion.token is None or config.notion.parent_page_id is None:

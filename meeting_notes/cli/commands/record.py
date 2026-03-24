@@ -94,10 +94,13 @@ def stop(ctx: click.Context):
 
     output_path_str = existing.get("output_path")
 
+    # Load config to resolve storage path
+    config = Config.load(_get_config_path())
+
     # Compute duration and write metadata (per D-01, D-04, D-05)
     if output_path_str:
         stem = Path(output_path_str).stem
-        metadata_dir = get_data_dir() / "metadata"
+        metadata_dir = get_data_dir(config.storage_path) / "metadata"
         metadata_dir.mkdir(parents=True, exist_ok=True)
         metadata_path = metadata_dir / f"{stem}.json"
 
