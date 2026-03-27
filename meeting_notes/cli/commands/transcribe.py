@@ -13,8 +13,11 @@ from meeting_notes.services.transcription import (
     WARN_DURATION_SECONDS,
     WARN_WORD_COUNT,
     MODEL_REPO,
+    assign_speakers_to_segments,
+    build_diarized_txt,
     estimate_wav_duration_seconds,
     generate_srt,
+    run_diarization,
     run_with_spinner,
     transcribe_audio,
 )
@@ -93,20 +96,57 @@ def transcribe(ctx: click.Context, session: str | None) -> None:
     text, segments = run_with_spinner(lambda: transcribe_audio(wav_path, config), spinner_message, quiet=quiet)
     text = text.strip()
 
+    # --- Diarization (per D-07, D-08) ---
+    speaker_map = None
+    speaker_turns = []
+    diarization_succeeded = False
+
+    hf_token = config.huggingface.token
+    if not hf_token:
+        if not quiet:
+            console.print("[yellow]HuggingFace token not configured — skipping speaker diarization.[/yellow]")
+    else:
+        try:
+            diarization = run_with_spinner(
+                lambda: run_diarization(wav_path, hf_token),
+                "Running speaker diarization...",
+                quiet=quiet,
+            )
+            speaker_map = assign_speakers_to_segments(segments, diarization)
+            # Extract speaker turns for metadata
+            for turn, _, speaker in diarization.itertracks(yield_label=True):
+                speaker_turns.append({
+                    "start": round(turn.start, 2),
+                    "end": round(turn.end, 2),
+                    "speaker": speaker,
+                })
+            diarization_succeeded = True
+            if not quiet:
+                n_speakers = len(set(speaker_map.values()))
+                console.print(f"[green]Diarization complete[/green] ({n_speakers} speakers detected)")
+        except Exception as exc:
+            if not quiet:
+                console.print(f"[yellow]Diarization failed: {exc}[/yellow]")
+                console.print("[yellow]Continuing without speaker labels.[/yellow]")
+
     # --- Word count warning ---
+    # Update text to use diarized version when available (D-09)
+    if diarization_succeeded and speaker_map:
+        text = build_diarized_txt(segments, speaker_map)
+
     word_count = len(text.split())
     if word_count < WARN_WORD_COUNT:
         console.print(
             f"[yellow]Warning:[/yellow] Transcript may be empty — check audio routing ({word_count} words)"
         )
 
-    # --- Save transcript ---
+    # --- Save transcript (D-09: diarized .txt overwrites plain when available) ---
     transcripts_dir.mkdir(parents=True, exist_ok=True)
     transcript_path = transcripts_dir / f"{stem}.txt"
     transcript_path.write_text(text)
 
-    # --- Save SRT (per D-01, D-02, D-03) ---
-    srt_content = generate_srt(segments)
+    # --- Save SRT (D-10: with speaker prefixes when diarization succeeded) ---
+    srt_content = generate_srt(segments, speaker_map=speaker_map)
     srt_path = transcripts_dir / f"{stem}.srt"
     srt_path.write_text(srt_content)
 
@@ -120,9 +160,9 @@ def transcribe(ctx: click.Context, session: str | None) -> None:
         "transcribed_at": datetime.now(timezone.utc).isoformat(),
         "word_count": word_count,
         "whisper_model": MODEL_REPO,
-        "diarization_succeeded": False,
-        "diarized_transcript_path": None,
-        "speaker_turns": [],
+        "diarization_succeeded": diarization_succeeded,
+        "diarized_transcript_path": str(transcript_path.resolve()) if diarization_succeeded else None,
+        "speaker_turns": speaker_turns,
     }
     write_state(metadata_path, metadata)
 

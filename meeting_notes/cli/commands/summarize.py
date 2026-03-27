@@ -76,6 +76,15 @@ def summarize(ctx: click.Context, template: str, session: str | None) -> None:
         sys.exit(1)
 
     stem = transcript_path.stem
+
+    # --- Prefer diarized transcript when available (D-11) ---
+    metadata_path = metadata_dir / f"{stem}.json"
+    session_metadata = read_state(metadata_path)
+    if session_metadata and session_metadata.get("diarized_transcript_path"):
+        diarized_path = Path(session_metadata["diarized_transcript_path"])
+        if diarized_path.exists():
+            transcript_path = diarized_path
+
     transcript_text = transcript_path.read_text().strip()
 
     if not transcript_text:

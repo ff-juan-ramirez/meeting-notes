@@ -419,3 +419,84 @@ def test_metadata_includes_srt_fields(runner, tmp_path):
     assert data["diarized_transcript_path"] is None
     assert "speaker_turns" in data
     assert data["speaker_turns"] == []
+
+
+# ---------------------------------------------------------------------------
+# Diarization integration tests
+# ---------------------------------------------------------------------------
+
+def test_diarization_skips_without_hf_token(runner, tmp_path):
+    """meet transcribe with no HF token prints yellow warning and produces plain .txt and .srt."""
+    from meeting_notes.cli.commands.transcribe import transcribe
+    from meeting_notes.core.config import Config, HuggingFaceConfig
+
+    recordings, transcripts, metadata, config_dir = _make_env_dirs(tmp_path)
+    stem = "20260322-143000-abc12345"
+    _create_fake_wav(recordings, stem)
+
+    fake_segments = [{"start": 0.0, "end": 2.0, "text": " Hello"}]
+
+    def fake_run_with_spinner(fn, message, **kw):
+        return fn()
+
+    cfg = Config()
+    cfg.huggingface = HuggingFaceConfig(token=None)
+
+    with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir), \
+         patch("meeting_notes.cli.commands.transcribe.run_with_spinner", side_effect=fake_run_with_spinner), \
+         patch("meeting_notes.cli.commands.transcribe.Config.load", return_value=cfg), \
+         patch("meeting_notes.services.transcription.mlx_whisper") as mock_mlx:
+        mock_mlx.transcribe.return_value = {
+            "text": "Hello this is a long enough transcript to avoid the short warning",
+            "segments": fake_segments,
+        }
+        result = runner.invoke(transcribe, ["--session", stem])
+
+    assert result.exit_code == 0, f"Exit code was {result.exit_code}, output: {result.output}"
+    assert "skipping speaker diarization" in result.output.lower(), f"Expected 'skipping speaker diarization' in output: {result.output}"
+
+    txt_file = transcripts / f"{stem}.txt"
+    srt_file = transcripts / f"{stem}.srt"
+    assert txt_file.exists()
+    assert srt_file.exists()
+    # Plain txt should NOT contain SPEAKER_ labels
+    assert "SPEAKER_" not in txt_file.read_text()
+
+
+def test_diarization_graceful_failure(runner, tmp_path):
+    """meet transcribe where diarization raises Exception warns and still produces .txt and .srt."""
+    from meeting_notes.cli.commands.transcribe import transcribe
+    from meeting_notes.core.config import Config, HuggingFaceConfig
+
+    recordings, transcripts, metadata, config_dir = _make_env_dirs(tmp_path)
+    stem = "20260322-143000-abc12345"
+    _create_fake_wav(recordings, stem)
+
+    fake_segments = [{"start": 0.0, "end": 2.0, "text": " Hello"}]
+
+    def fake_run_with_spinner(fn, message, **kw):
+        return fn()
+
+    cfg = Config()
+    cfg.huggingface = HuggingFaceConfig(token="hf_test")
+
+    with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir), \
+         patch("meeting_notes.cli.commands.transcribe.run_with_spinner", side_effect=fake_run_with_spinner), \
+         patch("meeting_notes.cli.commands.transcribe.Config.load", return_value=cfg), \
+         patch("meeting_notes.cli.commands.transcribe.run_diarization", side_effect=RuntimeError("Pipeline failed")), \
+         patch("meeting_notes.services.transcription.mlx_whisper") as mock_mlx:
+        mock_mlx.transcribe.return_value = {
+            "text": "Hello this is a long enough transcript to avoid the short warning",
+            "segments": fake_segments,
+        }
+        result = runner.invoke(transcribe, ["--session", stem])
+
+    assert result.exit_code == 0, f"Exit code was {result.exit_code}, output: {result.output}"
+    assert "Diarization failed" in result.output, f"Expected 'Diarization failed' in output: {result.output}"
+
+    txt_file = transcripts / f"{stem}.txt"
+    srt_file = transcripts / f"{stem}.srt"
+    assert txt_file.exists()
+    assert srt_file.exists()
