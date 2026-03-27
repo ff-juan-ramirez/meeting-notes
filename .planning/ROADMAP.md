@@ -47,7 +47,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 **Plans:** 4 plans
 
 Plans:
-- [ ] 01-00-PLAN.md — Wave 0: Nyquist test stubs for all phase tests
+- [x] 01-00-PLAN.md — Wave 0: Nyquist test stubs for all phase tests (1/4 complete, 2026-03-27)
 - [ ] 01-01-PLAN.md — SRT generation + transcribe_audio tuple return + CLI wiring
 - [ ] 01-02-PLAN.md — HuggingFaceConfig + init wizard + pyannote health checks + deps
 - [ ] 01-03-PLAN.md — Speaker diarization integration + summarize diarized preference
