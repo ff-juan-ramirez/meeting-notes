@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Executing Phase 01
-last_updated: "2026-03-27T18:18:50.684Z"
+last_updated: "2026-03-27T19:19:02.482Z"
 progress:
   total_phases: 1
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 1
+  completed_plans: 4
 ---
 
 # Project State
@@ -91,6 +91,9 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 - [Phase 01-02]: PyannoteCheck returns ERROR when pyannote.audio not importable — diarization cannot proceed without it (unlike WhisperModelCheck)
 - [Phase 01-02]: _collect_hf_token() is wizard step 3.5 — after Notion, blank input skips (returns None), validated via HfApi().whoami()
 - [Phase 01-02]: Field [7] added to update menu for HuggingFace token — consistent with existing 1-6 field numbering
+- [Phase 01]: run_diarization() lazy-imports pyannote.audio.Pipeline — avoids import-time cost for users without pyannote
+- [Phase 01]: diarized content overwrites plain .txt — diarized_transcript_path points to same file (RESEARCH.md Pitfall 5)
+- [Phase 01]: assign_speakers_to_segments uses max-overlap: pyannote turn with greatest temporal overlap per Whisper segment
 
 ## Performance Metrics
 
@@ -114,6 +117,7 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 | Phase 06 P02 | 329 | 1 tasks | 2 files |
 | Phase 01 | 01 | 900 | 2 | 4 |
 | Phase 01 | 02 | 720 | 2 | 6 |
+| Phase 01 P03 | 900 | 2 tasks | 6 files |
 
 ## Roadmap Evolution
 
