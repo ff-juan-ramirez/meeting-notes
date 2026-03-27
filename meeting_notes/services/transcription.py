@@ -25,8 +25,38 @@ MODEL_REPO = "mlx-community/whisper-large-v3-turbo"
 # Public API
 # ---------------------------------------------------------------------------
 
-def transcribe_audio(wav_path: Path, config: Config) -> str:
-    """Run mlx-whisper on a WAV file. Returns transcript text.
+def seconds_to_srt_timestamp(seconds: float) -> str:
+    """Convert float seconds to SRT HH:MM:SS,mmm format."""
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+    millis = int(round((seconds % 1) * 1000))
+    return f"{hours:02d}:{minutes:02d}:{secs:02d},{millis:03d}"
+
+
+def generate_srt(segments: list[dict], speaker_map: dict[int, str] | None = None) -> str:
+    """Generate SRT subtitle content from Whisper segments.
+
+    Args:
+        segments: List of dicts with 'start', 'end', 'text' keys (from mlx_whisper).
+        speaker_map: Optional {segment_index: speaker_label} for diarized output (per D-10).
+
+    Returns:
+        Complete SRT file content as a string.
+    """
+    lines = []
+    for i, seg in enumerate(segments, start=1):
+        start_ts = seconds_to_srt_timestamp(seg["start"])
+        end_ts = seconds_to_srt_timestamp(seg["end"])
+        text = seg["text"].strip()
+        if speaker_map and (i - 1) in speaker_map:
+            text = f"{speaker_map[i - 1]}: {text}"
+        lines.append(f"{i}\n{start_ts} --> {end_ts}\n{text}\n")
+    return "\n".join(lines)
+
+
+def transcribe_audio(wav_path: Path, config: Config) -> tuple[str, list[dict]]:
+    """Run mlx-whisper on a WAV file. Returns (transcript_text, segments).
 
     When config.whisper.language is None, the language kwarg is omitted entirely
     so mlx-whisper auto-detects. Passing language=None explicitly would cause
@@ -41,7 +71,7 @@ def transcribe_audio(wav_path: Path, config: Config) -> str:
         path_or_hf_repo=MODEL_REPO,
         **decode_opts,
     )
-    return result["text"]
+    return result["text"], result["segments"]
 
 
 def estimate_wav_duration_seconds(wav_path: Path) -> float:
