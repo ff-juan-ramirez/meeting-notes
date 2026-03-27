@@ -3,11 +3,12 @@ import tempfile
 from pathlib import Path
 
 import click
+from huggingface_hub import HfApi
 from notion_client import Client as NotionClient
 from notion_client.errors import APIResponseError
 
 from meeting_notes.cli.ui import console, STATUS_ICONS
-from meeting_notes.core.config import AudioConfig, Config, NotionConfig
+from meeting_notes.core.config import AudioConfig, Config, HuggingFaceConfig, NotionConfig
 from meeting_notes.core.health_check import CheckStatus, HealthCheckSuite
 from meeting_notes.core.storage import ensure_dirs, get_config_dir
 from meeting_notes.services.checks import (
@@ -15,12 +16,15 @@ from meeting_notes.services.checks import (
     BlackHoleCheck,
     DiskSpaceCheck,
     FFmpegDeviceCheck,
+    HuggingFaceTokenCheck,
     MlxWhisperCheck,
     NotionDatabaseCheck,
     NotionTokenCheck,
     OllamaModelCheck,
     OllamaRunningCheck,
     OpenaiWhisperConflictCheck,
+    PyannoteCheck,
+    PyannoteModelCheck,
     PythonVersionCheck,
     WhisperModelCheck,
 )
@@ -83,6 +87,29 @@ def _collect_notion_credentials() -> tuple[str | None, str | None]:
     return token, page_id
 
 
+def _collect_hf_token() -> str | None:
+    """Prompt for HuggingFace token (optional — user can skip). Per D-06."""
+    console.print("\n[bold]HuggingFace Token[/bold] (for speaker diarization)")
+    console.print("Create one at: https://hf.co/settings/tokens")
+    console.print("Accept model conditions at:")
+    console.print("  https://huggingface.co/pyannote/speaker-diarization-3.1")
+    console.print("  https://huggingface.co/pyannote/segmentation-3.0")
+    token = click.prompt(
+        "HuggingFace access token (leave blank to skip)",
+        default="",
+        hide_input=True,
+    )
+    if not token:
+        console.print("[yellow]Skipping HuggingFace token — speaker diarization will be disabled.[/yellow]")
+        return None
+    try:
+        HfApi().whoami(token=token)
+        console.print("[green]HuggingFace token valid.[/green]")
+    except Exception as e:
+        console.print(f"[yellow]Could not verify token ({e}). Saving anyway.[/yellow]")
+    return token
+
+
 def _update_specific_fields(config: Config, config_path: Path) -> None:
     """Show numbered field menu and re-prompt only selected fields."""
     fields = [
@@ -92,6 +119,7 @@ def _update_specific_fields(config: Config, config_path: Path) -> None:
         ("Notion database/page ID", config.notion.parent_page_id or "[not set]"),
         ("Whisper language", config.whisper.language or "auto"),
         ("Storage path", config.storage_path or "~/Documents/meeting-notes (default)"),
+        ("HuggingFace token", mask_token(config.huggingface.token)),
     ]
     for i, (name, value) in enumerate(fields):
         console.print(f"  [{i + 1}] {name}: {value}")
@@ -151,6 +179,9 @@ def _update_specific_fields(config: Config, config_path: Path) -> None:
             default=config.storage_path or "",
         )
         config.storage_path = path if path else None
+    if 7 in selected:
+        hf_token = _collect_hf_token()
+        config.huggingface.token = hf_token
 
     config.save(config_path)
     console.print("[green]Config updated.[/green]")
@@ -197,6 +228,9 @@ def _run_inline_doctor(config: Config) -> None:
     suite.register(OllamaModelCheck())
     suite.register(NotionTokenCheck(config.notion.token))
     suite.register(NotionDatabaseCheck(config.notion.token, config.notion.parent_page_id))
+    suite.register(PyannoteCheck())
+    suite.register(HuggingFaceTokenCheck(config.huggingface.token))
+    suite.register(PyannoteModelCheck())
 
     results = suite.run_all()
     for check, result in results:
@@ -249,11 +283,15 @@ def init(ctx: click.Context):
     # Step 3: Notion credentials (D-07, D-11)
     token, page_id = _collect_notion_credentials()
 
+    # Step 3.5: HuggingFace token (D-06)
+    hf_token = _collect_hf_token()
+
     # Step 4: Build and save config
     config = Config(
         storage_path=storage_path,
         audio=AudioConfig(system_device_index=system_idx, microphone_device_index=mic_idx),
         notion=NotionConfig(token=token, parent_page_id=page_id),
+        huggingface=HuggingFaceConfig(token=hf_token),
     )
     config.save(config_path)
     console.print(f"\n[green]Config saved to {config_path}[/green]")

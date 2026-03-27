@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 
-from meeting_notes.core.config import Config, AudioConfig, NotionConfig
+from meeting_notes.core.config import Config, AudioConfig, NotionConfig, HuggingFaceConfig
 
 
 def test_config_default_values():
@@ -81,11 +81,31 @@ def test_config_save_round_trip_with_notion(tmp_path):
     assert loaded.notion.parent_page_id == "y"
 
 
-# ---------------------------------------------------------------------------
-# Wave 0 stubs — HuggingFace token config
-# ---------------------------------------------------------------------------
-
-@pytest.mark.skip(reason="Wave 0 stub — implementation pending")
 def test_config_hf_token_roundtrip(tmp_path):
     """Config with huggingface.token saves and loads correctly."""
-    pass
+    import json
+    path = tmp_path / "config.json"
+    c = Config()
+    c.huggingface.token = "hf_test123"
+    c.save(path)
+    loaded = Config.load(path)
+    assert loaded.huggingface.token == "hf_test123"
+
+    # Also test missing key defaults to None
+    path2 = tmp_path / "config2.json"
+    path2.write_text(json.dumps({"version": 1}))
+    loaded2 = Config.load(path2)
+    assert loaded2.huggingface.token is None
+
+
+def test_huggingface_config_defaults():
+    """HuggingFaceConfig defaults token to None."""
+    hf = HuggingFaceConfig()
+    assert hf.token is None
+
+
+def test_config_has_huggingface_field():
+    """Config has huggingface field of type HuggingFaceConfig."""
+    c = Config()
+    assert hasattr(c, "huggingface")
+    assert isinstance(c.huggingface, HuggingFaceConfig)

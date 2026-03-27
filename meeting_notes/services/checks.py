@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 
 import requests
+from huggingface_hub import HfApi
 from notion_client import Client as NotionClient
 from notion_client.errors import APIResponseError
 
@@ -156,6 +157,8 @@ class DiskSpaceCheck(HealthCheck):
 
 HF_HUB_CACHE = Path.home() / ".cache" / "huggingface" / "hub"
 MODEL_CACHE_DIR = HF_HUB_CACHE / "models--mlx-community--whisper-large-v3-turbo"
+PYANNOTE_DIARIZATION_CACHE = HF_HUB_CACHE / "models--pyannote--speaker-diarization-3.1"
+PYANNOTE_SEGMENTATION_CACHE = HF_HUB_CACHE / "models--pyannote--segmentation-3.0"
 
 
 class MlxWhisperCheck(HealthCheck):
@@ -422,3 +425,97 @@ class OpenaiWhisperConflictCheck(HealthCheck):
             status=CheckStatus.OK,
             message="No openai-whisper conflict detected",
         )
+
+
+class PyannoteCheck(HealthCheck):
+    """Verify that pyannote.audio is importable (per D-13)."""
+
+    name = "pyannote.audio"
+
+    def check(self) -> CheckResult:
+        try:
+            import pyannote.audio  # noqa: F401
+            return CheckResult(status=CheckStatus.OK, message="pyannote.audio importable")
+        except ImportError:
+            return CheckResult(
+                status=CheckStatus.ERROR,
+                message="pyannote.audio not installed — speaker diarization unavailable",
+                fix_suggestion="pip install 'pyannote.audio==3.3.2'",
+            )
+
+    def verbose_detail(self) -> str | None:
+        try:
+            ver = importlib.metadata.version("pyannote-audio")
+            return f"pyannote.audio {ver}"
+        except Exception:
+            return None
+
+
+class HuggingFaceTokenCheck(HealthCheck):
+    """Verify HF token is present in config and can reach HuggingFace (per D-14)."""
+
+    name = "HuggingFace Token"
+
+    def __init__(self, token: str | None) -> None:
+        self.token = token
+
+    def check(self) -> CheckResult:
+        if not self.token:
+            return CheckResult(
+                status=CheckStatus.WARNING,
+                message="HuggingFace token not configured — speaker diarization disabled",
+                fix_suggestion="Run: meet init to configure HuggingFace token",
+            )
+        try:
+            HfApi().whoami(token=self.token)
+            return CheckResult(status=CheckStatus.OK, message="HuggingFace token valid")
+        except Exception as exc:
+            return CheckResult(
+                status=CheckStatus.WARNING,
+                message=f"HuggingFace token validation failed: {exc}",
+                fix_suggestion="Check token at https://hf.co/settings/tokens",
+            )
+
+    def verbose_detail(self) -> str | None:
+        if not self.token:
+            return None
+        if len(self.token) > 7:
+            return f"Token: {self.token[:4]}***{self.token[-3:]}"
+        return "Token: ***"
+
+
+class PyannoteModelCheck(HealthCheck):
+    """Verify pyannote/speaker-diarization-3.1 model is cached locally (per D-15)."""
+
+    name = "Pyannote Model Cache"
+
+    def check(self) -> CheckResult:
+        if PYANNOTE_DIARIZATION_CACHE.exists():
+            return CheckResult(
+                status=CheckStatus.OK,
+                message="pyannote/speaker-diarization-3.1 model cached locally",
+            )
+        return CheckResult(
+            status=CheckStatus.WARNING,
+            message="pyannote/speaker-diarization-3.1 not cached — will download on first use",
+            fix_suggestion=(
+                "Run: meet transcribe (auto-downloads). "
+                "First, accept conditions at huggingface.co/pyannote/speaker-diarization-3.1 "
+                "and huggingface.co/pyannote/segmentation-3.0"
+            ),
+        )
+
+    def verbose_detail(self) -> str | None:
+        if not PYANNOTE_DIARIZATION_CACHE.exists():
+            return None
+        try:
+            total_bytes = sum(
+                f.stat().st_size for f in PYANNOTE_DIARIZATION_CACHE.rglob("*") if f.is_file()
+            )
+            if total_bytes >= 1024**3:
+                size_str = f"{total_bytes / (1024**3):.1f} GB"
+            else:
+                size_str = f"{total_bytes / (1024**2):.0f} MB"
+            return f"{PYANNOTE_DIARIZATION_CACHE} ({size_str})"
+        except Exception:
+            return None
