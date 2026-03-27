@@ -14,6 +14,7 @@ from meeting_notes.services.transcription import (
     WARN_WORD_COUNT,
     MODEL_REPO,
     estimate_wav_duration_seconds,
+    generate_srt,
     run_with_spinner,
     transcribe_audio,
 )
@@ -89,7 +90,7 @@ def transcribe(ctx: click.Context, session: str | None) -> None:
     else:
         spinner_message = "Downloading model and transcribing..."
 
-    text = run_with_spinner(lambda: transcribe_audio(wav_path, config), spinner_message, quiet=quiet)
+    text, segments = run_with_spinner(lambda: transcribe_audio(wav_path, config), spinner_message, quiet=quiet)
     text = text.strip()
 
     # --- Word count warning ---
@@ -104,15 +105,24 @@ def transcribe(ctx: click.Context, session: str | None) -> None:
     transcript_path = transcripts_dir / f"{stem}.txt"
     transcript_path.write_text(text)
 
+    # --- Save SRT (per D-01, D-02, D-03) ---
+    srt_content = generate_srt(segments)
+    srt_path = transcripts_dir / f"{stem}.srt"
+    srt_path.write_text(srt_content)
+
     # --- Save metadata ---
     metadata_dir.mkdir(parents=True, exist_ok=True)
     metadata_path = metadata_dir / f"{stem}.json"
     metadata = {
         "wav_path": str(wav_path.resolve()),
         "transcript_path": str(transcript_path.resolve()),
+        "srt_path": str(srt_path.resolve()),
         "transcribed_at": datetime.now(timezone.utc).isoformat(),
         "word_count": word_count,
         "whisper_model": MODEL_REPO,
+        "diarization_succeeded": False,
+        "diarized_transcript_path": None,
+        "speaker_turns": [],
     }
     write_state(metadata_path, metadata)
 

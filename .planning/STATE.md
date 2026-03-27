@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Executing Phase 01
-last_updated: "2026-03-27T00:00:00.000Z"
+last_updated: "2026-03-27T18:18:50.684Z"
 progress:
   total_phases: 1
   completed_phases: 0
@@ -83,6 +83,9 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 - [Phase 01-00]: Wave 0 stubs use @pytest.mark.skip(reason="Wave 0 stub — implementation pending") — consistent reason string across all 17 stubs
 - [Phase 01-00]: test_checks.py is a new file for pyannote health check stubs (separate from test_health_check.py for v1.0 checks)
 - [Phase 01-00]: Imports inside function bodies in test_checks.py to avoid collection failures before classes exist
+- [Phase 01]: transcribe_audio() returns (text, segments) tuple — callers must unpack; breaking change to existing callers fixed in same plan
+- [Phase 01]: generate_srt() accepts optional speaker_map dict keyed by 0-based segment index — ready for Plan 03 diarization
+- [Phase 01]: SRT always written alongside .txt with no flag — per D-01; metadata baseline: diarization_succeeded=False, diarized_transcript_path=None, speaker_turns=[]
 
 ## Performance Metrics
 
@@ -104,6 +107,11 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 | Phase 06 P01 | 163 | 2 tasks | 5 files |
 | Phase 06 P03 | 900 | 2 tasks | 3 files |
 | Phase 06 P02 | 329 | 1 tasks | 2 files |
+| Phase 01 P01 | 900 | 2 tasks | 4 files |
+
+## Roadmap Evolution
+
+- Phase 1 added: SRT output and speaker diarization for transcription pipeline
 
 ## Roadmap Evolution
 
