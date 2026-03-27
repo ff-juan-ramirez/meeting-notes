@@ -102,6 +102,10 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 | Phase 06 P03 | 900 | 2 tasks | 3 files |
 | Phase 06 P02 | 329 | 1 tasks | 2 files |
 
+## Roadmap Evolution
+
+- Phase 1 added: SRT output and speaker diarization for transcription pipeline
+
 ## Key Context for Future Sessions
 
 - Tech stack is fully validated and locked — do not suggest alternatives
