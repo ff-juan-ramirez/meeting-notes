@@ -261,3 +261,48 @@ def test_transcribe_returns_segments(tmp_path, monkeypatch):
     text, segments = trans_module.transcribe_audio(wav_file, cfg)
     assert text == "Hello"
     assert segments == fake_segments
+
+
+# ---------------------------------------------------------------------------
+# Diarization function tests
+# ---------------------------------------------------------------------------
+
+def test_speaker_segment_merge():
+    """assign_speakers_to_segments() assigns speakers by max overlap."""
+    from meeting_notes.services.transcription import assign_speakers_to_segments
+    from unittest.mock import MagicMock
+
+    segments = [
+        {"start": 0.0, "end": 3.0, "text": " Hello"},     # overlaps mostly with turn 0-2.5 (SPEAKER_00)
+        {"start": 3.0, "end": 6.0, "text": " Goodbye"},    # overlaps mostly with turn 2.5-6.0 (SPEAKER_01)
+    ]
+
+    # Build a mock diarization Annotation-like object
+    turns = [
+        (MagicMock(start=0.0, end=2.5), None, "SPEAKER_00"),
+        (MagicMock(start=2.5, end=6.0), None, "SPEAKER_01"),
+    ]
+    diarization = MagicMock()
+    diarization.itertracks.return_value = turns
+
+    speaker_map = assign_speakers_to_segments(segments, diarization)
+    assert speaker_map[0] == "SPEAKER_00"
+    assert speaker_map[1] == "SPEAKER_01"
+
+
+def test_diarized_txt_grouping():
+    """build_diarized_txt() groups consecutive same-speaker segments."""
+    from meeting_notes.services.transcription import build_diarized_txt
+
+    segments = [
+        {"start": 0.0, "end": 1.0, "text": " Hello"},
+        {"start": 1.0, "end": 2.0, "text": " welcome"},
+        {"start": 2.0, "end": 3.0, "text": " Thanks"},
+        {"start": 3.0, "end": 4.0, "text": " sure"},
+    ]
+    speaker_map = {0: "SPEAKER_00", 1: "SPEAKER_00", 2: "SPEAKER_01", 3: "SPEAKER_01"}
+    txt = build_diarized_txt(segments, speaker_map)
+    assert "SPEAKER_00:" in txt
+    assert "Hello welcome" in txt
+    assert "SPEAKER_01:" in txt
+    assert "Thanks sure" in txt

@@ -2,7 +2,7 @@
 import threading
 import time
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 import mlx_whisper
 from rich.live import Live
@@ -72,6 +72,98 @@ def transcribe_audio(wav_path: Path, config: Config) -> tuple[str, list[dict]]:
         **decode_opts,
     )
     return result["text"], result["segments"]
+
+
+def run_diarization(wav_path: Path, hf_token: str) -> Any:
+    """Run pyannote speaker diarization pipeline on a WAV file.
+
+    Args:
+        wav_path: Path to mono 16kHz WAV file.
+        hf_token: HuggingFace access token for gated model.
+
+    Returns:
+        pyannote Annotation object with speaker turns.
+
+    Raises:
+        Exception: Any pipeline error (network, auth, model loading).
+    """
+    from pyannote.audio import Pipeline  # type: ignore[import]
+
+    pipeline = Pipeline.from_pretrained(
+        "pyannote/speaker-diarization-3.1",
+        use_auth_token=hf_token,
+    )
+    return pipeline(str(wav_path))
+
+
+def assign_speakers_to_segments(
+    segments: list[dict],
+    diarization: Any,
+) -> dict[int, str]:
+    """Return {segment_index: speaker_label} by maximum overlap.
+
+    For each Whisper segment [start, end], find the pyannote speaker turn
+    with the most temporal overlap. Ties broken by iteration order.
+    """
+    speaker_map = {}
+    for idx, seg in enumerate(segments):
+        seg_start = seg["start"]
+        seg_end = seg["end"]
+        if seg_end <= seg_start:
+            continue
+
+        best_speaker: Optional[str] = None
+        best_overlap = 0.0
+
+        for turn, _, speaker in diarization.itertracks(yield_label=True):
+            overlap_start = max(seg_start, turn.start)
+            overlap_end = min(seg_end, turn.end)
+            overlap = max(0.0, overlap_end - overlap_start)
+            if overlap > best_overlap:
+                best_overlap = overlap
+                best_speaker = speaker
+
+        if best_speaker is not None:
+            speaker_map[idx] = best_speaker
+
+    return speaker_map
+
+
+def build_diarized_txt(segments: list[dict], speaker_map: dict[int, str]) -> str:
+    """Group consecutive segments from the same speaker into paragraphs (per D-09).
+
+    Format:
+        SPEAKER_00:
+        Hello, welcome to the call.
+
+        SPEAKER_01:
+        Thanks for setting this up.
+    """
+    lines = []
+    current_speaker: Optional[str] = None
+    current_texts: list[str] = []
+
+    for idx, seg in enumerate(segments):
+        speaker = speaker_map.get(idx)
+        text = seg["text"].strip()
+        if not text:
+            continue
+        if speaker != current_speaker:
+            if current_speaker is not None and current_texts:
+                lines.append(f"{current_speaker}:")
+                lines.append(" ".join(current_texts))
+                lines.append("")
+            current_speaker = speaker
+            current_texts = [text]
+        else:
+            current_texts.append(text)
+
+    # Flush final speaker block
+    if current_speaker is not None and current_texts:
+        lines.append(f"{current_speaker}:")
+        lines.append(" ".join(current_texts))
+
+    return "\n".join(lines)
 
 
 def estimate_wav_duration_seconds(wav_path: Path) -> float:
