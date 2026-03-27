@@ -422,3 +422,18 @@ def test_device_menu_shows_numbered_list(tmp_path):
     assert "[0]" in result.output
     assert "[1]" in result.output
     assert "[2]" in result.output
+
+
+# ---------------------------------------------------------------------------
+# Wave 0 stubs — HuggingFace token init wizard
+# ---------------------------------------------------------------------------
+
+@pytest.mark.skip(reason="Wave 0 stub — implementation pending")
+def test_init_collects_hf_token():
+    """meet init wizard collects and saves HuggingFace token."""
+    pass
+
+@pytest.mark.skip(reason="Wave 0 stub — implementation pending")
+def test_update_includes_hf_token():
+    """_update_specific_fields includes HuggingFace token as a selectable field."""
+    pass

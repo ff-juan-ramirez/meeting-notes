@@ -79,3 +79,13 @@ def test_config_save_round_trip_with_notion(tmp_path):
     loaded = Config.load(path)
     assert loaded.notion.token == "x"
     assert loaded.notion.parent_page_id == "y"
+
+
+# ---------------------------------------------------------------------------
+# Wave 0 stubs — HuggingFace token config
+# ---------------------------------------------------------------------------
+
+@pytest.mark.skip(reason="Wave 0 stub — implementation pending")
+def test_config_hf_token_roundtrip(tmp_path):
+    """Config with huggingface.token saves and loads correctly."""
+    pass

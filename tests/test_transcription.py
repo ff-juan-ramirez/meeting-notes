@@ -200,3 +200,64 @@ def test_run_with_spinner_reraises_exception(monkeypatch):
     with patch("meeting_notes.services.transcription.Live", return_value=mock_live):
         with pytest.raises(ValueError, match="transcription failed"):
             run_with_spinner(failing_fn, "Processing...")
+
+
+# ---------------------------------------------------------------------------
+# Wave 0 stubs — SRT output + speaker diarization
+# ---------------------------------------------------------------------------
+
+@pytest.mark.skip(reason="Wave 0 stub — implementation pending")
+def test_srt_timestamp_format():
+    """seconds_to_srt_timestamp(3661.5) returns '01:01:01,500'."""
+    from meeting_notes.services.transcription import seconds_to_srt_timestamp
+    assert seconds_to_srt_timestamp(3661.5) == "01:01:01,500"
+
+@pytest.mark.skip(reason="Wave 0 stub — implementation pending")
+def test_generate_srt():
+    """generate_srt() produces valid SRT with 1-based indices and HH:MM:SS,mmm timestamps."""
+    from meeting_notes.services.transcription import generate_srt
+    segments = [
+        {"start": 0.0, "end": 2.5, "text": " Hello world"},
+        {"start": 3.0, "end": 5.0, "text": " Goodbye"},
+    ]
+    srt = generate_srt(segments)
+    assert "1\n00:00:00,000 --> 00:00:02,500\nHello world" in srt
+    assert "2\n00:00:03,000 --> 00:00:05,000\nGoodbye" in srt
+
+@pytest.mark.skip(reason="Wave 0 stub — implementation pending")
+def test_generate_srt_with_speakers():
+    """generate_srt() with speaker_map prefixes speaker tag on each entry."""
+    from meeting_notes.services.transcription import generate_srt
+    segments = [
+        {"start": 0.0, "end": 2.0, "text": " Hello"},
+        {"start": 2.0, "end": 4.0, "text": " Hi there"},
+    ]
+    speaker_map = {0: "SPEAKER_00", 1: "SPEAKER_01"}
+    srt = generate_srt(segments, speaker_map=speaker_map)
+    assert "SPEAKER_00: Hello" in srt
+    assert "SPEAKER_01: Hi there" in srt
+
+@pytest.mark.skip(reason="Wave 0 stub — implementation pending")
+def test_transcribe_returns_segments(tmp_path, monkeypatch):
+    """transcribe_audio() returns (text, segments) tuple instead of just text."""
+    from meeting_notes.services import transcription as trans_module
+    wav_file = tmp_path / "test.wav"
+    wav_file.write_bytes(b"\x00" * 1000)
+    fake_segments = [{"start": 0.0, "end": 2.0, "text": " Hello"}]
+    monkeypatch.setattr(trans_module.mlx_whisper, "transcribe", lambda *a, **kw: {"text": "Hello", "segments": fake_segments})
+    cfg = Config()
+    text, segments = trans_module.transcribe_audio(wav_file, cfg)
+    assert text == "Hello"
+    assert segments == fake_segments
+
+@pytest.mark.skip(reason="Wave 0 stub — implementation pending")
+def test_speaker_segment_merge():
+    """assign_speakers_to_segments() assigns speakers by max overlap."""
+    from meeting_notes.services.transcription import assign_speakers_to_segments
+    pass  # Full test in Plan 03
+
+@pytest.mark.skip(reason="Wave 0 stub — implementation pending")
+def test_diarized_txt_grouping():
+    """build_diarized_txt() groups consecutive same-speaker segments."""
+    from meeting_notes.services.transcription import build_diarized_txt
+    pass  # Full test in Plan 03

@@ -608,3 +608,13 @@ def test_summarize_preserves_phase3_metadata(runner, tmp_path):
     assert "transcribed_at" in data
     assert "word_count" in data
     assert "whisper_model" in data
+
+
+# ---------------------------------------------------------------------------
+# Wave 0 stubs — diarized transcript preference
+# ---------------------------------------------------------------------------
+
+@pytest.mark.skip(reason="Wave 0 stub — implementation pending")
+def test_prefers_diarized_transcript(runner, tmp_path):
+    """meet summarize uses diarized_transcript_path from metadata when available."""
+    pass

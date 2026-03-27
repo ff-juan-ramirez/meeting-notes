@@ -344,3 +344,28 @@ def test_transcribe_no_recordings_dir_with_session_shows_error(runner, tmp_path)
     assert result.exit_code == 1
     assert "Error:" in result.output
     assert "No recording found for session" in result.output
+
+
+# ---------------------------------------------------------------------------
+# Wave 0 stubs — SRT output + diarization integration
+# ---------------------------------------------------------------------------
+
+@pytest.mark.skip(reason="Wave 0 stub — implementation pending")
+def test_srt_file_created(runner, tmp_path):
+    """meet transcribe writes a .srt file alongside the .txt file."""
+    pass
+
+@pytest.mark.skip(reason="Wave 0 stub — implementation pending")
+def test_metadata_includes_srt_fields(runner, tmp_path):
+    """Metadata JSON includes srt_path and diarization_succeeded fields."""
+    pass
+
+@pytest.mark.skip(reason="Wave 0 stub — implementation pending")
+def test_diarization_skips_without_hf_token(runner, tmp_path):
+    """When HF token is missing, diarization is skipped with a yellow warning."""
+    pass
+
+@pytest.mark.skip(reason="Wave 0 stub — implementation pending")
+def test_diarization_graceful_failure(runner, tmp_path):
+    """When diarization raises an exception, transcription continues without speaker labels."""
+    pass
