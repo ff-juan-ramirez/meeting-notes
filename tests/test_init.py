@@ -70,11 +70,11 @@ def test_first_time_init_runs_full_wizard(tmp_path):
         mock_suite.run_all.return_value = []
         mock_suite_cls.return_value = mock_suite
 
-        # Input: system device=1, mic device=2, token=ntn_test, page_id=page123
+        # Input: system device=1, mic device=2, storage path (blank=default), token=ntn_test, page_id=page123
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nntn_testtoken\npage123\n",
+            input="1\n2\n\nntn_testtoken\npage123\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -104,7 +104,7 @@ def test_first_time_init_saves_correct_config_values(tmp_path):
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nntn_token_abc\npage_xyz\n",
+            input="1\n2\n\nntn_token_abc\npage_xyz\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -140,7 +140,7 @@ def test_first_time_init_calls_test_recording(tmp_path):
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nntn_tok\npage1\n",
+            input="1\n2\n\nntn_tok\npage1\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -171,7 +171,7 @@ def test_first_time_init_runs_inline_doctor(tmp_path):
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nntn_tok\npage1\n",
+            input="1\n2\n\nntn_tok\npage1\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -242,11 +242,11 @@ def test_r_choice_runs_full_wizard(tmp_path):
         mock_suite.run_all.return_value = []
         mock_suite_cls.return_value = mock_suite
 
-        # R choice, then full wizard inputs
+        # R choice, then full wizard inputs (include blank for storage path)
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="R\n1\n2\nntn_new\npage_new\n",
+            input="R\n1\n2\n\nntn_new\npage_new\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -315,7 +315,7 @@ def test_notion_token_valid_accepted(tmp_path):
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nntn_valid_token\npage_id_here\n",
+            input="1\n2\n\nntn_valid_token\npage_id_here\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -351,7 +351,7 @@ def test_notion_token_invalid_prompts_reentry(tmp_path):
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nbad_token\ngood_token\npage_id\n",
+            input="1\n2\n\nbad_token\ngood_token\npage_id\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -379,7 +379,7 @@ def test_notion_token_network_error_saves_with_warning(tmp_path):
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nntn_tok\npage_id\n",
+            input="1\n2\n\nntn_tok\npage_id\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -413,7 +413,7 @@ def test_device_menu_shows_numbered_list(tmp_path):
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nntn_tok\npage_id\n",
+            input="1\n2\n\nntn_tok\npage_id\n",
         )
 
     assert result.exit_code == 0, result.output
