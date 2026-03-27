@@ -4,7 +4,7 @@
 
 A 100% local CLI tool that captures audio from any video call (Zoom, Google Meet, Teams) without bots or browser extensions, transcribes it locally with Whisper, generates structured meeting notes using a local LLM, and saves them to Notion. No cloud, no third-party services, no data leaves the machine.
 
-**Status:** v1.0 shipped 2026-03-24 — fully functional, installable from git repo.
+**Status:** v1.0 shipped 2026-03-24. Phase 01 complete 2026-03-27 — SRT output and speaker diarization added.
 
 ## Core Value
 
@@ -29,6 +29,15 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 - ✓ `meet doctor --verbose` with per-check `verbose_detail()` inline lines — v1.0
 - ✓ Exportable git repo: pyproject.toml (PEP 621), README.md with Audio MIDI Setup walkthrough + ASCII diagram, MIT LICENSE, .gitignore — v1.0
 
+### Validated (Phase 01 — 2026-03-27)
+
+- ✓ SRT subtitle output: `generate_srt()` + `seconds_to_srt_timestamp()`, every transcription writes `.srt` alongside `.txt` — Phase 01
+- ✓ `transcribe_audio()` returns `(text, segments)` tuple; all callers updated — Phase 01
+- ✓ Speaker diarization via pyannote.audio: `run_diarization()`, `assign_speakers_to_segments()`, `build_diarized_txt()` with graceful fallback — Phase 01
+- ✓ `HuggingFaceConfig` in `Config`, HF token collected in `meet init` wizard step 3.5 — Phase 01
+- ✓ Three new health checks: `PyannoteCheck` (ERROR), `HuggingFaceTokenCheck` (WARNING), `PyannoteModelCheck` (WARNING) — Phase 01
+- ✓ `meet summarize` prefers diarized transcript when `diarized_transcript_path` is set in metadata — Phase 01
+
 ### Active (v2.0 candidates)
 
 - [ ] Shell completion scripts (zsh/bash) via `meet --install-completion`
@@ -44,7 +53,7 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 - Browser extensions or meeting bots — no injection into call software
 - Windows or Linux support — macOS + Apple Silicon only (BlackHole, MLX, avfoundation)
 - Real-time transcription during recording — transcription runs post-recording
-- Speaker diarization — not required for v1, high complexity
+- Speaker diarization — ~~not required for v1, high complexity~~ shipped in Phase 01
 - GUI — CLI-only by design
 - SQLite database for metadata — JSON files sufficient
 - Sync back from Notion — high complexity, v2+ candidate
