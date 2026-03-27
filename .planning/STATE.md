@@ -81,6 +81,11 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 - [Phase 06]: Notion token validated via NotionClient.users.me() loop; APIResponseError re-prompts, generic Exception saves with warning
 - [Phase 06]: Inline doctor in meet init uses HealthCheckSuite directly (no subprocess) per D-12
 - [Phase 06]: APIResponseError test helper uses correct constructor: (code, status, message, headers, raw_body_text)
+- [Phase 01-02]: HfApi imported at module level in checks.py and init.py so tests can patch via module path
+- [Phase 01-02]: HuggingFaceTokenCheck returns WARNING (not ERROR) when token absent — diarization is optional, matches NotionTokenCheck pattern
+- [Phase 01-02]: PyannoteCheck returns ERROR when pyannote.audio not importable — diarization cannot proceed without it (unlike WhisperModelCheck)
+- [Phase 01-02]: _collect_hf_token() is wizard step 3.5 — after Notion, blank input skips (returns None), validated via HfApi().whoami()
+- [Phase 01-02]: Field [7] added to update menu for HuggingFace token — consistent with existing 1-6 field numbering
 
 ## Performance Metrics
 
@@ -101,6 +106,7 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 | Phase 06 P01 | 163 | 2 tasks | 5 files |
 | Phase 06 P03 | 900 | 2 tasks | 3 files |
 | Phase 06 P02 | 329 | 1 tasks | 2 files |
+| 01    | 02   | 720         | 2     | 6     |
 
 ## Key Context for Future Sessions
 
