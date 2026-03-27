@@ -1,15 +1,14 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: MVP
-status: Between milestones
-stopped_at: v1.0 milestone archived
-last_updated: "2026-03-24T00:00:00.000Z"
+milestone_name: milestone
+status: Executing Phase 01
+last_updated: "2026-03-27T18:18:50.684Z"
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 16
-  completed_plans: 16
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 4
+  completed_plans: 1
 ---
 
 # Project State
@@ -19,7 +18,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-24)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** v1.0 shipped — planning next milestone
+**Current focus:** Phase 01 — srt-output-and-speaker-diarization-for-transcription-pipeline
 
 ## Current Status
 
@@ -33,8 +32,8 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 
 ## Last Session
 
-**Completed:** v1.0 milestone archive
-**Date:** 2026-03-24
+**Completed:** Plan 01-00 — Wave 0 test stubs (17 stubs, 6 files)
+**Date:** 2026-03-27
 
 ## Decisions
 
@@ -81,11 +80,18 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 - [Phase 06]: Notion token validated via NotionClient.users.me() loop; APIResponseError re-prompts, generic Exception saves with warning
 - [Phase 06]: Inline doctor in meet init uses HealthCheckSuite directly (no subprocess) per D-12
 - [Phase 06]: APIResponseError test helper uses correct constructor: (code, status, message, headers, raw_body_text)
+- [Phase 01-00]: Wave 0 stubs use @pytest.mark.skip(reason="Wave 0 stub — implementation pending") — consistent reason string across all 17 stubs
+- [Phase 01-00]: test_checks.py is a new file for pyannote health check stubs (separate from test_health_check.py for v1.0 checks)
+- [Phase 01-00]: Imports inside function bodies in test_checks.py to avoid collection failures before classes exist
+- [Phase 01]: transcribe_audio() returns (text, segments) tuple — callers must unpack; breaking change to existing callers fixed in same plan
+- [Phase 01]: generate_srt() accepts optional speaker_map dict keyed by 0-based segment index — ready for Plan 03 diarization
+- [Phase 01]: SRT always written alongside .txt with no flag — per D-01; metadata baseline: diarization_succeeded=False, diarized_transcript_path=None, speaker_turns=[]
 
 ## Performance Metrics
 
 | Phase | Plan | Duration (s) | Tasks | Files |
 |-------|------|-------------|-------|-------|
+| Phase 01 | 00 | 120 | 2 | 6 |
 | 01    | 02   | 244         | 2     | 20    |
 | 01    | 03   | 225         | 2     | 7     |
 | Phase 02 P01 | 3 | 2 tasks | 6 files |
@@ -101,6 +107,11 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 | Phase 06 P01 | 163 | 2 tasks | 5 files |
 | Phase 06 P03 | 900 | 2 tasks | 3 files |
 | Phase 06 P02 | 329 | 1 tasks | 2 files |
+| Phase 01 P01 | 900 | 2 tasks | 4 files |
+
+## Roadmap Evolution
+
+- Phase 1 added: SRT output and speaker diarization for transcription pipeline
 
 ## Key Context for Future Sessions
 

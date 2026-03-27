@@ -32,12 +32,25 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 
 | Phase | Milestone | Plans | Status   | Completed  |
 |-------|-----------|-------|----------|------------|
-| 1. Audio Capture + Health Check Design | v1.0 | 3/3 | Complete | 2026-03-22 |
+| 1. Audio Capture + Health Check Design | v1.0 | 1/4 | In Progress|  |
 | 2. Local Transcription | v1.0 | 3/3 | Complete | 2026-03-22 |
 | 3. Note Generation | v1.0 | 3/3 | Complete | 2026-03-22 |
 | 4. Notion Integration | v1.0 | 2/2 | Complete | 2026-03-23 |
 | 5. Integrated CLI | v1.0 | 2/2 | Complete | 2026-03-23 |
 | 6. Exportable Git Repo | v1.0 | 3/3 | Complete | 2026-03-23 |
+
+### Phase 1: SRT output and speaker diarization for transcription pipeline
+
+**Goal:** Extend `meet transcribe` to produce SRT subtitle files from Whisper segments and add pyannote-audio speaker diarization with graceful fallback. Every transcription produces both `.txt` and `.srt`. Diarized output uses `SPEAKER_XX:` prefixes. `meet summarize` prefers diarized transcripts when available.
+**Requirements**: D-01 through D-15 (SRT output, speaker diarization, diarized format, health checks)
+**Depends on:** v1.0 MVP
+**Plans:** 1/4 plans executed
+
+Plans:
+- [x] 01-00-PLAN.md — Wave 0: Nyquist test stubs for all phase tests (1/4 complete, 2026-03-27)
+- [ ] 01-01-PLAN.md — SRT generation + transcribe_audio tuple return + CLI wiring
+- [ ] 01-02-PLAN.md — HuggingFaceConfig + init wizard + pyannote health checks + deps
+- [ ] 01-03-PLAN.md — Speaker diarization integration + summarize diarized preference
 
 ---
 *v1.0 shipped 2026-03-24 — see `.planning/MILESTONES.md` for details*
