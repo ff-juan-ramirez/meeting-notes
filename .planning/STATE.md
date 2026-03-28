@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Named Recordings
-status: Phase complete — ready for verification
-last_updated: "2026-03-28T21:31:30.864Z"
+status: Ready to plan
+last_updated: "2026-03-28T21:34:30.820Z"
 progress:
   total_phases: 6
   completed_phases: 5
@@ -22,8 +22,8 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 ## Current Position
 
-Phase: 06 (add-session-id-column-to-meet-list-untruncated-and-wire-it-as-a-selector-for-meet-summarize-session) — EXECUTING
-Plan: 1 of 1
+Phase: 07
+Plan: Not started
 
 ## Current Status
 
