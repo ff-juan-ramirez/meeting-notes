@@ -25,7 +25,7 @@
 
 ### Notion
 
-- [ ] **NOTION-01**: `meet summarize` uses `meta.get("recording_name")` as the Notion page title before `extract_title()` fallback; unnamed and pre-v1.2 sessions are unaffected
+- [x] **NOTION-01**: `meet summarize` uses `meta.get("recording_name")` as the Notion page title before `extract_title()` fallback; unnamed and pre-v1.2 sessions are unaffected
 
 ## v2 Requirements
 
@@ -59,7 +59,7 @@
 | RECORD-04 | Phase 03 | Complete |
 | LIST-01 | Phase 04 | Complete |
 | LIST-02 | Phase 04 | Complete |
-| NOTION-01 | Phase 05 | Pending |
+| NOTION-01 | Phase 05 | Complete |
 
 **Coverage:**
 - v1.2 requirements: 10 total

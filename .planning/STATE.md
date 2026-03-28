@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Named Recordings
 status: Ready to plan
-last_updated: "2026-03-28T18:42:46.076Z"
+last_updated: "2026-03-28T19:19:51.001Z"
 progress:
   total_phases: 4
-  completed_phases: 3
-  total_plans: 3
-  completed_plans: 3
+  completed_phases: 4
+  total_plans: 4
+  completed_plans: 4
 ---
 
 # Project State
@@ -105,6 +105,8 @@ Plan: Not started
 - [Phase 03-record-stop-command]: stop propagation uses .get() with if-guards — no key written for unnamed sessions, full backward compat (RECORD-04)
 - [Phase 04]: recording_name guard clause at top of _derive_title() before notes_path check — user-given name always wins (D-01)
 - [Phase 04]: Falsy check (if recording_name:) handles None, empty string, and missing key uniformly per D-03 discretion
+- [Phase 05]: recording_name guard uses falsy check (if recording_name) to uniformly handle None, empty string, missing key — consistent with Phase 04 D-03
+- [Phase 05]: session_metadata.get('recording_name') if session_metadata else None guards against pre-v1.2 sessions where read_state returns None for missing files
 
 ## Performance Metrics
 
@@ -133,6 +135,7 @@ Plan: Not started
 | Phase 02 P01 | 152 | 2 tasks | 2 files |
 | Phase 03-record-stop-command P01 | 254 | 2 tasks | 3 files |
 | Phase 04 P01 | 54 | 2 tasks | 2 files |
+| Phase 05 P01 | 164 | 2 tasks | 2 files |
 
 ## Roadmap Evolution
 
