@@ -494,3 +494,55 @@ def test_json_output_includes_recording_name_and_title(runner, data_dir):
     assert len(sessions) == 1
     assert sessions[0]["recording_name"] == "Sprint Review"
     assert sessions[0]["title"] == "Sprint Review"
+
+
+# ---------------------------------------------------------------------------
+# Tests: Session ID column (SESSID-01, SESSID-02, SESSID-03)
+# ---------------------------------------------------------------------------
+
+def test_session_id_column_in_table(runner, data_dir):
+    """meet list table shows 'Session ID' header and the full stem in the Session ID column."""
+    stem = "20260322-143000-abc12345"
+    _write_metadata(data_dir, stem, {
+        "transcribed_at": "2026-03-22T14:30:00+00:00",
+    })
+
+    result = _invoke(runner, data_dir)
+    assert result.exit_code == 0
+    assert "Session ID" in result.output
+    assert stem in result.output
+
+
+def test_named_session_id_column(runner, data_dir):
+    """Session with recording_name shows full slug-prefixed stem in Session ID column."""
+    stem = "team-standup-20260322-143000-named01"
+    _write_metadata(data_dir, stem, {
+        "recording_name": "Team Standup",
+        "transcribed_at": "2026-03-22T14:30:00+00:00",
+    })
+
+    result = _invoke(runner, data_dir)
+    assert result.exit_code == 0
+    assert stem in result.output
+
+
+def test_json_output_includes_session_id(runner, data_dir):
+    """meet list --json includes session_id field equal to the metadata file stem."""
+    stem = "20260322-143000-jsonsid"
+    _write_metadata(data_dir, stem, {
+        "transcribed_at": "2026-03-22T14:30:00+00:00",
+    })
+
+    result = _invoke(runner, data_dir, ["--json"])
+    assert result.exit_code == 0
+    sessions = json.loads(result.output)
+    assert len(sessions) == 1
+    assert sessions[0]["session_id"] == stem
+
+
+def test_empty_table_has_session_id_header(runner, data_dir):
+    """meet list with empty metadata dir shows 'Session ID' in table column headers."""
+    # Remove all json files to get empty table (metadata dir exists but is empty)
+    result = _invoke(runner, data_dir)
+    assert result.exit_code == 0
+    assert "Session ID" in result.output
