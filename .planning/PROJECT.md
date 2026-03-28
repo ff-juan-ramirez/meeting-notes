@@ -4,7 +4,7 @@
 
 A 100% local CLI tool that captures audio from any video call (Zoom, Google Meet, Teams) without bots or browser extensions, transcribes it locally with Whisper, generates structured meeting notes using a local LLM, and saves them to Notion. No cloud, no third-party services, no data leaves the machine.
 
-**Status:** v1.1 shipped 2026-03-28 — SRT output and speaker diarization. Next: `/gsd:new-milestone`.
+**Status:** v1.2 in progress — Named recordings.
 
 ## Core Value
 
@@ -106,9 +106,20 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 | torchaudio.list_audio_backends monkey-patch | pyannote.audio 3.x calls this at import time; removed in torchaudio≥2.9 | ✓ Good — fixed silent import failure |
 | pyannote.audio pin relaxed to `>=3.3.2,<5` | `==3.3.2` caused pip conflicts with torchaudio-resolved pyannote.core | ✓ Good — installs cleanly |
 
+## Current Milestone: v1.2 Named Recordings
+
+**Goal:** Allow `meet record` to accept an optional name that propagates to all output files, metadata, and downstream tools.
+
+**Target features:**
+- `meet record [NAME]` — optional name argument at record time
+- Name stored in session metadata (state.json and session JSON)
+- Output files slugified from name (e.g. "1:1 with Gabriel" → `1-1-with-gabriel-<timestamp>.wav/.txt/.srt`)
+- `meet list` displays the recording name/title
+- Notion page title uses the recording name
+
 ## Evolution
 
-**Last updated:** 2026-03-28 — v1.1 milestone complete (SRT output, speaker diarization, pyannote health checks, init --update, torchaudio compat)
+**Last updated:** 2026-03-27 — v1.2 milestone started (Named recordings)
 
 This document evolves at phase transitions and milestone boundaries.
 
@@ -126,4 +137,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 — v1.1 milestone complete (SRT output, speaker diarization, pyannote health checks, init --update, torchaudio compat)*
+*Last updated: 2026-03-27 — v1.2 milestone started (Named recordings)*
