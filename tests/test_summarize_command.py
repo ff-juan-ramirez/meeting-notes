@@ -652,3 +652,84 @@ def test_prefers_diarized_transcript(runner, tmp_path):
         result = runner.invoke(summarize, ["--session", stem], obj={"quiet": False})
 
     assert result.exit_code == 0, f"Exit code was {result.exit_code}, output: {result.output}"
+
+
+# ---------------------------------------------------------------------------
+# NOTION-01: recording_name priority for Notion page title
+# ---------------------------------------------------------------------------
+
+def test_summarize_notion_uses_recording_name(runner, tmp_path):
+    """When metadata has recording_name, Notion page title is that name (NOTION-01)."""
+    from meeting_notes.cli.commands.summarize import summarize
+    from meeting_notes.core.state import write_state
+
+    transcripts, notes, metadata = _make_env_dirs(tmp_path)
+    stem = "my-standup-20260328-090000-abc12345"
+    _create_fake_transcript(transcripts, stem)
+    _create_config(tmp_path, token="secret_test", parent_page_id="page123")
+
+    # Pre-populate metadata with recording_name
+    metadata_path = metadata / f"{stem}.json"
+    write_state(metadata_path, {"recording_name": "My Standup"})
+
+    mock_create_page = MagicMock(return_value="https://notion.so/abc123")
+    with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
+         patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
+         patch("meeting_notes.cli.commands.summarize.create_page", mock_create_page):
+        result = runner.invoke(summarize, ["--session", stem])
+
+    assert result.exit_code == 0
+    mock_create_page.assert_called_once()
+    call_kwargs = mock_create_page.call_args[1]
+    assert call_kwargs["title"] == "My Standup"
+
+
+def test_summarize_notion_unnamed_uses_extract_title(runner, tmp_path):
+    """When metadata has no recording_name, Notion title comes from extract_title (NOTION-01 regression)."""
+    from meeting_notes.cli.commands.summarize import summarize
+
+    transcripts, notes, metadata = _make_env_dirs(tmp_path)
+    stem = "20260328-090000-abc12345"
+    _create_fake_transcript(transcripts, stem)
+    _create_config(tmp_path, token="secret_test", parent_page_id="page123")
+    # No metadata pre-populated — no recording_name
+
+    mock_create_page = MagicMock(return_value="https://notion.so/abc123")
+    with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
+         patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
+         patch("meeting_notes.cli.commands.summarize.create_page", mock_create_page):
+        result = runner.invoke(summarize, ["--session", stem])
+
+    assert result.exit_code == 0
+    mock_create_page.assert_called_once()
+    call_kwargs = mock_create_page.call_args[1]
+    # Title must NOT be a recording_name — it should be from extract_title
+    # extract_title on "Generated notes text here" (no H1) falls back to timestamp pattern
+    assert "Meeting Notes" in call_kwargs["title"] or call_kwargs["title"] == "Generated notes text here"
+
+
+def test_summarize_notion_no_metadata_unaffected(runner, tmp_path):
+    """When no metadata file exists (pre-v1.2), Notion title from extract_title, no AttributeError (NOTION-01 regression)."""
+    from meeting_notes.cli.commands.summarize import summarize
+
+    transcripts, notes, metadata = _make_env_dirs(tmp_path)
+    stem = "20260328-090000-abc12345"
+    _create_fake_transcript(transcripts, stem)
+    _create_config(tmp_path, token="secret_test", parent_page_id="page123")
+    # Explicitly NO metadata file — simulates pre-v1.2 session
+
+    mock_create_page = MagicMock(return_value="https://notion.so/abc123")
+    with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
+         patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
+         patch("meeting_notes.cli.commands.summarize.create_page", mock_create_page):
+        result = runner.invoke(summarize, ["--session", stem])
+
+    assert result.exit_code == 0
+    mock_create_page.assert_called_once()
+    # No crash = session_metadata None guard works
