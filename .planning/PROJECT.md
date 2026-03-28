@@ -4,7 +4,7 @@
 
 A 100% local CLI tool that captures audio from any video call (Zoom, Google Meet, Teams) without bots or browser extensions, transcribes it locally with Whisper, generates structured meeting notes using a local LLM, and saves them to Notion. No cloud, no third-party services, no data leaves the machine.
 
-**Status:** v1.0 shipped 2026-03-24. Phase 01 complete 2026-03-27 — SRT output and speaker diarization added.
+**Status:** v1.1 shipped 2026-03-28 — SRT output and speaker diarization. Next: `/gsd:new-milestone`.
 
 ## Core Value
 
@@ -98,10 +98,17 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 | Shared cli/ui.py console | Single TTY detection source; `--quiet` suppresses all Rich output consistently | ✓ Good — clean piped output |
 | setuptools.build_meta backend | Required for setuptools 82+ (legacy backend removed) | ✓ Good — no packaging issues |
 | Language kwarg omitted (not None) for auto-detect | Passing None to mlx-whisper defaults to English, not auto-detect | ✓ Good — multilingual transcription works |
+| `transcribe_audio()` returns `(text, segments)` tuple | SRT generation requires segment timestamps; callers fixed in same plan | ✓ Good — clean API boundary |
+| SRT always written alongside `.txt`, no opt-out flag | Every transcription should have subtitle output; simplicity wins | ✓ Good — no flag confusion |
+| `HuggingFaceTokenCheck` as WARNING (not ERROR) | Diarization is optional; matches NotionTokenCheck pattern | ✓ Good — graceful degradation |
+| `PyannoteCheck` as ERROR (not WARNING) | Diarization cannot proceed without pyannote.audio importable | ✓ Good — clear failure signal |
+| `run_diarization()` lazy-imports pyannote.audio.Pipeline | Avoids import-time cost for users without pyannote installed | ✓ Good — startup not affected |
+| torchaudio.list_audio_backends monkey-patch | pyannote.audio 3.x calls this at import time; removed in torchaudio≥2.9 | ✓ Good — fixed silent import failure |
+| pyannote.audio pin relaxed to `>=3.3.2,<5` | `==3.3.2` caused pip conflicts with torchaudio-resolved pyannote.core | ✓ Good — installs cleanly |
 
 ## Evolution
 
-**Last updated:** 2026-03-28 — Phase 01 complete (SRT output + speaker diarization gap closure)
+**Last updated:** 2026-03-28 — v1.1 milestone complete (SRT output, speaker diarization, pyannote health checks, init --update, torchaudio compat)
 
 This document evolves at phase transitions and milestone boundaries.
 
@@ -119,4 +126,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 — Phase 01 complete (SRT output, speaker diarization, pyannote health checks, init --update, torchaudio 3.x compatibility fix)*
+*Last updated: 2026-03-28 — v1.1 milestone complete (SRT output, speaker diarization, pyannote health checks, init --update, torchaudio compat)*

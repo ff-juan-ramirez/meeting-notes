@@ -1,9 +1,9 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: Milestone complete
-last_updated: "2026-03-28T02:49:40.983Z"
+milestone: v1.1
+milestone_name: SRT Output and Speaker Diarization
+status: v1.1 milestone complete — planning next milestone
+last_updated: "2026-03-28T04:00:00.000Z"
 progress:
   total_phases: 1
   completed_phases: 1
@@ -15,25 +15,21 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-24)
+See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** Phase 01 — srt-output-and-speaker-diarization-for-transcription-pipeline
+**Current focus:** v1.1 complete — planning next milestone
 
 ## Current Status
 
 - [x] v1.0 MVP shipped 2026-03-24 (6 phases, 16 plans, 208 tests)
-  - [x] Phase 1: Audio Capture + Health Check Design (3/3)
-  - [x] Phase 2: Local Transcription (3/3)
-  - [x] Phase 3: Note Generation (3/3)
-  - [x] Phase 4: Notion Integration (2/2)
-  - [x] Phase 5: Integrated CLI (2/2)
-  - [x] Phase 6: Exportable Git Repo (3/3)
+- [x] v1.1 SRT + Speaker Diarization shipped 2026-03-28 (1 phase, 5 plans)
+  - [x] Phase 01: SRT output and speaker diarization (5/5 plans)
 
 ## Last Session
 
-**Completed:** Plan 01-00 — Wave 0 test stubs (17 stubs, 6 files)
-**Date:** 2026-03-27
+**Completed:** v1.1 milestone archived (SRT + diarization, pyannote health checks, init --update, torchaudio compat)
+**Date:** 2026-03-28
 
 ## Decisions
 

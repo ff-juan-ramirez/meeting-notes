@@ -55,6 +55,56 @@
 
 ---
 
+## Milestone: v1.1 — SRT Output and Speaker Diarization
+
+**Shipped:** 2026-03-28
+**Phases:** 1 | **Plans:** 5 | **Timeline:** 1 day (2026-03-27 → 2026-03-28)
+
+### What Was Built
+
+- SRT subtitle generation: `seconds_to_srt_timestamp()` + `generate_srt()` — every `meet transcribe` writes `.srt` alongside `.txt`
+- `transcribe_audio()` refactored to return `(text, segments)` tuple; all callers updated in same plan
+- `HuggingFaceConfig` dataclass + HF token step in `meet init` wizard (step 3.5)
+- Three new health checks: `PyannoteCheck` (ERROR), `HuggingFaceTokenCheck` (WARNING), `PyannoteModelCheck` (WARNING)
+- Full speaker diarization: `run_diarization()` + `assign_speakers_to_segments()` + `build_diarized_txt()` with graceful fallback
+- `meet summarize` prefers diarized transcript when `diarized_transcript_path` is in metadata
+- `meet init --update` flag for non-interactive field updates
+- torchaudio≥2.9 compatibility via `torchaudio.list_audio_backends` monkey-patch
+
+### What Worked
+
+- **Gap closure plan (01-04)** as a separate plan was the right call — it kept the main plans clean and gave room to investigate the torchaudio/pyannote import conflict without deadline pressure.
+- **RESEARCH.md Pitfall 5** explicitly documenting that diarized content should overwrite `.txt` prevented a design mistake (separate diarized file path). The pitfall list format continues to be high-value.
+- **Lazy import** of `pyannote.audio.Pipeline` (inside `run_diarization()`, not at module level) kept startup time unaffected for users without pyannote installed.
+- **Graceful fallback design**: diarization failure just logs a warning and falls back to undiarized output — no user-facing error for optional features.
+
+### What Was Inefficient
+
+- **Wave 0 stubs** (01-00) created 17 stubs but only a subset were converted to real tests by the end of the milestone. Stubs without follow-through implementation add maintenance overhead. In future milestones, either skip Wave 0 or commit to converting all stubs.
+- **Multiple gap closure iterations**: 01-04 was revised twice based on plan checker feedback. Root cause: planning missed that `meet doctor` didn't wire the new pyannote checks — a discovery that should have happened in 01-02 planning.
+- **pyannote version conflict debugging**: the torchaudio.list_audio_backends removal was not documented anywhere upstream. Took a full debug session to root-cause. Should be surfaced in health checks as a first-class check.
+
+### Patterns Established
+
+- **Optional dependency pattern**: wrap import in `try/except ImportError`, return `CheckStatus.ERROR` from the check. Don't propagate ImportError to callers — fail gracefully at the check boundary.
+- **Diarization metadata baseline**: always write `diarization_succeeded: false`, `diarized_transcript_path: null`, `speaker_turns: []` even when diarization is skipped — prevents downstream KeyError.
+- **Max-overlap speaker assignment**: match pyannote speaker turns to Whisper segments by finding the turn with the greatest temporal overlap per segment (not nearest-start or nearest-end).
+- **Monkey-patch for missing library API**: when a dependency removes an API your other dependency calls at import time, inject a shim in your app's init path before the problematic import.
+
+### Key Lessons
+
+1. **Plan gap closure separately.** 01-04 as its own plan let the team close the UAT failures without revisiting already-reviewed plans. The pattern of "execute → UAT → gap closure plan if needed" is worth formalizing.
+2. **Lazy import optional dependencies.** Any feature gated on an optional `pip install` should lazy-import inside the function, never at module level. Enforces this as a convention.
+3. **Plan checker iterations add time but prevent rework.** The two rounds of 01-04 revision via the checker caught missing wire-up before execution — net time saving despite feeling slow.
+4. **torchaudio monkey-patch lesson**: library version upgrades can silently remove APIs that transitive dependencies call at import time. When a new dependency fails to import, trace all `__init__.py` calls before assuming the dependency itself is broken.
+
+### Cost Observations
+
+- Sessions: ~7 plan executions over 1 day
+- Notable: Post-MVP feature with integration complexity (pyannote + torchaudio version matrix) shipped in 1 day via gap closure pattern
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -62,14 +112,18 @@
 | Milestone | Phases | Plans | Key Change |
 |-----------|--------|-------|------------|
 | v1.0 | 6 | 16 | Initial project — established all patterns |
+| v1.1 | 1 | 5 | Gap closure plan pattern + optional dependency pattern |
 
 ### Cumulative Quality
 
 | Milestone | Tests | Timeline |
 |-----------|-------|----------|
 | v1.0 | 208 | 2 days |
+| v1.1 | ~225 | 1 day |
 
 ### Top Lessons (Verified Across Milestones)
 
 1. Design extension points in the first phase — pluggable architecture scales better than retrofit
 2. Pitfalls list in the roadmap is more actionable than research docs for fast execution
+3. Gap closure as a named plan pattern keeps main plans clean and UAT failures resolvable without revisiting reviewed work
+4. Lazy-import optional dependencies — never at module level, always inside the function that uses them
