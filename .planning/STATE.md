@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Milestone complete
-last_updated: "2026-03-27T19:25:43.110Z"
+status: Executing Phase 01
+last_updated: "2026-03-28T02:43:45.822Z"
 progress:
   total_phases: 1
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 5
+  completed_plans: 5
 ---
 
 # Project State
@@ -94,6 +94,9 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 - [Phase 01]: run_diarization() lazy-imports pyannote.audio.Pipeline — avoids import-time cost for users without pyannote
 - [Phase 01]: diarized content overwrites plain .txt — diarized_transcript_path points to same file (RESEARCH.md Pitfall 5)
 - [Phase 01]: assign_speakers_to_segments uses max-overlap: pyannote turn with greatest temporal overlap per Whisper segment
+- [Phase 01-04]: torchaudio.list_audio_backends monkey-patch: pyannote.audio 3.x calls this at import time but removed in torchaudio>=2.9; patch adds missing function with ['soundfile'] backend
+- [Phase 01-04]: pyannote.audio version pin relaxed from ==3.3.2 to >=3.3.2,<5 to avoid pip dependency conflict with torchaudio-resolved pyannote.core versions
+- [Phase 01-04]: meet init --update flag uses early-exit routing to _update_specific_fields before interactive config-exists check
 
 ## Performance Metrics
 
@@ -118,6 +121,7 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 | Phase 01 | 01 | 900 | 2 | 4 |
 | Phase 01 | 02 | 720 | 2 | 6 |
 | Phase 01 P03 | 900 | 2 tasks | 6 files |
+| Phase 01 P04 | 480 | 2 tasks | 5 files |
 
 ## Roadmap Evolution
 

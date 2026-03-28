@@ -51,7 +51,7 @@ Plans:
 - [x] 01-01-PLAN.md — SRT generation + transcribe_audio tuple return + CLI wiring
 - [x] 01-02-PLAN.md — HuggingFaceConfig + init wizard + pyannote health checks + deps
 - [x] 01-03-PLAN.md — Speaker diarization integration + summarize diarized preference
-- [ ] 01-04-PLAN.md — Gap closure: doctor pyannote checks + init --update flag + pip reinstall
+- [x] 01-04-PLAN.md — Gap closure: doctor pyannote checks + init --update flag + pip reinstall
 
 ---
 *v1.0 shipped 2026-03-24 — see `.planning/MILESTONES.md` for details*
