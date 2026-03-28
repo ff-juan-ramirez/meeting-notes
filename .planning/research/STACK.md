@@ -1,7 +1,7 @@
 # Stack Research: meeting-notes
 
 **Domain:** Local meeting audio capture + transcription + LLM note generation CLI on macOS/Apple Silicon
-**Date:** 2026-03-22
+**Date:** 2026-03-22 (updated 2026-03-27 for v1.2 Named Recordings)
 
 ---
 
@@ -100,4 +100,148 @@ signal.signal(signal.SIGINT, handle_sigint)
 4. `pip install notion-client click rich python-dotenv` — no conflicts with mlx-whisper
 
 ---
-*Researched: 2026-03-22*
+
+## v1.2 Named Recordings — Stack Additions
+
+**Verdict: Zero new dependencies required.**
+
+The named recordings feature is achievable entirely with the existing stack plus
+Python's standard library. `pyproject.toml` does not need new entries.
+
+### Slugification — Pure stdlib (no new dependency)
+
+**Recommendation: inline function using `re` + `unicodedata`, place in `meeting_notes/core/storage.py`.**
+
+```python
+import re
+import unicodedata
+
+def slugify(text: str) -> str:
+    """Convert arbitrary meeting name to filesystem-safe slug.
+
+    Verified outputs:
+        "1:1 with Gabriel"       -> "1-1-with-gabriel"
+        "Q4 Planning & Review"   -> "q4-planning-review"
+        "Team Meeting - Q1 2026" -> "team-meeting-q1-2026"
+        "Jose / Maria sync"      -> "jose-maria-sync"
+    """
+    text = unicodedata.normalize('NFKD', text)
+    text = text.encode('ascii', 'ignore').decode('ascii')
+    text = text.lower().strip()
+    text = re.sub(r'[^a-z0-9]+', '-', text)
+    return text.strip('-')
+```
+
+`unicodedata` and `re` are stdlib modules present in every Python version this project
+supports (>=3.11). The function was tested locally against all realistic meeting name
+inputs and produces correct output.
+
+**Why not `python-slugify` (8.0.4, MIT)?**
+
+`python-slugify` is the community standard (~62M monthly PyPI downloads) and would
+work. However, it pulls in `text-unidecode` as a required transitive dependency, which
+is dual-licensed GPL + Perl Artistic. Adding a GPL-licensed transitive dependency to a
+project that ships under MIT is a licensing concern worth avoiding when 5 lines of
+stdlib produce identical output for every Latin/ASCII meeting name this tool will
+realistically encounter.
+
+**If non-Latin Unicode coverage becomes needed later** (Chinese, Arabic, Cyrillic
+meeting names where romanization is wanted rather than stripping), add
+`python-slugify[unidecode]` at that point. The `slugify()` function signature stays
+identical — swap the body, no caller changes required.
+
+### Click — Optional Positional Argument Pattern
+
+**Recommendation: `@click.argument("name", required=False, default=None)`**
+
+Click 8.x supports optional positional arguments natively. This is the idiomatic
+pattern when the argument is the command's primary subject and the user may omit it.
+
+```python
+@click.command()
+@click.argument("name", required=False, default=None, metavar="NAME")
+@click.pass_context
+def record(ctx: click.Context, name: str | None):
+    """Start a recording session.
+
+    NAME is an optional label for the recording (e.g. "1:1 with Gabriel").
+    If omitted, the recording is identified by timestamp only.
+    """
+    slug = slugify(name) if name else None
+    ...
+```
+
+Invocation:
+```
+meet record                          # name is None -> timestamp-only filename
+meet record "1:1 with Gabriel"       # name -> "1-1-with-gabriel-<timestamp>.wav"
+meet record standup                  # name -> "standup-<timestamp>.wav"
+```
+
+**Why positional argument, not `--name` option?**
+
+The name is what the command acts on — it is the primary subject, not a modifier.
+Click's convention is: positional argument = main subject, option = modifier/flag.
+Positional is also faster to type for the common case (`meet record standup` vs
+`meet record --name standup`). `required=False` with `default=None` gives clean
+None-check logic downstream with no special handling needed.
+
+**Add `metavar="NAME"`** so the help text renders as `meet record [NAME]` rather than
+the default `meet record [ARGS]...`, which is misleading for a single optional string.
+
+**Why not `nargs=-1` variadic?**
+
+Variadic (`nargs=-1`) makes Click pass a tuple, requiring `" ".join(name)` to
+reconstruct the string — an awkward workaround. `required=False` with `nargs=1`
+(the default) keeps the parameter a simple `str | None`.
+
+### Filename Generation — Integration Point
+
+`get_recording_path()` in `meeting_notes/core/storage.py` currently produces:
+
+```
+recordings/{timestamp}-{session_id[:8]}.wav
+```
+
+Extend it to accept an optional `name` parameter:
+
+```
+recordings/{slug}-{timestamp}-{session_id[:8]}.wav   # when name provided
+recordings/{timestamp}-{session_id[:8]}.wav           # when name is None (unchanged)
+```
+
+The slug is **prepended** (not appended) so that `meet list` sorted by filename still
+groups named recordings meaningfully. The `stem` derivation in the `stop` command
+(`Path(output_path).stem`) propagates the name through to the metadata filename
+automatically — no changes needed there.
+
+**State and metadata propagation:** Store `recording_name` (raw user string) in both
+`state.json` (written at `record` time) and the session metadata JSON (written at
+`stop` time). The raw name is kept separately from the slug so `meet list` and Notion
+can display the original human-readable title.
+
+### Alternatives Considered (v1.2 specific)
+
+| Category | Recommended | Alternative | Why Not |
+|----------|-------------|-------------|---------|
+| Slugification | stdlib `re` + `unicodedata` | `python-slugify` 8.0.4 | Adds `text-unidecode` (GPL+Perl Artistic) transitive dep; no behavioral gain for Latin/ASCII names |
+| Slugification | stdlib | `awesome-slugify` | Unmaintained since 2016 |
+| Slugification | stdlib | `unicode-slugify` | Mozilla-internal, inactive, poor Snyk health score, Django dep |
+| Click pattern | `@click.argument(required=False)` | `@click.option("--name")` | Options are modifiers; the name is the command's primary subject |
+| Click pattern | `@click.argument(required=False)` | `nargs=-1` variadic | Returns tuple, requires join hack, confusing for a single string value |
+
+---
+
+## Sources
+
+- [python-slugify on PyPI](https://pypi.org/project/python-slugify/) — version 8.0.4, MIT + text-unidecode dep confirmed (HIGH confidence)
+- [unicode-slugify health analysis via Snyk](https://snyk.io/advisor/python/unicode-slugify) — inactive, not recommended (MEDIUM confidence)
+- [Click Arguments documentation](https://click.palletsprojects.com/en/stable/arguments/) — `required=False` pattern (HIGH confidence)
+- [pallets/click issue #94 — Optional arguments](https://github.com/pallets/click/issues/94) — confirmed supported (HIGH confidence)
+- [pallets/click issue #3045 — 2025 usage](https://github.com/pallets/click/issues/3045) — `required=False` in recent use (HIGH confidence)
+- Local Python 3.14 test — stdlib slugify verified against PROJECT.md example and 6 edge cases, all correct (HIGH confidence — tested in project venv)
+
+---
+
+*Stack research for: meeting-notes CLI on macOS/Apple Silicon*
+*Researched: 2026-03-22 | Updated: 2026-03-27 (v1.2 Named Recordings)*
