@@ -148,7 +148,8 @@ def summarize(ctx: click.Context, template: str, session: str | None) -> None:
             console.print("[dim]Notion not configured — run meet init to set up.[/dim]")
     else:
         fallback_ts = datetime.now(timezone.utc).strftime("Meeting Notes — %Y-%m-%d %H:%M")
-        title = extract_title(notes, fallback_ts)
+        recording_name = session_metadata.get("recording_name") if session_metadata else None
+        title = recording_name if recording_name else extract_title(notes, fallback_ts)
         try:
             notion_url = run_with_spinner(
                 lambda: create_page(
