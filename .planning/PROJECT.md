@@ -29,6 +29,10 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 - ✓ `meet doctor --verbose` with per-check `verbose_detail()` inline lines — v1.0
 - ✓ Exportable git repo: pyproject.toml (PEP 621), README.md with Audio MIDI Setup walkthrough + ASCII diagram, MIT LICENSE, .gitignore — v1.0
 
+### Validated (Phase 04 — 2026-03-28)
+
+- ✓ `meet list` displays `recording_name` as the session title when set; unnamed/pre-v1.2 sessions fall back to existing title derivation unchanged — Phase 04 (LIST-01, LIST-02)
+
 ### Validated (Phase 03 — 2026-03-28)
 
 - ✓ `meet record [NAME]` accepts optional name argument; slug computed via `slugify()` and stored as `recording_slug` in `state.json` alongside `recording_name` — Phase 03 (RECORD-01, RECORD-02)
@@ -149,4 +153,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 — Phase 03 complete (record-stop-command: NAME arg + slug wired end-to-end)*
+*Last updated: 2026-03-28 — Phase 04 complete (meet-list-display: recording_name shown as title in meet list)*
