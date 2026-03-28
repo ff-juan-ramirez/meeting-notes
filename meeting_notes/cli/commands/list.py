@@ -131,6 +131,7 @@ def list_sessions(ctx: click.Context, filter_status: str | None, output_json: bo
             table.add_column("Title")
             table.add_column("Status")
             table.add_column("Notion URL")
+            table.add_column("Session ID")
             console.print(table)
         return
 
@@ -158,6 +159,7 @@ def list_sessions(ctx: click.Context, filter_status: str | None, output_json: bo
             "date": _derive_date(meta),
             "duration_display": _format_duration(duration_seconds),
             "duration_seconds": duration_seconds,
+            "session_id": stem,
         })
 
     # --json path: clean JSON, no Rich, no ANSI (per D-19)
@@ -175,6 +177,7 @@ def list_sessions(ctx: click.Context, filter_status: str | None, output_json: bo
     table.add_column("Title", max_width=40)
     table.add_column("Status")
     table.add_column("Notion URL")
+    table.add_column("Session ID")
 
     for s in sessions:
         table.add_row(
@@ -183,6 +186,7 @@ def list_sessions(ctx: click.Context, filter_status: str | None, output_json: bo
             s.get("title", "\u2014"),
             s.get("status", "\u2014"),
             s.get("notion_url") or "\u2014",
+            s.get("session_id", "\u2014"),
         )
 
     console.print(table)

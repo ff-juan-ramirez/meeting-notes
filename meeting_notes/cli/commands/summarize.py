@@ -50,7 +50,7 @@ def resolve_transcript_by_stem(transcripts_dir: Path, stem: str) -> Path:
 @click.command()
 @click.option("--template", default="meeting", type=click.Choice(["meeting", "minutes", "1on1"]),
               help="Note template (default: meeting)")
-@click.option("--session", default=None, help="Transcript filename stem (e.g. 20260322-143000-abc12345)")
+@click.option("--session", default=None, help="Session stem shown in 'meet list' (e.g. team-standup-20260322-143000-abc12345)")
 @click.pass_context
 def summarize(ctx: click.Context, template: str, session: str | None) -> None:
     """Generate structured notes from a transcript using Ollama llama3.1:8b."""
