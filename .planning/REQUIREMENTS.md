@@ -11,12 +11,12 @@
 - [ ] **RECORD-02**: NAME is stored verbatim in `state.json` at record time (field: `recording_name`)
 - [ ] **RECORD-03**: Slug is computed from NAME at record time (`{slug}-{timestamp}-{uuid8}`) and stored as `recording_slug` in `state.json`
 - [ ] **RECORD-04**: `meet stop` propagates `recording_name` and `recording_slug` from `state.json` to the session metadata JSON before clearing state
-- [ ] **RECORD-05**: Named output files use `{slug}-{timestamp}-{uuid8}` stem (WAV, TXT, SRT); unnamed sessions retain existing `{timestamp}-{uuid8}` stem — no collision possible
+- [x] **RECORD-05**: Named output files use `{slug}-{timestamp}-{uuid8}` stem (WAV, TXT, SRT); unnamed sessions retain existing `{timestamp}-{uuid8}` stem — no collision possible
 
 ### Slugification
 
-- [ ] **SLUG-01**: `slugify(text)` is a pure function in `core/storage.py`; handles colons (`1:1` → `1-1`), Unicode accents, slashes, whitespace runs, leading/trailing hyphens, max 80 chars, and all-punctuation/empty input (fallback: `"untitled"`)
-- [ ] **SLUG-02**: Slugification uses Python stdlib only (`unicodedata` + `re`) — zero new dependencies
+- [x] **SLUG-01**: `slugify(text)` is a pure function in `core/storage.py`; handles colons (`1:1` → `1-1`), Unicode accents, slashes, whitespace runs, leading/trailing hyphens, max 80 chars, and all-punctuation/empty input (fallback: `"untitled"`)
+- [x] **SLUG-02**: Slugification uses Python stdlib only (`unicodedata` + `re`) — zero new dependencies
 
 ### List Display
 
@@ -50,9 +50,9 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SLUG-01 | Phase 02 | Pending |
-| SLUG-02 | Phase 02 | Pending |
-| RECORD-05 | Phase 02 | Pending |
+| SLUG-01 | Phase 02 | Complete |
+| SLUG-02 | Phase 02 | Complete |
+| RECORD-05 | Phase 02 | Complete |
 | RECORD-01 | Phase 03 | Pending |
 | RECORD-02 | Phase 03 | Pending |
 | RECORD-03 | Phase 03 | Pending |
