@@ -28,10 +28,11 @@ def build_ffmpeg_command(
     ]
 
 
-def start_recording(config: Config) -> tuple[subprocess.Popen, Path]:
+def start_recording(config: Config, output_path: Path | None = None) -> tuple[subprocess.Popen, Path]:
     """Start a recording session. Returns (process, output_path)."""
     ensure_dirs(config.storage_path)
-    output_path = get_recording_path(config.storage_path)
+    if output_path is None:
+        output_path = get_recording_path(config.storage_path)
     cmd = build_ffmpeg_command(
         config.audio.system_device_index,
         config.audio.microphone_device_index,
