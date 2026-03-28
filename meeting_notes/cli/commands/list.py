@@ -52,11 +52,13 @@ def _derive_status(meta: dict) -> str:
 
 
 def _derive_title(meta: dict, stem: str) -> str:
-    """Derive session title (per D-16, D-17).
+    """Derive session title.
 
-    Summarized: first # Heading from notes file via extract_title().
-    Otherwise: session stem.
+    Priority: recording_name (user-given) > LLM heading (from notes) > stem.
     """
+    recording_name = meta.get("recording_name")
+    if recording_name:
+        return recording_name
     notes_path = meta.get("notes_path")
     if notes_path and Path(notes_path).exists():
         try:
