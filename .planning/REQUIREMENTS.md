@@ -7,10 +7,10 @@
 
 ### Recording
 
-- [ ] **RECORD-01**: `meet record [NAME]` accepts an optional positional NAME argument; unnamed invocation is unchanged
-- [ ] **RECORD-02**: NAME is stored verbatim in `state.json` at record time (field: `recording_name`)
-- [ ] **RECORD-03**: Slug is computed from NAME at record time (`{slug}-{timestamp}-{uuid8}`) and stored as `recording_slug` in `state.json`
-- [ ] **RECORD-04**: `meet stop` propagates `recording_name` and `recording_slug` from `state.json` to the session metadata JSON before clearing state
+- [x] **RECORD-01**: `meet record [NAME]` accepts an optional positional NAME argument; unnamed invocation is unchanged
+- [x] **RECORD-02**: NAME is stored verbatim in `state.json` at record time (field: `recording_name`)
+- [x] **RECORD-03**: Slug is computed from NAME at record time (`{slug}-{timestamp}-{uuid8}`) and stored as `recording_slug` in `state.json`
+- [x] **RECORD-04**: `meet stop` propagates `recording_name` and `recording_slug` from `state.json` to the session metadata JSON before clearing state
 - [x] **RECORD-05**: Named output files use `{slug}-{timestamp}-{uuid8}` stem (WAV, TXT, SRT); unnamed sessions retain existing `{timestamp}-{uuid8}` stem — no collision possible
 
 ### Slugification
@@ -53,10 +53,10 @@
 | SLUG-01 | Phase 02 | Complete |
 | SLUG-02 | Phase 02 | Complete |
 | RECORD-05 | Phase 02 | Complete |
-| RECORD-01 | Phase 03 | Pending |
-| RECORD-02 | Phase 03 | Pending |
-| RECORD-03 | Phase 03 | Pending |
-| RECORD-04 | Phase 03 | Pending |
+| RECORD-01 | Phase 03 | Complete |
+| RECORD-02 | Phase 03 | Complete |
+| RECORD-03 | Phase 03 | Complete |
+| RECORD-04 | Phase 03 | Complete |
 | LIST-01 | Phase 04 | Pending |
 | LIST-02 | Phase 04 | Pending |
 | NOTION-01 | Phase 05 | Pending |

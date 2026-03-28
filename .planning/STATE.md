@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Named Recordings
-status: In Progress
-last_updated: "2026-03-28T16:10:58.122Z"
+status: Phase complete — ready for verification
+last_updated: "2026-03-28T16:57:33.702Z"
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -18,12 +18,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** Phase 02 — storage-foundation
+**Current focus:** Phase 03 — record-stop-command
 
 ## Current Position
 
-Phase: 02
-Plan: Not started
+Phase: 03 (record-stop-command) — EXECUTING
+Plan: 1 of 1
 
 ## Current Status
 
@@ -101,6 +101,8 @@ Plan: Not started
 - [Phase 02]: slugify truncates at 80 chars with trailing hyphen strip (D-01)
 - [Phase 02]: get_recording_path_with_slug accepts str only not str|None (D-02) — called only when name is known
 - [Phase 02]: NFKD normalization for slugify Unicode handling (D-03) — unicodedata+re stdlib, zero new deps (SLUG-02)
+- [Phase 03-record-stop-command]: Optional positional NAME arg via @click.argument('name', required=False) — more natural than --name option for recording naming
+- [Phase 03-record-stop-command]: stop propagation uses .get() with if-guards — no key written for unnamed sessions, full backward compat (RECORD-04)
 
 ## Performance Metrics
 
@@ -127,6 +129,7 @@ Plan: Not started
 | Phase 01 P03 | 900 | 2 tasks | 6 files |
 | Phase 01 P04 | 480 | 2 tasks | 5 files |
 | Phase 02 P01 | 152 | 2 tasks | 2 files |
+| Phase 03-record-stop-command P01 | 254 | 2 tasks | 3 files |
 
 ## Roadmap Evolution
 
