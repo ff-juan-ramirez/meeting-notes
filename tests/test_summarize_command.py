@@ -608,3 +608,47 @@ def test_summarize_preserves_phase3_metadata(runner, tmp_path):
     assert "transcribed_at" in data
     assert "word_count" in data
     assert "whisper_model" in data
+
+
+# ---------------------------------------------------------------------------
+# Wave 0 stubs — diarized transcript preference
+# ---------------------------------------------------------------------------
+
+def test_prefers_diarized_transcript(runner, tmp_path):
+    """meet summarize uses diarized_transcript_path from metadata when available."""
+    import json
+
+    transcripts = tmp_path / "transcripts"
+    notes = tmp_path / "notes"
+    metadata_dir = tmp_path / "metadata"
+    for d in [transcripts, notes, metadata_dir]:
+        d.mkdir()
+
+    stem = "20260327-100000-aabbccdd"
+
+    # Write transcript with diarized content
+    transcript_path = transcripts / f"{stem}.txt"
+    transcript_path.write_text("SPEAKER_00:\nHello world\n\nSPEAKER_01:\nGoodbye")
+
+    # Write metadata indicating diarization succeeded
+    meta_path = metadata_dir / f"{stem}.json"
+    meta_path.write_text(json.dumps({
+        "transcript_path": str(transcript_path),
+        "diarized_transcript_path": str(transcript_path),
+        "diarization_succeeded": True,
+    }))
+
+    with patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.Config.load") as mock_config_load, \
+         patch("meeting_notes.cli.commands.summarize.ensure_dirs"), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
+         patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()):
+
+        from meeting_notes.core.config import Config
+        mock_config_load.return_value = Config()
+
+        from meeting_notes.cli.commands.summarize import summarize
+        result = runner.invoke(summarize, ["--session", stem], obj={"quiet": False})
+
+    assert result.exit_code == 0, f"Exit code was {result.exit_code}, output: {result.output}"

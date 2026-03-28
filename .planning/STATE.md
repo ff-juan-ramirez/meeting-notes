@@ -1,15 +1,14 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: MVP
-status: Between milestones
-stopped_at: v1.0 milestone archived
-last_updated: "2026-03-24T00:00:00.000Z"
+milestone_name: milestone
+status: Milestone complete
+last_updated: "2026-03-28T02:49:40.983Z"
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 16
-  completed_plans: 16
+  total_phases: 1
+  completed_phases: 1
+  total_plans: 5
+  completed_plans: 5
 ---
 
 # Project State
@@ -19,7 +18,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-24)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** v1.0 shipped — planning next milestone
+**Current focus:** Phase 01 — srt-output-and-speaker-diarization-for-transcription-pipeline
 
 ## Current Status
 
@@ -33,8 +32,8 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 
 ## Last Session
 
-**Completed:** v1.0 milestone archive
-**Date:** 2026-03-24
+**Completed:** Plan 01-00 — Wave 0 test stubs (17 stubs, 6 files)
+**Date:** 2026-03-27
 
 ## Decisions
 
@@ -81,11 +80,29 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 - [Phase 06]: Notion token validated via NotionClient.users.me() loop; APIResponseError re-prompts, generic Exception saves with warning
 - [Phase 06]: Inline doctor in meet init uses HealthCheckSuite directly (no subprocess) per D-12
 - [Phase 06]: APIResponseError test helper uses correct constructor: (code, status, message, headers, raw_body_text)
+- [Phase 01-00]: Wave 0 stubs use @pytest.mark.skip(reason="Wave 0 stub — implementation pending") — consistent reason string across all 17 stubs
+- [Phase 01-00]: test_checks.py is a new file for pyannote health check stubs (separate from test_health_check.py for v1.0 checks)
+- [Phase 01-00]: Imports inside function bodies in test_checks.py to avoid collection failures before classes exist
+- [Phase 01]: transcribe_audio() returns (text, segments) tuple — callers must unpack; breaking change to existing callers fixed in same plan
+- [Phase 01]: generate_srt() accepts optional speaker_map dict keyed by 0-based segment index — ready for Plan 03 diarization
+- [Phase 01]: SRT always written alongside .txt with no flag — per D-01; metadata baseline: diarization_succeeded=False, diarized_transcript_path=None, speaker_turns=[]
+- [Phase 01-02]: HfApi imported at module level in checks.py and init.py so tests can patch via module path
+- [Phase 01-02]: HuggingFaceTokenCheck returns WARNING (not ERROR) when token absent — diarization is optional, matches NotionTokenCheck pattern
+- [Phase 01-02]: PyannoteCheck returns ERROR when pyannote.audio not importable — diarization cannot proceed without it (unlike WhisperModelCheck)
+- [Phase 01-02]: _collect_hf_token() is wizard step 3.5 — after Notion, blank input skips (returns None), validated via HfApi().whoami()
+- [Phase 01-02]: Field [7] added to update menu for HuggingFace token — consistent with existing 1-6 field numbering
+- [Phase 01]: run_diarization() lazy-imports pyannote.audio.Pipeline — avoids import-time cost for users without pyannote
+- [Phase 01]: diarized content overwrites plain .txt — diarized_transcript_path points to same file (RESEARCH.md Pitfall 5)
+- [Phase 01]: assign_speakers_to_segments uses max-overlap: pyannote turn with greatest temporal overlap per Whisper segment
+- [Phase 01-04]: torchaudio.list_audio_backends monkey-patch: pyannote.audio 3.x calls this at import time but removed in torchaudio>=2.9; patch adds missing function with ['soundfile'] backend
+- [Phase 01-04]: pyannote.audio version pin relaxed from ==3.3.2 to >=3.3.2,<5 to avoid pip dependency conflict with torchaudio-resolved pyannote.core versions
+- [Phase 01-04]: meet init --update flag uses early-exit routing to _update_specific_fields before interactive config-exists check
 
 ## Performance Metrics
 
 | Phase | Plan | Duration (s) | Tasks | Files |
 |-------|------|-------------|-------|-------|
+| Phase 01 | 00 | 120 | 2 | 6 |
 | 01    | 02   | 244         | 2     | 20    |
 | 01    | 03   | 225         | 2     | 7     |
 | Phase 02 P01 | 3 | 2 tasks | 6 files |
@@ -101,6 +118,14 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 | Phase 06 P01 | 163 | 2 tasks | 5 files |
 | Phase 06 P03 | 900 | 2 tasks | 3 files |
 | Phase 06 P02 | 329 | 1 tasks | 2 files |
+| Phase 01 | 01 | 900 | 2 | 4 |
+| Phase 01 | 02 | 720 | 2 | 6 |
+| Phase 01 P03 | 900 | 2 tasks | 6 files |
+| Phase 01 P04 | 480 | 2 tasks | 5 files |
+
+## Roadmap Evolution
+
+- Phase 1 added: SRT output and speaker diarization for transcription pipeline
 
 ## Key Context for Future Sessions
 

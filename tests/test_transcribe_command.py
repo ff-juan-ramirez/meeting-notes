@@ -127,7 +127,7 @@ def test_transcribe_command_no_session(runner, tmp_path):
          patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir), \
          patch("meeting_notes.cli.commands.transcribe.run_with_spinner", side_effect=fake_run_with_spinner), \
          patch("meeting_notes.services.transcription.mlx_whisper") as mock_mlx:
-        mock_mlx.transcribe.return_value = {"text": "This is a test transcript with enough words to pass validation here"}
+        mock_mlx.transcribe.return_value = {"text": "This is a test transcript with enough words to pass validation here", "segments": []}
         result = runner.invoke(transcribe, [])
 
     assert result.exit_code == 0
@@ -149,7 +149,7 @@ def test_transcribe_command_with_session(runner, tmp_path):
          patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir), \
          patch("meeting_notes.cli.commands.transcribe.run_with_spinner", side_effect=fake_run_with_spinner), \
          patch("meeting_notes.services.transcription.mlx_whisper") as mock_mlx:
-        mock_mlx.transcribe.return_value = {"text": "This is a test transcript with enough words to pass the validation check"}
+        mock_mlx.transcribe.return_value = {"text": "This is a test transcript with enough words to pass the validation check", "segments": []}
         result = runner.invoke(transcribe, ["--session", stem])
 
     assert result.exit_code == 0
@@ -172,7 +172,7 @@ def test_transcript_saved_to_correct_path(runner, tmp_path):
          patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir), \
          patch("meeting_notes.cli.commands.transcribe.run_with_spinner", side_effect=fake_run_with_spinner), \
          patch("meeting_notes.services.transcription.mlx_whisper") as mock_mlx:
-        mock_mlx.transcribe.return_value = {"text": expected_text}
+        mock_mlx.transcribe.return_value = {"text": expected_text, "segments": []}
         result = runner.invoke(transcribe, ["--session", stem])
 
     assert result.exit_code == 0
@@ -197,7 +197,7 @@ def test_metadata_json(runner, tmp_path):
          patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir), \
          patch("meeting_notes.cli.commands.transcribe.run_with_spinner", side_effect=fake_run_with_spinner), \
          patch("meeting_notes.services.transcription.mlx_whisper") as mock_mlx:
-        mock_mlx.transcribe.return_value = {"text": transcript_text}
+        mock_mlx.transcribe.return_value = {"text": transcript_text, "segments": []}
         result = runner.invoke(transcribe, ["--session", stem])
 
     assert result.exit_code == 0
@@ -229,7 +229,7 @@ def test_short_transcript_warning(runner, tmp_path):
          patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir), \
          patch("meeting_notes.cli.commands.transcribe.run_with_spinner", side_effect=fake_run_with_spinner), \
          patch("meeting_notes.services.transcription.mlx_whisper") as mock_mlx:
-        mock_mlx.transcribe.return_value = {"text": "short text"}  # < 50 words
+        mock_mlx.transcribe.return_value = {"text": "short text", "segments": []}  # < 50 words
         result = runner.invoke(transcribe, ["--session", stem])
 
     assert "check audio routing" in result.output
@@ -254,7 +254,7 @@ def test_long_recording_warning(runner, tmp_path):
          patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir), \
          patch("meeting_notes.cli.commands.transcribe.run_with_spinner", side_effect=fake_run_with_spinner), \
          patch("meeting_notes.services.transcription.mlx_whisper") as mock_mlx:
-        mock_mlx.transcribe.return_value = {"text": "This transcript has enough words to avoid the short transcript warning triggered on small files"}
+        mock_mlx.transcribe.return_value = {"text": "This transcript has enough words to avoid the short transcript warning triggered on small files", "segments": []}
         result = runner.invoke(transcribe, ["--session", stem])
 
     assert "90 minutes" in result.output or "memory pressure" in result.output
@@ -275,7 +275,7 @@ def test_session_stem_displayed(runner, tmp_path):
          patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir), \
          patch("meeting_notes.cli.commands.transcribe.run_with_spinner", side_effect=fake_run_with_spinner), \
          patch("meeting_notes.services.transcription.mlx_whisper") as mock_mlx:
-        mock_mlx.transcribe.return_value = {"text": "This is a transcript with enough words to avoid the short warning test"}
+        mock_mlx.transcribe.return_value = {"text": "This is a transcript with enough words to avoid the short warning test", "segments": []}
         result = runner.invoke(transcribe, ["--session", stem])
 
     assert f"Session: {stem}" in result.output
@@ -302,7 +302,7 @@ def test_existing_transcript_overwritten(runner, tmp_path):
          patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir), \
          patch("meeting_notes.cli.commands.transcribe.run_with_spinner", side_effect=fake_run_with_spinner), \
          patch("meeting_notes.services.transcription.mlx_whisper") as mock_mlx:
-        mock_mlx.transcribe.return_value = {"text": new_text}
+        mock_mlx.transcribe.return_value = {"text": new_text, "segments": []}
         result = runner.invoke(transcribe, ["--session", stem])
 
     assert result.exit_code == 0
@@ -344,3 +344,159 @@ def test_transcribe_no_recordings_dir_with_session_shows_error(runner, tmp_path)
     assert result.exit_code == 1
     assert "Error:" in result.output
     assert "No recording found for session" in result.output
+
+
+# ---------------------------------------------------------------------------
+# SRT output tests
+# ---------------------------------------------------------------------------
+
+def test_srt_file_created(runner, tmp_path):
+    """meet transcribe writes a .srt file alongside the .txt file."""
+    from meeting_notes.cli.commands.transcribe import transcribe
+
+    recordings, transcripts, metadata, config_dir = _make_env_dirs(tmp_path)
+    stem = "20260322-143000-abc12345"
+    _create_fake_wav(recordings, stem)
+
+    fake_segments = [{"start": 0.0, "end": 2.0, "text": " Hello world"}]
+
+    def fake_run_with_spinner(fn, message, **kw):
+        return fn()
+
+    with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir), \
+         patch("meeting_notes.cli.commands.transcribe.run_with_spinner", side_effect=fake_run_with_spinner), \
+         patch("meeting_notes.services.transcription.mlx_whisper") as mock_mlx:
+        mock_mlx.transcribe.return_value = {
+            "text": "Hello world this is enough words to pass validation checks for short transcripts",
+            "segments": fake_segments,
+        }
+        result = runner.invoke(transcribe, ["--session", stem])
+
+    assert result.exit_code == 0, f"Exit code was {result.exit_code}, output: {result.output}"
+
+    # SRT file exists alongside .txt
+    srt_file = transcripts / f"{stem}.srt"
+    txt_file = transcripts / f"{stem}.txt"
+    assert srt_file.exists(), f"SRT file not found at {srt_file}"
+    assert txt_file.exists(), f"TXT file not found at {txt_file}"
+
+    srt_content = srt_file.read_text()
+    assert "1\n00:00:00,000 --> 00:00:02,000\nHello world" in srt_content
+
+
+def test_metadata_includes_srt_fields(runner, tmp_path):
+    """Metadata JSON includes srt_path, diarization_succeeded, and speaker_turns fields."""
+    from meeting_notes.cli.commands.transcribe import transcribe
+
+    recordings, transcripts, metadata, config_dir = _make_env_dirs(tmp_path)
+    stem = "20260322-143000-abc12345"
+    _create_fake_wav(recordings, stem)
+
+    def fake_run_with_spinner(fn, message, **kw):
+        return fn()
+
+    with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir), \
+         patch("meeting_notes.cli.commands.transcribe.run_with_spinner", side_effect=fake_run_with_spinner), \
+         patch("meeting_notes.services.transcription.mlx_whisper") as mock_mlx:
+        mock_mlx.transcribe.return_value = {
+            "text": "This is a long enough transcript with many words to avoid short transcript warning",
+            "segments": [],
+        }
+        result = runner.invoke(transcribe, ["--session", stem])
+
+    assert result.exit_code == 0
+
+    metadata_file = metadata / f"{stem}.json"
+    data = json.loads(metadata_file.read_text())
+
+    assert "srt_path" in data
+    assert data["srt_path"].endswith(".srt")
+    assert "diarization_succeeded" in data
+    assert data["diarization_succeeded"] is False
+    assert "diarized_transcript_path" in data
+    assert data["diarized_transcript_path"] is None
+    assert "speaker_turns" in data
+    assert data["speaker_turns"] == []
+
+
+# ---------------------------------------------------------------------------
+# Diarization integration tests
+# ---------------------------------------------------------------------------
+
+def test_diarization_skips_without_hf_token(runner, tmp_path):
+    """meet transcribe with no HF token prints yellow warning and produces plain .txt and .srt."""
+    from meeting_notes.cli.commands.transcribe import transcribe
+    from meeting_notes.core.config import Config, HuggingFaceConfig
+
+    recordings, transcripts, metadata, config_dir = _make_env_dirs(tmp_path)
+    stem = "20260322-143000-abc12345"
+    _create_fake_wav(recordings, stem)
+
+    fake_segments = [{"start": 0.0, "end": 2.0, "text": " Hello"}]
+
+    def fake_run_with_spinner(fn, message, **kw):
+        return fn()
+
+    cfg = Config()
+    cfg.huggingface = HuggingFaceConfig(token=None)
+
+    with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir), \
+         patch("meeting_notes.cli.commands.transcribe.run_with_spinner", side_effect=fake_run_with_spinner), \
+         patch("meeting_notes.cli.commands.transcribe.Config.load", return_value=cfg), \
+         patch("meeting_notes.services.transcription.mlx_whisper") as mock_mlx:
+        mock_mlx.transcribe.return_value = {
+            "text": "Hello this is a long enough transcript to avoid the short warning",
+            "segments": fake_segments,
+        }
+        result = runner.invoke(transcribe, ["--session", stem])
+
+    assert result.exit_code == 0, f"Exit code was {result.exit_code}, output: {result.output}"
+    assert "skipping speaker diarization" in result.output.lower(), f"Expected 'skipping speaker diarization' in output: {result.output}"
+
+    txt_file = transcripts / f"{stem}.txt"
+    srt_file = transcripts / f"{stem}.srt"
+    assert txt_file.exists()
+    assert srt_file.exists()
+    # Plain txt should NOT contain SPEAKER_ labels
+    assert "SPEAKER_" not in txt_file.read_text()
+
+
+def test_diarization_graceful_failure(runner, tmp_path):
+    """meet transcribe where diarization raises Exception warns and still produces .txt and .srt."""
+    from meeting_notes.cli.commands.transcribe import transcribe
+    from meeting_notes.core.config import Config, HuggingFaceConfig
+
+    recordings, transcripts, metadata, config_dir = _make_env_dirs(tmp_path)
+    stem = "20260322-143000-abc12345"
+    _create_fake_wav(recordings, stem)
+
+    fake_segments = [{"start": 0.0, "end": 2.0, "text": " Hello"}]
+
+    def fake_run_with_spinner(fn, message, **kw):
+        return fn()
+
+    cfg = Config()
+    cfg.huggingface = HuggingFaceConfig(token="hf_test")
+
+    with patch("meeting_notes.cli.commands.transcribe.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.transcribe.get_config_dir", return_value=config_dir), \
+         patch("meeting_notes.cli.commands.transcribe.run_with_spinner", side_effect=fake_run_with_spinner), \
+         patch("meeting_notes.cli.commands.transcribe.Config.load", return_value=cfg), \
+         patch("meeting_notes.cli.commands.transcribe.run_diarization", side_effect=RuntimeError("Pipeline failed")), \
+         patch("meeting_notes.services.transcription.mlx_whisper") as mock_mlx:
+        mock_mlx.transcribe.return_value = {
+            "text": "Hello this is a long enough transcript to avoid the short warning",
+            "segments": fake_segments,
+        }
+        result = runner.invoke(transcribe, ["--session", stem])
+
+    assert result.exit_code == 0, f"Exit code was {result.exit_code}, output: {result.output}"
+    assert "Diarization failed" in result.output, f"Expected 'Diarization failed' in output: {result.output}"
+
+    txt_file = transcripts / f"{stem}.txt"
+    srt_file = transcripts / f"{stem}.srt"
+    assert txt_file.exists()
+    assert srt_file.exists()

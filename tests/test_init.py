@@ -70,11 +70,11 @@ def test_first_time_init_runs_full_wizard(tmp_path):
         mock_suite.run_all.return_value = []
         mock_suite_cls.return_value = mock_suite
 
-        # Input: system device=1, mic device=2, token=ntn_test, page_id=page123
+        # Input: system device=1, mic device=2, storage path (blank=default), token=ntn_test, page_id=page123
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nntn_testtoken\npage123\n",
+            input="1\n2\n\nntn_testtoken\npage123\n\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -104,7 +104,7 @@ def test_first_time_init_saves_correct_config_values(tmp_path):
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nntn_token_abc\npage_xyz\n",
+            input="1\n2\n\nntn_token_abc\npage_xyz\n\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -140,7 +140,7 @@ def test_first_time_init_calls_test_recording(tmp_path):
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nntn_tok\npage1\n",
+            input="1\n2\n\nntn_tok\npage1\n\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -171,7 +171,7 @@ def test_first_time_init_runs_inline_doctor(tmp_path):
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nntn_tok\npage1\n",
+            input="1\n2\n\nntn_tok\npage1\n\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -242,11 +242,11 @@ def test_r_choice_runs_full_wizard(tmp_path):
         mock_suite.run_all.return_value = []
         mock_suite_cls.return_value = mock_suite
 
-        # R choice, then full wizard inputs
+        # R choice, then full wizard inputs (include blank for storage path)
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="R\n1\n2\nntn_new\npage_new\n",
+            input="R\n1\n2\n\nntn_new\npage_new\n\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -315,7 +315,7 @@ def test_notion_token_valid_accepted(tmp_path):
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nntn_valid_token\npage_id_here\n",
+            input="1\n2\n\nntn_valid_token\npage_id_here\n\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -351,7 +351,7 @@ def test_notion_token_invalid_prompts_reentry(tmp_path):
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nbad_token\ngood_token\npage_id\n",
+            input="1\n2\n\nbad_token\ngood_token\npage_id\n\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -379,7 +379,7 @@ def test_notion_token_network_error_saves_with_warning(tmp_path):
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nntn_tok\npage_id\n",
+            input="1\n2\n\nntn_tok\npage_id\n\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -413,7 +413,7 @@ def test_device_menu_shows_numbered_list(tmp_path):
         result = runner.invoke(
             init,
             obj={"quiet": False},
-            input="1\n2\nntn_tok\npage_id\n",
+            input="1\n2\n\nntn_tok\npage_id\n\n",
         )
 
     assert result.exit_code == 0, result.output
@@ -422,3 +422,109 @@ def test_device_menu_shows_numbered_list(tmp_path):
     assert "[0]" in result.output
     assert "[1]" in result.output
     assert "[2]" in result.output
+
+
+# ---------------------------------------------------------------------------
+# HuggingFace token wizard step
+# ---------------------------------------------------------------------------
+
+def test_init_collects_hf_token(tmp_path):
+    """Full wizard collects HuggingFace token and saves to config."""
+    import json
+    runner = CliRunner()
+
+    with (
+        patch("meeting_notes.cli.commands.init._parse_audio_devices", return_value=FAKE_DEVICES),
+        patch("meeting_notes.cli.commands.init.NotionClient") as mock_nc,
+        patch("meeting_notes.cli.commands.init.subprocess.run"),
+        patch("meeting_notes.cli.commands.init.HealthCheckSuite") as mock_suite_cls,
+        patch("meeting_notes.cli.commands.init.get_config_dir", return_value=tmp_path),
+        patch("meeting_notes.cli.commands.init.ensure_dirs"),
+        patch("meeting_notes.cli.commands.init.HfApi") as mock_hf_api,
+    ):
+        mock_nc.return_value.users.me.return_value = {"id": "user-1"}
+        mock_hf_api.return_value.whoami.return_value = {"name": "testuser"}
+        mock_suite = MagicMock()
+        mock_suite.run_all.return_value = []
+        mock_suite_cls.return_value = mock_suite
+
+        # system_device=1, mic=2, storage_path=blank, notion_token, page_id, hf_token
+        result = runner.invoke(
+            init,
+            obj={"quiet": False},
+            input="1\n2\n\nntn_tok\npage_id\nhf_mytoken123\n",
+        )
+
+    assert result.exit_code == 0, result.output
+    config_data = json.loads((tmp_path / "config.json").read_text())
+    assert config_data.get("huggingface", {}).get("token") == "hf_mytoken123"
+
+
+def test_update_includes_hf_token(tmp_path):
+    """Update menu shows HF token as field 7 and updates it."""
+    import json
+    from meeting_notes.core.config import AudioConfig, Config, NotionConfig
+
+    config_path = tmp_path / "config.json"
+    existing_config = Config(
+        audio=AudioConfig(system_device_index=1, microphone_device_index=2),
+        notion=NotionConfig(token="ntn_existing", parent_page_id="page_existing"),
+    )
+    existing_config.save(config_path)
+
+    runner = CliRunner()
+
+    with (
+        patch("meeting_notes.cli.commands.init.get_config_dir", return_value=tmp_path),
+        patch("meeting_notes.cli.commands.init.subprocess.run"),
+        patch("meeting_notes.cli.commands.init.HealthCheckSuite") as mock_suite_cls,
+        patch("meeting_notes.cli.commands.init.HfApi") as mock_hf_api,
+    ):
+        mock_hf_api.return_value.whoami.return_value = {"name": "testuser"}
+        mock_suite = MagicMock()
+        mock_suite.run_all.return_value = []
+        mock_suite_cls.return_value = mock_suite
+
+        # U choice, select field 7 (HF token), provide new HF token
+        result = runner.invoke(
+            init,
+            obj={"quiet": False},
+            input="U\n7\nhf_newtoken456\n",
+        )
+
+    assert result.exit_code == 0, result.output
+    config_data = json.loads((tmp_path / "config.json").read_text())
+    assert config_data.get("huggingface", {}).get("token") == "hf_newtoken456"
+
+
+def test_update_menu_shows_hf_token_field(tmp_path):
+    """Update menu shows HuggingFace token as field [7]."""
+    from meeting_notes.core.config import AudioConfig, Config, NotionConfig
+
+    config_path = tmp_path / "config.json"
+    existing_config = Config(
+        audio=AudioConfig(system_device_index=1, microphone_device_index=2),
+        notion=NotionConfig(token="ntn_existing", parent_page_id="page_existing"),
+    )
+    existing_config.save(config_path)
+
+    runner = CliRunner()
+
+    with (
+        patch("meeting_notes.cli.commands.init.get_config_dir", return_value=tmp_path),
+        patch("meeting_notes.cli.commands.init.subprocess.run"),
+        patch("meeting_notes.cli.commands.init.HealthCheckSuite") as mock_suite_cls,
+    ):
+        mock_suite = MagicMock()
+        mock_suite.run_all.return_value = []
+        mock_suite_cls.return_value = mock_suite
+
+        result = runner.invoke(
+            init,
+            obj={"quiet": False},
+            input="U\n\n",
+        )
+
+    assert result.exit_code == 0, result.output
+    assert "[7]" in result.output
+    assert "HuggingFace token" in result.output or "HuggingFace" in result.output
