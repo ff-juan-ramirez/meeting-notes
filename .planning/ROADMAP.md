@@ -102,7 +102,7 @@ Plans:
 **Plans:** 1 plan
 
 Plans:
-- [ ] 06-01-PLAN.md — Add session_id to meet list table/JSON and update summarize help text
+- [x] 06-01-PLAN.md — Add session_id to meet list table/JSON and update summarize help text
 
 ### Phase 7: for the notes in notion if the user specifies a title i want that title to be in the notion note title
 
