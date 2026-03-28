@@ -4,7 +4,7 @@
 
 A 100% local CLI tool that captures audio from any video call (Zoom, Google Meet, Teams) without bots or browser extensions, transcribes it locally with Whisper, generates structured meeting notes using a local LLM, and saves them to Notion. No cloud, no third-party services, no data leaves the machine.
 
-**Status:** v1.2 complete — Named recordings (Phase 05 complete, all NOTION-01 requirements satisfied).
+**Status:** v1.2 in progress — Phase 06 complete (Session ID column in meet list + --json output, summarize --session help updated).
 
 ## Core Value
 
@@ -28,6 +28,12 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 - ✓ `meet list` with Rich table, `--status` filter, `--json` output, duration/title derivation — v1.0
 - ✓ `meet doctor --verbose` with per-check `verbose_detail()` inline lines — v1.0
 - ✓ Exportable git repo: pyproject.toml (PEP 621), README.md with Audio MIDI Setup walkthrough + ASCII diagram, MIT LICENSE, .gitignore — v1.0
+
+### Validated (Phase 06 — 2026-03-28)
+
+- ✓ `meet list` table shows a "Session ID" column with the full file stem (untruncated) for each session — Phase 06 (SESSID-01)
+- ✓ `meet list --json` output includes `session_id` field with value equal to the metadata file stem — Phase 06 (SESSID-02)
+- ✓ `meet summarize --session` help text reflects v1.2 slug-prefixed stem format (e.g. `team-standup-20260322-143000-abc12345`) — Phase 06 (SESSID-03)
 
 ### Validated (Phase 05 — 2026-03-28)
 
@@ -157,4 +163,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 — Phase 04 complete (meet-list-display: recording_name shown as title in meet list)*
+*Last updated: 2026-03-28 — Phase 06 complete (Session ID column in meet list, session_id in --json output, summarize --session help updated)*
