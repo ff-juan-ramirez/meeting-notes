@@ -140,6 +140,8 @@ Plan: Not started
 ## Roadmap Evolution
 
 - Phase 1 added: SRT output and speaker diarization for transcription pipeline
+- Phase 6 added: Add session ID column to meet list (untruncated) and wire it as a selector for meet summarize --session
+- Phase 7 added: for the notes in notion if the user specifies a title i want that title to be in the notion note title
 
 ## Key Context for Future Sessions
 
