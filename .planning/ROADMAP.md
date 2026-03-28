@@ -94,4 +94,24 @@ Plans:
 | 04. meet list Display | v1.2 | 0/1 | Complete    | 2026-03-28 |
 | 05. Notion Title | v1.2 | 1/1 | Complete    | 2026-03-28 |
 
+### Phase 6: Add session ID column to meet list (untruncated) and wire it as a selector for meet summarize --session
+
+**Goal:** Add a "Session ID" column to `meet list` showing the full file stem (untruncated), expose `session_id` in `--json` output, and update `meet summarize --session` help text to reflect v1.2 slug-prefixed stem format.
+**Requirements:** SESSID-01 (table column), SESSID-02 (JSON field), SESSID-03 (help text)
+**Depends on:** Phase 5
+**Plans:** 1 plan
+
+Plans:
+- [ ] 06-01-PLAN.md — Add session_id to meet list table/JSON and update summarize help text
+
+### Phase 7: for the notes in notion if the user specifies a title i want that title to be in the notion note title
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 6
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 7 to break down)
+
 ---
