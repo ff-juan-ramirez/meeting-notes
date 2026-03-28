@@ -87,13 +87,51 @@ def run_diarization(wav_path: Path, hf_token: str) -> Any:
     Raises:
         Exception: Any pipeline error (network, auth, model loading).
     """
+    # speechbrain 1.0.3 calls torchaudio.list_audio_backends() at import time,
+    # but torchaudio 2.9+ removed that API. Provide a no-op shim so speechbrain's
+    # backend check succeeds (it just logs a warning when the list is empty).
+    # Remove this once speechbrain releases a fix (tracked upstream:
+    # https://github.com/speechbrain/speechbrain/issues/3012).
+    import torchaudio as _torchaudio
+    if not hasattr(_torchaudio, "list_audio_backends"):
+        _torchaudio.list_audio_backends = lambda: []  # type: ignore[attr-defined]
+
     from pyannote.audio import Pipeline  # type: ignore[import]
 
     pipeline = Pipeline.from_pretrained(
         "pyannote/speaker-diarization-3.1",
-        use_auth_token=hf_token,
+        token=hf_token,
     )
-    return pipeline(str(wav_path))
+
+    # torchcodec (pyannote 4.x audio backend) fails to load on this system because
+    # the installed torchcodec .dylib requires a PyTorch symbol not present in
+    # torch 2.10.0.  When torchcodec is unavailable, pyannote's io.py leaves
+    # AudioDecoder undefined, so passing a file path to the pipeline raises
+    # "NameError: name 'AudioDecoder' is not defined".
+    #
+    # Workaround: pre-load the waveform with soundfile (always available) and
+    # pass {"waveform": tensor, "sample_rate": int} to the pipeline.  pyannote's
+    # Audio class has an explicit fast-path for this dict format (io.py lines
+    # 313-317 and 362-392) that completely bypasses AudioDecoder.
+    import soundfile as _sf  # type: ignore[import]
+    import torch as _torch
+
+    _audio_data, _sr = _sf.read(str(wav_path), dtype="float32", always_2d=True)
+    # soundfile returns (time, channel); pyannote expects (channel, time)
+    _waveform = _torch.from_numpy(_audio_data.T)
+    audio_input = {"waveform": _waveform, "sample_rate": _sr}
+
+    result = pipeline(audio_input)
+
+    # pyannote 4.x returns a DiarizeOutput dataclass instead of a plain Annotation.
+    # DiarizeOutput.exclusive_speaker_diarization is an Annotation with non-overlapping
+    # turns — the right choice for mapping speech turns to transcript segments.
+    # Unwrap here so all downstream code (assign_speakers_to_segments, transcribe.py
+    # speaker_turns loop) can call .itertracks(yield_label=True) without change.
+    if hasattr(result, "exclusive_speaker_diarization"):
+        return result.exclusive_speaker_diarization
+
+    return result  # pyannote 3.x: already an Annotation
 
 
 def assign_speakers_to_segments(

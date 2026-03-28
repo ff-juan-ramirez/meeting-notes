@@ -306,3 +306,139 @@ def test_diarized_txt_grouping():
     assert "Hello welcome" in txt
     assert "SPEAKER_01:" in txt
     assert "Thanks sure" in txt
+
+
+def _make_real_wav(tmp_path: Path) -> Path:
+    """Create a minimal valid mono 16kHz WAV file for tests that use soundfile."""
+    import struct
+    import wave
+
+    wav_file = tmp_path / "test.wav"
+    with wave.open(str(wav_file), "w") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(16000)
+        # 0.1 second of silence (1600 samples)
+        wf.writeframes(struct.pack("<1600h", *([0] * 1600)))
+    return wav_file
+
+
+def test_run_diarization_shims_list_audio_backends(tmp_path, monkeypatch):
+    """run_diarization() patches torchaudio.list_audio_backends when missing.
+
+    speechbrain 1.0.3 calls torchaudio.list_audio_backends() at import time,
+    but torchaudio 2.9+ removed that API. The shim must be installed before
+    pyannote.audio.Pipeline is imported so that the speechbrain import chain
+    does not raise AttributeError.
+    """
+    import torchaudio
+    from meeting_notes.services import transcription as trans_module
+    from unittest.mock import MagicMock, patch
+
+    wav_file = _make_real_wav(tmp_path)
+
+    # Simulate torchaudio without list_audio_backends (i.e. torchaudio 2.9+)
+    original = torchaudio.__dict__.pop("list_audio_backends", None)
+    try:
+        assert not hasattr(torchaudio, "list_audio_backends"), (
+            "Test precondition failed: list_audio_backends must be absent"
+        )
+
+        # Simulate a plain pyannote Annotation (no exclusive_speaker_diarization attr).
+        # Using spec=['itertracks'] ensures hasattr check returns False, so
+        # run_diarization returns the annotation directly rather than unwrapping.
+        fake_annotation = MagicMock(spec=["itertracks"])
+        fake_pipeline = MagicMock(return_value=fake_annotation)
+
+        # Pipeline is imported locally inside run_diarization, so patch at source.
+        with patch("pyannote.audio.Pipeline") as MockPipeline:
+            MockPipeline.from_pretrained.return_value = fake_pipeline
+            result = trans_module.run_diarization(wav_file, "hf-fake-token")
+
+        # The shim must now be present on torchaudio
+        assert hasattr(torchaudio, "list_audio_backends"), (
+            "run_diarization must install list_audio_backends shim on torchaudio"
+        )
+        assert torchaudio.list_audio_backends() == [], (
+            "Shim must return empty list so speechbrain logs a warning, not an error"
+        )
+        assert result is fake_annotation
+    finally:
+        # Restore original state
+        if original is not None:
+            torchaudio.list_audio_backends = original
+        else:
+            torchaudio.__dict__.pop("list_audio_backends", None)
+
+
+def test_run_diarization_passes_waveform_dict_to_pipeline(tmp_path, monkeypatch):
+    """run_diarization() pre-loads audio with soundfile and passes a waveform dict.
+
+    torchcodec (pyannote 4.x audio backend) fails to load on systems where its
+    .dylib requires a PyTorch symbol not present in the installed torch version.
+    When torchcodec is unavailable, pyannote's io.py leaves AudioDecoder undefined.
+    Passing a file-path string to the pipeline triggers AudioDecoder and raises
+    NameError. The fix: pre-load with soundfile and pass
+    {"waveform": tensor, "sample_rate": int} so pyannote's waveform fast-path is
+    used instead.
+    """
+    import torch
+    from meeting_notes.services import transcription as trans_module
+    from unittest.mock import MagicMock, patch, call
+
+    wav_file = _make_real_wav(tmp_path)
+
+    # Simulate a plain pyannote Annotation (no exclusive_speaker_diarization attr).
+    # Using spec=['itertracks'] ensures hasattr check returns False, so
+    # run_diarization returns the annotation directly rather than unwrapping.
+    fake_annotation = MagicMock(spec=["itertracks"])
+    fake_pipeline = MagicMock(return_value=fake_annotation)
+
+    with patch("pyannote.audio.Pipeline") as MockPipeline:
+        MockPipeline.from_pretrained.return_value = fake_pipeline
+        result = trans_module.run_diarization(wav_file, "hf-fake-token")
+
+    # Pipeline must be called with a dict, not a string path
+    assert fake_pipeline.call_count == 1
+    call_arg = fake_pipeline.call_args[0][0]
+    assert isinstance(call_arg, dict), (
+        "run_diarization must pass a waveform dict, not a path string, "
+        "to avoid AudioDecoder (torchcodec) which may be unavailable"
+    )
+    assert "waveform" in call_arg, "dict must have 'waveform' key"
+    assert "sample_rate" in call_arg, "dict must have 'sample_rate' key"
+    assert isinstance(call_arg["waveform"], torch.Tensor), "'waveform' must be a torch.Tensor"
+    assert call_arg["waveform"].shape[0] == 1, "waveform must be (channel, time) with channel=1 for mono"
+    assert call_arg["sample_rate"] == 16000
+    assert result is fake_annotation
+
+
+def test_run_diarization_unwraps_diarize_output(tmp_path):
+    """run_diarization() unwraps pyannote 4.x DiarizeOutput into an Annotation.
+
+    pyannote 4.x pipeline() returns a DiarizeOutput dataclass with fields
+    `speaker_diarization` and `exclusive_speaker_diarization`. All downstream
+    code (assign_speakers_to_segments, transcribe.py speaker_turns loop) calls
+    .itertracks(yield_label=True) on the return value. run_diarization() must
+    detect DiarizeOutput and return exclusive_speaker_diarization (the non-
+    overlapping annotation, optimal for mapping speech turns to transcript segments).
+    """
+    from meeting_notes.services import transcription as trans_module
+    from unittest.mock import MagicMock, patch
+
+    wav_file = _make_real_wav(tmp_path)
+
+    # Simulate pyannote 4.x DiarizeOutput
+    fake_exclusive_annotation = MagicMock(spec=["itertracks"])
+    fake_diarize_output = MagicMock()
+    fake_diarize_output.exclusive_speaker_diarization = fake_exclusive_annotation
+    fake_pipeline = MagicMock(return_value=fake_diarize_output)
+
+    with patch("pyannote.audio.Pipeline") as MockPipeline:
+        MockPipeline.from_pretrained.return_value = fake_pipeline
+        result = trans_module.run_diarization(wav_file, "hf-fake-token")
+
+    assert result is fake_exclusive_annotation, (
+        "run_diarization must unwrap DiarizeOutput and return "
+        "exclusive_speaker_diarization so callers can call .itertracks()"
+    )
