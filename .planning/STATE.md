@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Named Recordings
-status: Phase complete — ready for verification
-last_updated: "2026-03-28T16:57:33.702Z"
+status: Ready to plan
+last_updated: "2026-03-28T17:03:53.358Z"
 progress:
   total_phases: 4
   completed_phases: 2
@@ -22,8 +22,8 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 ## Current Position
 
-Phase: 03 (record-stop-command) — EXECUTING
-Plan: 1 of 1
+Phase: 04
+Plan: Not started
 
 ## Current Status
 
