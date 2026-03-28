@@ -41,6 +41,9 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 <summary>🚧 v1.2 Named Recordings (Phases 02-05) — IN PROGRESS</summary>
 
 - [ ] Phase 02: Storage foundation — `slugify()` pure function + `get_recording_path_with_slug()` (SLUG-01, SLUG-02, RECORD-05)
+  **Plans:** 1 plan
+  Plans:
+  - [ ] 02-01-PLAN.md — TDD slugify() and get_recording_path_with_slug() pure functions
 - [ ] Phase 03: Record/Stop command — `meet record [NAME]` argument, name/slug in state.json and metadata JSON (RECORD-01–04)
 - [ ] Phase 04: `meet list` display — title derived from `recording_name` before LLM-heading fallback (LIST-01, LIST-02)
 - [ ] Phase 05: Notion title integration — page title uses `recording_name` before `extract_title()` fallback (NOTION-01)
@@ -55,7 +58,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 |-------|-----------|-------|----------|------------|
 | 1-6. v1.0 MVP phases | v1.0 | 16/16 | Complete | 2026-03-24 |
 | 01. SRT + Speaker Diarization | v1.1 | 5/5 | Complete | 2026-03-28 |
-| 02. Storage Foundation | v1.2 | 0/? | Pending | — |
+| 02. Storage Foundation | v1.2 | 0/1 | Pending | — |
 | 03. Record/Stop Command | v1.2 | 0/? | Pending | — |
 | 04. meet list Display | v1.2 | 0/? | Pending | — |
 | 05. Notion Title | v1.2 | 0/? | Pending | — |
