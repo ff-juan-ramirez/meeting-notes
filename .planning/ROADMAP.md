@@ -70,7 +70,7 @@ Plans:
 **Plans:** 1 plan
 
 Plans:
-- [ ] 04-01-PLAN.md — Add recording_name title priority to _derive_title with TDD tests
+- [x] 04-01-PLAN.md — Add recording_name title priority to _derive_title with TDD tests
 
 ### Phase 05: Notion Title Integration
 

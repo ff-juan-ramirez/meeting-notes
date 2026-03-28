@@ -20,8 +20,8 @@
 
 ### List Display
 
-- [ ] **LIST-01**: `meet list` derives the session title from `meta.get("recording_name")` before the existing LLM-heading / stem fallback
-- [ ] **LIST-02**: Unnamed sessions and pre-v1.2 sessions (no `recording_name` field) display exactly as they do today — no regressions
+- [x] **LIST-01**: `meet list` derives the session title from `meta.get("recording_name")` before the existing LLM-heading / stem fallback
+- [x] **LIST-02**: Unnamed sessions and pre-v1.2 sessions (no `recording_name` field) display exactly as they do today — no regressions
 
 ### Notion
 
@@ -57,8 +57,8 @@
 | RECORD-02 | Phase 03 | Complete |
 | RECORD-03 | Phase 03 | Complete |
 | RECORD-04 | Phase 03 | Complete |
-| LIST-01 | Phase 04 | Pending |
-| LIST-02 | Phase 04 | Pending |
+| LIST-01 | Phase 04 | Complete |
+| LIST-02 | Phase 04 | Complete |
 | NOTION-01 | Phase 05 | Pending |
 
 **Coverage:**

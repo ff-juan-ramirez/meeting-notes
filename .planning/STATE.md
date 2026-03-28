@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Named Recordings
-status: Ready to plan
-last_updated: "2026-03-28T17:03:53.358Z"
+status: Phase complete — ready for verification
+last_updated: "2026-03-28T18:40:19.002Z"
 progress:
   total_phases: 4
-  completed_phases: 2
-  total_plans: 2
-  completed_plans: 2
+  completed_phases: 3
+  total_plans: 3
+  completed_plans: 3
 ---
 
 # Project State
@@ -18,12 +18,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** Phase 03 — record-stop-command
+**Current focus:** Phase 04 — meet-list-display
 
 ## Current Position
 
-Phase: 04
-Plan: Not started
+Phase: 04 (meet-list-display) — EXECUTING
+Plan: 1 of 1
 
 ## Current Status
 
@@ -103,6 +103,8 @@ Plan: Not started
 - [Phase 02]: NFKD normalization for slugify Unicode handling (D-03) — unicodedata+re stdlib, zero new deps (SLUG-02)
 - [Phase 03-record-stop-command]: Optional positional NAME arg via @click.argument('name', required=False) — more natural than --name option for recording naming
 - [Phase 03-record-stop-command]: stop propagation uses .get() with if-guards — no key written for unnamed sessions, full backward compat (RECORD-04)
+- [Phase 04]: recording_name guard clause at top of _derive_title() before notes_path check — user-given name always wins (D-01)
+- [Phase 04]: Falsy check (if recording_name:) handles None, empty string, and missing key uniformly per D-03 discretion
 
 ## Performance Metrics
 
@@ -130,6 +132,7 @@ Plan: Not started
 | Phase 01 P04 | 480 | 2 tasks | 5 files |
 | Phase 02 P01 | 152 | 2 tasks | 2 files |
 | Phase 03-record-stop-command P01 | 254 | 2 tasks | 3 files |
+| Phase 04 P01 | 54 | 2 tasks | 2 files |
 
 ## Roadmap Evolution
 
