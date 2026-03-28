@@ -142,11 +142,13 @@ The existing `get_recording_path()` is not modified — unnamed sessions continu
 |---------|----------------|------------------|
 | `meet record` | Yes | New optional `[NAME]` argument; slugify; call `get_recording_path_with_slug`; write `name`+`slug` to state.json |
 | `meet stop` | Yes | Read `name`/`slug` from state.json; include in metadata JSON; derive metadata filename from stem |
-| `meet transcribe` | Minimal | Stem-based resolution already works; no slug awareness needed. Session resolution by latest WAV or `--session STEM` unchanged |
+| `meet transcribe` | Yes — CRITICAL | Must switch from destructive overwrite to read-merge-write (see note below) |
 | `meet summarize` | Yes | Notion title: prefer `name` from metadata over `extract_title()` from notes content when available |
 | `meet list` | Yes | `_derive_title()` must check `meta.get("name")` first, before reading notes file for H1 |
 | `meet doctor` | No | No changes — no new system prerequisites |
-| `meet init` | No | No changes — name is per-session, not a config concern |
+| `meet init` | No | No changes — name is per-season, not a config concern |
+
+**Critical note on `meet transcribe`:** The current implementation at `cli/commands/transcribe.py:167` does a destructive `write_state(metadata_path, metadata)` — it builds a fresh dict and overwrites the file completely. This will silently erase `name`, `slug`, and `duration_seconds` written by `meet stop`. This must be converted to read-merge-write before the named recordings feature can work end-to-end. The `meet summarize` command already uses the correct read-merge-write pattern (`existing = read_state(...) or {}; existing.update(...)`) and does not need this fix — only `transcribe` does.
 
 ---
 
@@ -175,13 +177,14 @@ meet transcribe [--session 1-1-with-gabriel-20240322-143022]
   ├─ stem = "1-1-with-gabriel-20240322-143022"
   ├─ transcripts/1-1-with-gabriel-20240322-143022.txt
   ├─ transcripts/1-1-with-gabriel-20240322-143022.srt
-  └─ metadata JSON: read-merge-write (preserves "name", "slug" from stop)
+  └─ metadata JSON: read-merge-write (preserves "name", "slug", "duration_seconds" from stop)
+     [FIX REQUIRED: current code overwrites; must be changed to merge]
 
 meet summarize
   ├─ stem = "1-1-with-gabriel-20240322-143022"
   ├─ notes/1-1-with-gabriel-20240322-143022-meeting.md
   ├─ Notion title = meta.get("name") or extract_title(notes, fallback_ts)
-  └─ metadata JSON: read-merge-write (preserves all fields)
+  └─ metadata JSON: read-merge-write (already correct — preserves all fields)
 
 meet list
   └─ _derive_title() = meta.get("name") or [existing H1/stem logic]
@@ -204,7 +207,7 @@ meet list --json
 
 `start_recording(config)` currently calls `get_recording_path()` directly. The name must be passed in:
 
-**Option A (recommended):** Add optional `slug: str | None = None` parameter to `start_recording()`. When present, calls `get_recording_path_with_slug(slug)`. When absent, calls `get_recording_path()`. This keeps the service layer responsible for path selection and keeps `record.py` thin.
+**Recommended change:** Add optional `slug: str | None = None` parameter to `start_recording()`. When present, calls `get_recording_path_with_slug(slug)`. When absent, calls `get_recording_path()`. This keeps the service layer responsible for path selection and keeps `record.py` thin.
 
 ```python
 def start_recording(config: Config, slug: str | None = None) -> tuple[subprocess.Popen, Path]:
@@ -228,6 +231,23 @@ def start_recording(config: Config, slug: str | None = None) -> tuple[subprocess
 - Read `name` and `slug` from `existing` (state.json) — both may be absent for unnamed sessions
 - Write both to the metadata JSON alongside `wav_path` and `duration_seconds`
 - No change to stem derivation — stem comes from `Path(output_path_str).stem` as today
+
+### Modified: `meeting_notes/cli/commands/transcribe.py` — REQUIRED FIX
+
+Current code at line 156-167 builds a fresh `metadata` dict and calls `write_state(metadata_path, metadata)`, overwriting any prior content. Must be changed to read-merge-write:
+
+```python
+# Current (BROKEN for named sessions):
+metadata = { "wav_path": ..., "transcript_path": ..., ... }
+write_state(metadata_path, metadata)
+
+# Required fix:
+existing = read_state(metadata_path) or {}
+existing.update({ "wav_path": ..., "transcript_path": ..., ... })
+write_state(metadata_path, existing)
+```
+
+This change also preserves `duration_seconds` for sessions that were stopped before transcription, which is already useful independent of the named recordings feature.
 
 ### Modified: `meeting_notes/cli/commands/list.py`
 
@@ -254,7 +274,7 @@ The `session_metadata` dict is already loaded in `summarize.py` (line 83). This 
 
 ### Unchanged: All other modules
 
-`meet transcribe`, `meet doctor`, `meet init`, `services/transcription.py`, `services/llm.py`, `services/notion.py`, `core/config.py`, `core/state.py`, `core/health_check.py` — no changes required.
+`meet doctor`, `meet init`, `services/transcription.py`, `services/llm.py`, `services/notion.py`, `core/config.py`, `core/state.py`, `core/health_check.py` — no changes required.
 
 ---
 
@@ -353,18 +373,26 @@ Dependencies flow in one direction: `storage.py` → `audio.py` → `record.py` 
 | 3 | `meet record [NAME]` argument + state.json fields | `cli/commands/record.py` | Phase 2 audio |
 | 3 | `meet stop` reads name/slug, writes to metadata JSON | `cli/commands/record.py` | Phase 3 record |
 | 3 | Tests for record + stop with named and unnamed sessions | `tests/test_record_command.py` | Phase 3 commands |
-| 4 | `_derive_title()` prefers `meta.get("name")` | `cli/commands/list.py` | Phase 3 metadata |
-| 4 | Tests for list with named sessions | `tests/test_cli_list.py` | Phase 4 list |
-| 5 | Notion title uses `meta.get("name")` over `extract_title()` | `cli/commands/summarize.py` | Phase 3 metadata |
-| 5 | Tests for summarize Notion title with named sessions | `tests/test_summarize_command.py` | Phase 5 summarize |
+| 4 | Fix `meet transcribe` metadata write: destructive overwrite → read-merge-write | `cli/commands/transcribe.py` | Phase 3 metadata |
+| 4 | Tests for transcribe preserving name/slug/duration_seconds | `tests/test_transcribe_command.py` | Phase 4 transcribe |
+| 5 | `_derive_title()` prefers `meta.get("name")` | `cli/commands/list.py` | Phase 3 metadata |
+| 5 | Tests for list with named sessions | `tests/test_cli_list.py` | Phase 5 list |
+| 6 | Notion title uses `meta.get("name")` over `extract_title()` | `cli/commands/summarize.py` | Phase 3 metadata |
+| 6 | Tests for summarize Notion title with named sessions | `tests/test_summarize_command.py` | Phase 6 summarize |
 
 **Rationale for ordering:**
 
 - Phase 1 first: `slugify()` is a pure function with no dependencies — can be built and fully tested in isolation
 - Phase 2 before Phase 3: `audio.py` is the next dependency in the chain; its signature change must be stable before `record.py` calls it
 - Phase 3 (record + stop together): `stop` lives in the same file as `record`; they share `_get_state_path()` and `_get_config_path()`; separating them creates merge complexity
-- Phase 4 and 5 are independent of each other: either can be built after Phase 3 completes; list is simpler so build it first
-- Notion title change (Phase 5) is lowest risk — it is a two-line change gated behind existing Notion configuration
+- Phase 4 (`transcribe` fix) before Phase 5 and 6: the read-merge-write fix is a prerequisite for `name`/`slug` to survive the full pipeline. Without it, `meet transcribe` erases what `meet stop` wrote. Phase 4 can be combined with Phase 3 if desired — the fix is small — but is listed separately to make the dependency explicit
+- Phase 5 and 6 are independent of each other: either can be built after Phase 4 completes; `list` is simpler so build it first
+- Notion title change (Phase 6) is lowest risk — it is a two-line change gated behind existing Notion configuration
+
+**Phases that could be merged for efficiency:**
+- Phases 1+2 can be a single PR (pure core/services, no CLI changes)
+- Phases 3+4 can be a single PR (`record.py` + `transcribe.py` fix, both affect data flow through stop)
+- Phases 5+6 can be a single PR (both are read-only consumers of the `name` field)
 
 ---
 
@@ -372,7 +400,7 @@ Dependencies flow in one direction: `storage.py` → `audio.py` → `record.py` 
 
 ### Pattern: Read-merge-write for metadata
 
-Already established and working. All metadata writes must read existing content first, merge, then write. Never overwrite. The `name` and `slug` fields written at `stop` time must survive through `transcribe` and `summarize` writes.
+Already established in `summarize.py` and must be applied to `transcribe.py` as part of this milestone. All metadata writes must read existing content first, merge, then write. Never overwrite. The `name` and `slug` fields written at `stop` time must survive through `transcribe` and `summarize` writes.
 
 ```python
 existing = read_state(metadata_path) or {}
@@ -414,6 +442,10 @@ The existing function is used by tests and the audio service. Add a new sibling 
 
 The `--session` flag already accepts a stem. A named session's stem (`1-1-with-gabriel-20240322-143022`) is a valid stem. No changes to session resolution logic are needed.
 
+### Anti-Pattern: Skipping the `transcribe.py` fix and relying on `stop` fields only
+
+`meet list` and `meet summarize` read from the metadata JSON after `transcribe` has run. If `transcribe` overwrites the file, `name` is gone before those commands ever see it. The fix is mandatory, not optional.
+
 ---
 
 ## Confidence Assessment
@@ -423,10 +455,11 @@ The `--session` flag already accepts a stem. A named session's stem (`1-1-with-g
 | Where to store name | HIGH | Code-verified: stop reads state.json; downstream reads metadata |
 | Filename strategy | HIGH | Code-verified: stem-based resolution is already in transcribe + summarize |
 | Slugify algorithm | HIGH | stdlib-only, no new deps, edge cases from PROJECT.md covered |
-| Commands needing changes | HIGH | All command files read directly |
+| Commands needing changes | HIGH | All command files read directly; transcribe overwrite bug confirmed at line 167 |
 | Data flow | HIGH | Traced through all five commands in source |
 | Backward compatibility | HIGH | `.get()` with fallback is the established pattern in list.py |
 | Build order | HIGH | Dependency graph is explicit in source code |
+| Transcribe overwrite bug | HIGH | Confirmed by direct inspection: line 167 does destructive write_state |
 
 ---
 

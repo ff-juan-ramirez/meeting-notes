@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Named Recordings
-status: Defining requirements
-last_updated: "2026-03-27T00:00:00.000Z"
+status: Ready to plan
+last_updated: "2026-03-28T00:00:00.000Z"
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -22,10 +22,10 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Phase 02 (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-03-27 — Milestone v1.2 started
+Status: Ready to plan
+Last activity: 2026-03-28 — v1.2 requirements and roadmap defined (4 phases)
 
 ## Current Status
 
@@ -35,8 +35,8 @@ Last activity: 2026-03-27 — Milestone v1.2 started
 
 ## Last Session
 
-**Completed:** v1.2 milestone started — defining requirements
-**Date:** 2026-03-27
+**Completed:** v1.2 requirements defined (10 reqs, 4 phases) — REQUIREMENTS.md + ROADMAP.md written
+**Date:** 2026-03-28
 
 ## Decisions
 
