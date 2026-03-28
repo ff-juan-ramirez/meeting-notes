@@ -29,6 +29,12 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 - ✓ `meet doctor --verbose` with per-check `verbose_detail()` inline lines — v1.0
 - ✓ Exportable git repo: pyproject.toml (PEP 621), README.md with Audio MIDI Setup walkthrough + ASCII diagram, MIT LICENSE, .gitignore — v1.0
 
+### Validated (Phase 03 — 2026-03-28)
+
+- ✓ `meet record [NAME]` accepts optional name argument; slug computed via `slugify()` and stored as `recording_slug` in `state.json` alongside `recording_name` — Phase 03 (RECORD-01, RECORD-02)
+- ✓ Named session uses `get_recording_path_with_slug()` for WAV output path; unnamed sessions unchanged — Phase 03 (RECORD-03)
+- ✓ `meet stop` propagates `recording_name` and `recording_slug` from `state.json` to session metadata JSON — Phase 03 (RECORD-04)
+
 ### Validated (Phase 02 — 2026-03-28)
 
 - ✓ `slugify(text)` pure function in `core/storage.py`: NFKD normalization, ASCII-safe, lowercase, colon→hyphen, 80-char max, `"untitled"` fallback — Phase 02 (SLUG-01, SLUG-02)
@@ -143,4 +149,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 — Phase 02 complete (storage-foundation: slugify + path utilities)*
+*Last updated: 2026-03-28 — Phase 03 complete (record-stop-command: NAME arg + slug wired end-to-end)*
