@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Named Recordings
-status: Ready to plan
-last_updated: "2026-03-28T00:00:00.000Z"
+status: Phase complete — ready for verification
+last_updated: "2026-03-28T16:06:12.905Z"
 progress:
-  total_phases: 4
+  total_phases: 1
   completed_phases: 0
-  total_plans: 0
+  total_plans: 1
   completed_plans: 0
 ---
 
@@ -18,14 +18,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** v1.2 — Named recordings
+**Current focus:** Phase 02 — storage-foundation
 
 ## Current Position
 
-Phase: Phase 02 (not started)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-03-28 — v1.2 requirements and roadmap defined (4 phases)
+Phase: 02 (storage-foundation) — EXECUTING
+Plan: 1 of 1
 
 ## Current Status
 
@@ -100,6 +98,9 @@ Last activity: 2026-03-28 — v1.2 requirements and roadmap defined (4 phases)
 - [Phase 01-04]: torchaudio.list_audio_backends monkey-patch: pyannote.audio 3.x calls this at import time but removed in torchaudio>=2.9; patch adds missing function with ['soundfile'] backend
 - [Phase 01-04]: pyannote.audio version pin relaxed from ==3.3.2 to >=3.3.2,<5 to avoid pip dependency conflict with torchaudio-resolved pyannote.core versions
 - [Phase 01-04]: meet init --update flag uses early-exit routing to _update_specific_fields before interactive config-exists check
+- [Phase 02]: slugify truncates at 80 chars with trailing hyphen strip (D-01)
+- [Phase 02]: get_recording_path_with_slug accepts str only not str|None (D-02) — called only when name is known
+- [Phase 02]: NFKD normalization for slugify Unicode handling (D-03) — unicodedata+re stdlib, zero new deps (SLUG-02)
 
 ## Performance Metrics
 
@@ -125,6 +126,7 @@ Last activity: 2026-03-28 — v1.2 requirements and roadmap defined (4 phases)
 | Phase 01 | 02 | 720 | 2 | 6 |
 | Phase 01 P03 | 900 | 2 tasks | 6 files |
 | Phase 01 P04 | 480 | 2 tasks | 5 files |
+| Phase 02 P01 | 152 | 2 tasks | 2 files |
 
 ## Roadmap Evolution
 
