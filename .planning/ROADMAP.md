@@ -41,7 +41,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 
 - [x] Phase 02: Storage foundation — completed 2026-03-28 (1/1 plans)
 - [x] Phase 03: Record/Stop command — pending (1 plan) (completed 2026-03-28)
-- [ ] Phase 04: meet list display — 1 plan
+- [x] Phase 04: meet list display — 1 plan (completed 2026-03-28)
 - [ ] Phase 05: Notion title integration — pending
 
 ### Phase 02: Storage Foundation
@@ -67,7 +67,7 @@ Plans:
 
 **Goal:** Update `meet list` to derive session title from `meta.get("recording_name")` before the existing LLM-heading / stem fallback. Unnamed and pre-v1.2 sessions must display exactly as they do today.
 **Requirements covered:** LIST-01, LIST-02
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
 - [x] 04-01-PLAN.md — Add recording_name title priority to _derive_title with TDD tests
@@ -87,7 +87,7 @@ Plans:
 | 01. SRT + Speaker Diarization | v1.1 | 5/5 | Complete | 2026-03-28 |
 | 02. Storage Foundation | v1.2 | 1/1 | Complete    | 2026-03-28 |
 | 03. Record/Stop Command | v1.2 | 1/1 | Complete    | 2026-03-28 |
-| 04. meet list Display | v1.2 | 0/1 | Planned | — |
+| 04. meet list Display | v1.2 | 0/1 | Complete    | 2026-03-28 |
 | 05. Notion Title | v1.2 | 0/? | Pending | — |
 
 ---
