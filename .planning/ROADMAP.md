@@ -58,7 +58,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 |-------|-----------|-------|----------|------------|
 | 1-6. v1.0 MVP phases | v1.0 | 16/16 | Complete | 2026-03-24 |
 | 01. SRT + Speaker Diarization | v1.1 | 5/5 | Complete | 2026-03-28 |
-| 02. Storage Foundation | v1.2 | 0/1 | Planned    |  |
+| 02. Storage Foundation | v1.2 | 0/1 | Complete    | 2026-03-28 |
 | 03. Record/Stop Command | v1.2 | 0/? | Pending | — |
 | 04. meet list Display | v1.2 | 0/? | Pending | — |
 | 05. Notion Title | v1.2 | 0/? | Pending | — |
