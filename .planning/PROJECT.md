@@ -101,7 +101,7 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 
 ## Evolution
 
-**Last updated:** 2026-03-24 — v1.0 milestone complete
+**Last updated:** 2026-03-28 — Phase 01 complete (SRT output + speaker diarization gap closure)
 
 This document evolves at phase transitions and milestone boundaries.
 
@@ -119,4 +119,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-24 — v1.0 shipped (6 phases, 16 plans, 208 tests, fully exportable git repo)*
+*Last updated: 2026-03-28 — Phase 01 complete (SRT output, speaker diarization, pyannote health checks, init --update, torchaudio 3.x compatibility fix)*
