@@ -250,3 +250,87 @@ def test_start_recording_without_output_path(tmp_path):
 
     assert returned_path == generated_path
     assert proc.pid == 99015
+
+
+# ---------------------------------------------------------------------------
+# Task 2 tests: meet stop propagates recording_name/slug to metadata (RECORD-04)
+# ---------------------------------------------------------------------------
+
+def test_stop_propagates_name_to_metadata(runner, tmp_path, state_path):
+    """meet stop copies recording_name and recording_slug from state to metadata JSON."""
+    start_time = datetime.now(timezone.utc) - timedelta(seconds=60)
+    wav_name = "team-standup-20260328-143000-abc12345.wav"
+    write_state(state_path, {
+        "session_id": "abc",
+        "pid": 99003,
+        "output_path": str(tmp_path / "recordings" / wav_name),
+        "start_time": start_time.isoformat(),
+        "recording_name": "Team Standup",
+        "recording_slug": "team-standup",
+    })
+    metadata_dir = tmp_path / "metadata"
+
+    with patch("meeting_notes.cli.commands.record._get_state_path", return_value=state_path):
+        with patch("meeting_notes.cli.commands.record.stop_recording"):
+            with patch("meeting_notes.cli.commands.record.get_data_dir", return_value=tmp_path):
+                result = runner.invoke(stop, obj={"quiet": False})
+
+    assert result.exit_code == 0
+    metadata_path = metadata_dir / wav_name.replace(".wav", ".json")
+    meta = read_state(metadata_path)
+    assert meta is not None
+    assert meta["recording_name"] == "Team Standup"
+    assert meta["recording_slug"] == "team-standup"
+
+
+def test_stop_unnamed_session_no_name_in_metadata(runner, tmp_path, state_path):
+    """meet stop does NOT add recording_name/slug to metadata for unnamed sessions."""
+    start_time = datetime.now(timezone.utc) - timedelta(seconds=60)
+    wav_name = "20260328-143000-abc12345.wav"
+    write_state(state_path, {
+        "session_id": "abc",
+        "pid": 99003,
+        "output_path": str(tmp_path / "recordings" / wav_name),
+        "start_time": start_time.isoformat(),
+    })
+    metadata_dir = tmp_path / "metadata"
+
+    with patch("meeting_notes.cli.commands.record._get_state_path", return_value=state_path):
+        with patch("meeting_notes.cli.commands.record.stop_recording"):
+            with patch("meeting_notes.cli.commands.record.get_data_dir", return_value=tmp_path):
+                result = runner.invoke(stop, obj={"quiet": False})
+
+    assert result.exit_code == 0
+    metadata_path = metadata_dir / wav_name.replace(".wav", ".json")
+    meta = read_state(metadata_path)
+    assert meta is not None
+    assert "recording_name" not in meta
+    assert "recording_slug" not in meta
+
+
+def test_stop_named_session_still_writes_duration(runner, tmp_path, state_path):
+    """meet stop writes both duration_seconds AND recording_name for named sessions."""
+    start_time = datetime.now(timezone.utc) - timedelta(seconds=300)
+    wav_name = "team-standup-20260328-143000-abc12345.wav"
+    write_state(state_path, {
+        "session_id": "abc",
+        "pid": 99003,
+        "output_path": str(tmp_path / "recordings" / wav_name),
+        "start_time": start_time.isoformat(),
+        "recording_name": "Team Standup",
+        "recording_slug": "team-standup",
+    })
+    metadata_dir = tmp_path / "metadata"
+
+    with patch("meeting_notes.cli.commands.record._get_state_path", return_value=state_path):
+        with patch("meeting_notes.cli.commands.record.stop_recording"):
+            with patch("meeting_notes.cli.commands.record.get_data_dir", return_value=tmp_path):
+                result = runner.invoke(stop, obj={"quiet": False})
+
+    assert result.exit_code == 0
+    metadata_path = metadata_dir / wav_name.replace(".wav", ".json")
+    meta = read_state(metadata_path)
+    assert meta is not None
+    assert "duration_seconds" in meta
+    assert 298 <= meta["duration_seconds"] <= 302
+    assert meta["recording_name"] == "Team Standup"

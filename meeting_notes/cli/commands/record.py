@@ -133,6 +133,14 @@ def stop(ctx: click.Context):
         # Also write wav_path for sessions that may never reach transcription
         meta["wav_path"] = str(Path(output_path_str).resolve())
 
+        # Propagate recording name/slug from state to metadata (RECORD-04)
+        recording_name = existing.get("recording_name")
+        recording_slug = existing.get("recording_slug")
+        if recording_name:
+            meta["recording_name"] = recording_name
+        if recording_slug:
+            meta["recording_slug"] = recording_slug
+
         write_state(metadata_path, meta)
 
     clear_state(state_path)
