@@ -76,6 +76,10 @@ Plans:
 
 **Goal:** Update `meet summarize` to use `meta.get("recording_name")` as the Notion page title before `extract_title()` fallback. Unnamed and pre-v1.2 sessions are unaffected.
 **Requirements covered:** NOTION-01
+**Plans:** 1 plan
+
+Plans:
+- [ ] 05-01-PLAN.md — TDD recording_name as Notion page title priority in summarize command
 
 ---
 
@@ -88,6 +92,6 @@ Plans:
 | 02. Storage Foundation | v1.2 | 1/1 | Complete    | 2026-03-28 |
 | 03. Record/Stop Command | v1.2 | 1/1 | Complete    | 2026-03-28 |
 | 04. meet list Display | v1.2 | 0/1 | Complete    | 2026-03-28 |
-| 05. Notion Title | v1.2 | 0/? | Pending | — |
+| 05. Notion Title | v1.2 | 0/1 | Pending | — |
 
 ---
