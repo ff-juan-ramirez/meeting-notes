@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Named Recordings
-status: Milestone complete
+status: In Progress
 last_updated: "2026-03-28T16:10:58.122Z"
 progress:
-  total_phases: 1
+  total_phases: 4
   completed_phases: 1
-  total_plans: 1
+  total_plans: 2
   completed_plans: 1
 ---
 
