@@ -40,7 +40,7 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 ## v1.2: Named Recordings — IN PROGRESS
 
 - [x] Phase 02: Storage foundation — completed 2026-03-28 (1/1 plans)
-- [ ] Phase 03: Record/Stop command — pending
+- [ ] Phase 03: Record/Stop command — pending (1 plan)
 - [ ] Phase 04: meet list display — pending
 - [ ] Phase 05: Notion title integration — pending
 
@@ -58,6 +58,10 @@ Plans:
 
 **Goal:** Wire `meet record [NAME]` optional argument, store `recording_name`/`recording_slug` in `state.json` at record time, and propagate both fields to session metadata JSON in `meet stop`.
 **Requirements covered:** RECORD-01, RECORD-02, RECORD-03, RECORD-04
+**Plans:** 1 plan
+
+Plans:
+- [ ] 03-01-PLAN.md — Wire NAME arg through record/stop lifecycle with state and metadata propagation
 
 ### Phase 04: meet list Display
 
@@ -77,8 +81,8 @@ Plans:
 |-------|-----------|-------|----------|------------|
 | 1-6. v1.0 MVP phases | v1.0 | 16/16 | Complete | 2026-03-24 |
 | 01. SRT + Speaker Diarization | v1.1 | 5/5 | Complete | 2026-03-28 |
-| 02. Storage Foundation | v1.2 | 0/1 | Complete    | 2026-03-28 |
-| 03. Record/Stop Command | v1.2 | 0/? | Pending | — |
+| 02. Storage Foundation | v1.2 | 1/1 | Complete    | 2026-03-28 |
+| 03. Record/Stop Command | v1.2 | 0/1 | Pending | — |
 | 04. meet list Display | v1.2 | 0/? | Pending | — |
 | 05. Notion Title | v1.2 | 0/? | Pending | — |
 
