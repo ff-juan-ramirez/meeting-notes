@@ -9,6 +9,7 @@ from meeting_notes.core.storage import (
     ensure_dirs,
     get_recording_path,
     slugify,
+    get_recording_path_with_slug,
 )
 
 
@@ -98,3 +99,34 @@ def test_slugify_all_punctuation():
 
 def test_slugify_numbers_only():
     assert slugify("123") == "123"
+
+
+# --- get_recording_path_with_slug() tests ---
+
+def test_recording_path_with_slug_format(monkeypatch, tmp_path):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    path = get_recording_path_with_slug("Weekly 1:1")
+    assert re.match(r"weekly-1-1-\d{8}-\d{6}-[a-f0-9]{8}\.wav", path.name)
+
+
+def test_recording_path_with_slug_in_recordings_dir(monkeypatch, tmp_path):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    path = get_recording_path_with_slug("Test Meeting")
+    assert path.parent.name == "recordings"
+
+
+def test_recording_path_with_slug_custom_storage(tmp_path):
+    path = get_recording_path_with_slug("Test", storage_path=str(tmp_path))
+    assert str(path).startswith(str(tmp_path))
+
+
+def test_recording_path_with_slug_is_wav(monkeypatch, tmp_path):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    path = get_recording_path_with_slug("Demo Session")
+    assert path.suffix == ".wav"
+
+
+def test_unnamed_path_unchanged(monkeypatch, tmp_path):
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    path = get_recording_path()
+    assert re.match(r"\d{8}-\d{6}-[a-f0-9]{8}\.wav", path.name)

@@ -57,3 +57,11 @@ def get_recording_path(storage_path: str | None = None) -> Path:
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     session_id = uuid4().hex[:8]
     return get_data_dir(storage_path) / "recordings" / f"{timestamp}-{session_id}.wav"
+
+
+def get_recording_path_with_slug(name: str, storage_path: str | None = None) -> Path:
+    """Generate a recording path with slug-prefixed stem: {slug}-{timestamp}-{uuid8}.wav (RECORD-05)."""
+    slug = slugify(name)
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    session_id = uuid4().hex[:8]
+    return get_data_dir(storage_path) / "recordings" / f"{slug}-{timestamp}-{session_id}.wav"
