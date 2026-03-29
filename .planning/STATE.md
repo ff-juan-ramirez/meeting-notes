@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Named Recordings
-status: Ready to plan
-last_updated: "2026-03-28T21:34:30.820Z"
+status: Phase complete — ready for verification
+last_updated: "2026-03-29T17:43:18.910Z"
 progress:
   total_phases: 6
-  completed_phases: 5
-  total_plans: 5
-  completed_plans: 5
+  completed_phases: 6
+  total_plans: 6
+  completed_plans: 6
 ---
 
 # Project State
@@ -18,12 +18,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** Phase 06 — add-session-id-column-to-meet-list-untruncated-and-wire-it-as-a-selector-for-meet-summarize-session
+**Current focus:** Phase 07 — for-the-notes-in-notion-if-the-user-specifies-a-title-i-want-that-title-to-be-in-the-notion-note-title
 
 ## Current Position
 
-Phase: 07
-Plan: Not started
+Phase: 07 (for-the-notes-in-notion-if-the-user-specifies-a-title-i-want-that-title-to-be-in-the-notion-note-title) — EXECUTING
+Plan: 1 of 1
 
 ## Current Status
 
@@ -108,6 +108,7 @@ Plan: Not started
 - [Phase 05]: recording_name guard uses falsy check (if recording_name) to uniformly handle None, empty string, missing key — consistent with Phase 04 D-03
 - [Phase 05]: session_metadata.get('recording_name') if session_metadata else None guards against pre-v1.2 sessions where read_state returns None for missing files
 - [Phase 06]: Session ID column added last (no max_width) — untruncated by design; session_id set to path.stem for exact --session round-trip; summarize help text updated to v1.2 slug-prefix format
+- [Phase 07]: [Phase 07-01]: --title flag uses falsy check; notion_title local var avoids shadowing Click param; session_metadata loaded before Notion push block
 
 ## Performance Metrics
 
@@ -138,6 +139,7 @@ Plan: Not started
 | Phase 04 P01 | 54 | 2 tasks | 2 files |
 | Phase 05 P01 | 164 | 2 tasks | 2 files |
 | Phase 06 P01 | 420 | 1 tasks | 3 files |
+| Phase 07 P01 | 236 | 2 tasks | 2 files |
 
 ## Roadmap Evolution
 

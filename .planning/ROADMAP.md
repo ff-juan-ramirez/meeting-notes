@@ -109,9 +109,9 @@ Plans:
 **Goal:** Add a `--title` option to `meet summarize` that overrides the Notion page title at summarize time. Priority chain: `--title` > `recording_name` > `extract_title()`. Runtime override only — not persisted to metadata.
 **Requirements:** TITLE-01 (--title flag), TITLE-02 (priority chain), TITLE-03 (no metadata persistence)
 **Depends on:** Phase 6
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 07-01-PLAN.md — Add --title flag to meet summarize with TDD tests
+- [x] 07-01-PLAN.md — Add --title flag to meet summarize with TDD tests
 
 ---
