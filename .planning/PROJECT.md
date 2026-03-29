@@ -4,7 +4,7 @@
 
 A 100% local CLI tool that captures audio from any video call (Zoom, Google Meet, Teams) without bots or browser extensions, transcribes it locally with Whisper, generates structured meeting notes using a local LLM, and saves them to Notion. No cloud, no third-party services, no data leaves the machine.
 
-**Status:** v1.2 in progress — Phase 06 complete (Session ID column in meet list + --json output, summarize --session help updated).
+**Status:** v1.2 complete — Phase 07 complete (--title flag for meet summarize Notion page title override).
 
 ## Core Value
 
@@ -28,6 +28,12 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 - ✓ `meet list` with Rich table, `--status` filter, `--json` output, duration/title derivation — v1.0
 - ✓ `meet doctor --verbose` with per-check `verbose_detail()` inline lines — v1.0
 - ✓ Exportable git repo: pyproject.toml (PEP 621), README.md with Audio MIDI Setup walkthrough + ASCII diagram, MIT LICENSE, .gitignore — v1.0
+
+### Validated (Phase 07 — 2026-03-29)
+
+- ✓ `meet summarize --title "Custom Title"` overrides Notion page title at summarize time; priority chain: `--title` > `recording_name` > `extract_title()` fallback — Phase 07 (TITLE-01, TITLE-02, TITLE-03)
+- ✓ Empty `--title ""` is treated as falsy — falls through to `recording_name` — Phase 07 (TITLE-03)
+- ✓ `--title` value is runtime-only and never persisted to session metadata JSON — Phase 07 (D-05)
 
 ### Validated (Phase 06 — 2026-03-28)
 
