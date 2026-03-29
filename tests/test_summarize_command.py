@@ -611,55 +611,35 @@ def test_summarize_preserves_phase3_metadata(runner, tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Wave 0 stubs — diarized transcript preference
+# TITLE-01/02/03: --title flag for Notion page title override
 # ---------------------------------------------------------------------------
 
-def test_prefers_diarized_transcript(runner, tmp_path):
-    """meet summarize uses diarized_transcript_path from metadata when available."""
-    import json
+def test_summarize_notion_title_flag_overrides_default(runner, tmp_path):
+    """--title 'Weekly Sync' sets Notion page title to 'Weekly Sync' (no recording_name in metadata)."""
+    from meeting_notes.cli.commands.summarize import summarize
 
-    transcripts = tmp_path / "transcripts"
-    notes = tmp_path / "notes"
-    metadata_dir = tmp_path / "metadata"
-    for d in [transcripts, notes, metadata_dir]:
-        d.mkdir()
+    transcripts, notes, metadata = _make_env_dirs(tmp_path)
+    stem = "my-standup-20260328-090000-abc12345"
+    _create_fake_transcript(transcripts, stem)
+    _create_config(tmp_path, token="secret_test", parent_page_id="page123")
+    # No metadata pre-populated — no recording_name
 
-    stem = "20260327-100000-aabbccdd"
-
-    # Write transcript with diarized content
-    transcript_path = transcripts / f"{stem}.txt"
-    transcript_path.write_text("SPEAKER_00:\nHello world\n\nSPEAKER_01:\nGoodbye")
-
-    # Write metadata indicating diarization succeeded
-    meta_path = metadata_dir / f"{stem}.json"
-    meta_path.write_text(json.dumps({
-        "transcript_path": str(transcript_path),
-        "diarized_transcript_path": str(transcript_path),
-        "diarization_succeeded": True,
-    }))
-
-    with patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
-         patch("meeting_notes.cli.commands.summarize.Config.load") as mock_config_load, \
-         patch("meeting_notes.cli.commands.summarize.ensure_dirs"), \
+    mock_create_page = MagicMock(return_value="https://notion.so/abc123")
+    with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
          patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
-         patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()):
-
-        from meeting_notes.core.config import Config
-        mock_config_load.return_value = Config()
-
-        from meeting_notes.cli.commands.summarize import summarize
-        result = runner.invoke(summarize, ["--session", stem], obj={"quiet": False})
+         patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
+         patch("meeting_notes.cli.commands.summarize.create_page", mock_create_page):
+        result = runner.invoke(summarize, ["--session", stem, "--title", "Weekly Sync"])
 
     assert result.exit_code == 0, f"Exit code was {result.exit_code}, output: {result.output}"
+    mock_create_page.assert_called_once()
+    call_kwargs = mock_create_page.call_args[1]
+    assert call_kwargs["title"] == "Weekly Sync"
 
 
-# ---------------------------------------------------------------------------
-# NOTION-01: recording_name priority for Notion page title
-# ---------------------------------------------------------------------------
-
-def test_summarize_notion_uses_recording_name(runner, tmp_path):
-    """When metadata has recording_name, Notion page title is that name (NOTION-01)."""
+def test_summarize_notion_title_flag_overrides_recording_name(runner, tmp_path):
+    """--title 'Weekly Sync' overrides recording_name='My Standup' in metadata (D-03)."""
     from meeting_notes.cli.commands.summarize import summarize
     from meeting_notes.core.state import write_state
 
@@ -678,23 +658,55 @@ def test_summarize_notion_uses_recording_name(runner, tmp_path):
          patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
          patch("meeting_notes.cli.commands.summarize.create_page", mock_create_page):
-        result = runner.invoke(summarize, ["--session", stem])
+        result = runner.invoke(summarize, ["--session", stem, "--title", "Weekly Sync"])
 
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Exit code was {result.exit_code}, output: {result.output}"
+    mock_create_page.assert_called_once()
+    call_kwargs = mock_create_page.call_args[1]
+    assert call_kwargs["title"] == "Weekly Sync"  # NOT "My Standup"
+
+
+def test_summarize_notion_no_title_flag_uses_recording_name(runner, tmp_path):
+    """Without --title, recording_name from metadata is used as Notion title (D-04 regression guard)."""
+    from meeting_notes.cli.commands.summarize import summarize
+    from meeting_notes.core.state import write_state
+
+    transcripts, notes, metadata = _make_env_dirs(tmp_path)
+    stem = "my-standup-20260328-090000-abc12345"
+    _create_fake_transcript(transcripts, stem)
+    _create_config(tmp_path, token="secret_test", parent_page_id="page123")
+
+    # Pre-populate metadata with recording_name
+    metadata_path = metadata / f"{stem}.json"
+    write_state(metadata_path, {"recording_name": "My Standup"})
+
+    mock_create_page = MagicMock(return_value="https://notion.so/abc123")
+    with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.get_config_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
+         patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
+         patch("meeting_notes.cli.commands.summarize.create_page", mock_create_page):
+        result = runner.invoke(summarize, ["--session", stem])  # no --title
+
+    assert result.exit_code == 0, f"Exit code was {result.exit_code}, output: {result.output}"
     mock_create_page.assert_called_once()
     call_kwargs = mock_create_page.call_args[1]
     assert call_kwargs["title"] == "My Standup"
 
 
-def test_summarize_notion_unnamed_uses_extract_title(runner, tmp_path):
-    """When metadata has no recording_name, Notion title comes from extract_title (NOTION-01 regression)."""
+def test_summarize_notion_empty_title_flag_ignored(runner, tmp_path):
+    """Empty --title '' is falsy — falls through to recording_name from metadata."""
     from meeting_notes.cli.commands.summarize import summarize
+    from meeting_notes.core.state import write_state
 
     transcripts, notes, metadata = _make_env_dirs(tmp_path)
-    stem = "20260328-090000-abc12345"
+    stem = "my-standup-20260328-090000-abc12345"
     _create_fake_transcript(transcripts, stem)
     _create_config(tmp_path, token="secret_test", parent_page_id="page123")
-    # No metadata pre-populated — no recording_name
+
+    # Pre-populate metadata with recording_name
+    metadata_path = metadata / f"{stem}.json"
+    write_state(metadata_path, {"recording_name": "My Standup"})
 
     mock_create_page = MagicMock(return_value="https://notion.so/abc123")
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
@@ -702,25 +714,27 @@ def test_summarize_notion_unnamed_uses_extract_title(runner, tmp_path):
          patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
          patch("meeting_notes.cli.commands.summarize.create_page", mock_create_page):
-        result = runner.invoke(summarize, ["--session", stem])
+        result = runner.invoke(summarize, ["--session", stem, "--title", ""])
 
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Exit code was {result.exit_code}, output: {result.output}"
     mock_create_page.assert_called_once()
     call_kwargs = mock_create_page.call_args[1]
-    # Title must NOT be a recording_name — it should be from extract_title
-    # extract_title on "Generated notes text here" (no H1) falls back to timestamp pattern
-    assert "Meeting Notes" in call_kwargs["title"] or call_kwargs["title"] == "Generated notes text here"
+    assert call_kwargs["title"] == "My Standup"  # empty --title is ignored
 
 
-def test_summarize_notion_no_metadata_unaffected(runner, tmp_path):
-    """When no metadata file exists (pre-v1.2), Notion title from extract_title, no AttributeError (NOTION-01 regression)."""
+def test_summarize_title_flag_not_persisted_to_metadata(runner, tmp_path):
+    """--title value is NOT written back to session metadata JSON (D-05)."""
     from meeting_notes.cli.commands.summarize import summarize
+    from meeting_notes.core.state import write_state
 
     transcripts, notes, metadata = _make_env_dirs(tmp_path)
-    stem = "20260328-090000-abc12345"
+    stem = "my-standup-20260328-090000-abc12345"
     _create_fake_transcript(transcripts, stem)
     _create_config(tmp_path, token="secret_test", parent_page_id="page123")
-    # Explicitly NO metadata file — simulates pre-v1.2 session
+
+    # Pre-populate metadata with recording_name
+    metadata_path = metadata / f"{stem}.json"
+    write_state(metadata_path, {"recording_name": "My Standup"})
 
     mock_create_page = MagicMock(return_value="https://notion.so/abc123")
     with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
@@ -728,8 +742,12 @@ def test_summarize_notion_no_metadata_unaffected(runner, tmp_path):
          patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
          patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()), \
          patch("meeting_notes.cli.commands.summarize.create_page", mock_create_page):
-        result = runner.invoke(summarize, ["--session", stem])
+        result = runner.invoke(summarize, ["--session", stem, "--title", "Weekly Sync"])
 
-    assert result.exit_code == 0
-    mock_create_page.assert_called_once()
-    # No crash = session_metadata None guard works
+    assert result.exit_code == 0, f"Exit code was {result.exit_code}, output: {result.output}"
+
+    # Read metadata and verify --title was NOT persisted
+    data = json.loads(metadata_path.read_text())
+    assert data["recording_name"] == "My Standup"  # unchanged
+    assert "cli_title" not in data  # no new key
+    assert "title" not in data  # no new top-level title key
