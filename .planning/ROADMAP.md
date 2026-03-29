@@ -8,7 +8,7 @@
 
 - ✅ **v1.0 MVP** — Phases 1-6 (shipped 2026-03-24)
 - ✅ **v1.1 SRT + Diarization** — Phase 01 (shipped 2026-03-28)
-- 🚧 **v1.2 Named Recordings** — Phases 02-05 (in progress)
+- ✅ **v1.2 Named Recordings** — Phases 02-07 (shipped 2026-03-29)
 
 ---
 
@@ -37,49 +37,19 @@ Full details: `.planning/milestones/v1.1-ROADMAP.md`
 
 </details>
 
-## v1.2: Named Recordings — IN PROGRESS
+<details>
+<summary>✅ v1.2 Named Recordings (Phases 02-07) — SHIPPED 2026-03-29</summary>
 
-- [x] Phase 02: Storage foundation — completed 2026-03-28 (1/1 plans)
-- [x] Phase 03: Record/Stop command — pending (1 plan) (completed 2026-03-28)
-- [x] Phase 04: meet list display — 1 plan (completed 2026-03-28)
-- [x] Phase 05: Notion title integration — pending (completed 2026-03-28)
+- [x] Phase 02: Storage Foundation (1/1 plans) — completed 2026-03-28
+- [x] Phase 03: Record/Stop Command (1/1 plans) — completed 2026-03-28
+- [x] Phase 04: meet list Display (1/1 plans) — completed 2026-03-28
+- [x] Phase 05: Notion Title Integration (1/1 plans) — completed 2026-03-28
+- [x] Phase 06: Session ID Column + meet list wiring (1/1 plans) — completed 2026-03-28
+- [x] Phase 07: --title flag for Notion page title override (1/1 plans) — completed 2026-03-29
 
-### Phase 02: Storage Foundation
+Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
-**Goal:** Implement `slugify()` pure function and `get_recording_path_with_slug()` in `core/storage.py` using TDD. Zero new dependencies.
-**Requirements covered:** SLUG-01, SLUG-02, RECORD-05
-**Status:** ✅ Complete (2026-03-28)
-**Plans:** 1/1 plans
-
-Plans:
-- [x] 02-01-PLAN.md — TDD slugify() and get_recording_path_with_slug() pure functions
-
-### Phase 03: Record/Stop Command
-
-**Goal:** Wire `meet record [NAME]` optional argument, store `recording_name`/`recording_slug` in `state.json` at record time, and propagate both fields to session metadata JSON in `meet stop`.
-**Requirements covered:** RECORD-01, RECORD-02, RECORD-03, RECORD-04
-**Plans:** 1/1 plans complete
-
-Plans:
-- [x] 03-01-PLAN.md — Wire NAME arg through record/stop lifecycle with state and metadata propagation
-
-### Phase 04: meet list Display
-
-**Goal:** Update `meet list` to derive session title from `meta.get("recording_name")` before the existing LLM-heading / stem fallback. Unnamed and pre-v1.2 sessions must display exactly as they do today.
-**Requirements covered:** LIST-01, LIST-02
-**Plans:** 1/1 plans complete
-
-Plans:
-- [x] 04-01-PLAN.md — Add recording_name title priority to _derive_title with TDD tests
-
-### Phase 05: Notion Title Integration
-
-**Goal:** Update `meet summarize` to use `meta.get("recording_name")` as the Notion page title before `extract_title()` fallback. Unnamed and pre-v1.2 sessions are unaffected.
-**Requirements covered:** NOTION-01
-**Plans:** 1/1 plans complete
-
-Plans:
-- [x] 05-01-PLAN.md — TDD recording_name as Notion page title priority in summarize command
+</details>
 
 ---
 
@@ -89,29 +59,4 @@ Plans:
 |-------|-----------|-------|----------|------------|
 | 1-6. v1.0 MVP phases | v1.0 | 16/16 | Complete | 2026-03-24 |
 | 01. SRT + Speaker Diarization | v1.1 | 5/5 | Complete | 2026-03-28 |
-| 02. Storage Foundation | v1.2 | 1/1 | Complete    | 2026-03-28 |
-| 03. Record/Stop Command | v1.2 | 1/1 | Complete    | 2026-03-28 |
-| 04. meet list Display | v1.2 | 0/1 | Complete    | 2026-03-28 |
-| 05. Notion Title | v1.2 | 1/1 | Complete    | 2026-03-28 |
-
-### Phase 6: Add session ID column to meet list (untruncated) and wire it as a selector for meet summarize --session
-
-**Goal:** Add a "Session ID" column to `meet list` showing the full file stem (untruncated), expose `session_id` in `--json` output, and update `meet summarize --session` help text to reflect v1.2 slug-prefixed stem format.
-**Requirements:** SESSID-01 (table column), SESSID-02 (JSON field), SESSID-03 (help text)
-**Depends on:** Phase 5
-**Plans:** 1 plan
-
-Plans:
-- [x] 06-01-PLAN.md — Add session_id to meet list table/JSON and update summarize help text
-
-### Phase 7: Notion title override via --title flag on meet summarize
-
-**Goal:** Add a `--title` option to `meet summarize` that overrides the Notion page title at summarize time. Priority chain: `--title` > `recording_name` > `extract_title()`. Runtime override only — not persisted to metadata.
-**Requirements:** TITLE-01 (--title flag), TITLE-02 (priority chain), TITLE-03 (no metadata persistence)
-**Depends on:** Phase 6
-**Plans:** 1/1 plans complete
-
-Plans:
-- [x] 07-01-PLAN.md — Add --title flag to meet summarize with TDD tests
-
----
+| 02-07. Named Recordings | v1.2 | 6/6 | Complete | 2026-03-29 |

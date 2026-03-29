@@ -4,7 +4,7 @@
 
 A 100% local CLI tool that captures audio from any video call (Zoom, Google Meet, Teams) without bots or browser extensions, transcribes it locally with Whisper, generates structured meeting notes using a local LLM, and saves them to Notion. No cloud, no third-party services, no data leaves the machine.
 
-**Status:** v1.2 complete — Phase 07 complete (--title flag for meet summarize Notion page title override).
+**Status:** v1.2 shipped 2026-03-29 — Named Recordings milestone complete (6 phases, 6 plans).
 
 ## Core Value
 
@@ -29,37 +29,19 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 - ✓ `meet doctor --verbose` with per-check `verbose_detail()` inline lines — v1.0
 - ✓ Exportable git repo: pyproject.toml (PEP 621), README.md with Audio MIDI Setup walkthrough + ASCII diagram, MIT LICENSE, .gitignore — v1.0
 
-### Validated (Phase 07 — 2026-03-29)
+### Validated (v1.2 — 2026-03-29)
 
 - ✓ `meet summarize --title "Custom Title"` overrides Notion page title at summarize time; priority chain: `--title` > `recording_name` > `extract_title()` fallback — Phase 07 (TITLE-01, TITLE-02, TITLE-03)
 - ✓ Empty `--title ""` is treated as falsy — falls through to `recording_name` — Phase 07 (TITLE-03)
 - ✓ `--title` value is runtime-only and never persisted to session metadata JSON — Phase 07 (D-05)
+- ✓ `meet list` table shows a "Session ID" column with full untruncated file stem — Phase 06 (SESSID-01)
+- ✓ `meet list --json` includes `session_id` field equal to the metadata file stem — Phase 06 (SESSID-02)
+- ✓ `meet summarize --session` help text reflects v1.2 slug-prefixed stem format — Phase 06 (SESSID-03)
+- ✓ `meet list` displays `recording_name` as session title when set; unnamed/pre-v1.2 sessions fall back to existing title derivation — Phase 04 (LIST-01, LIST-02)
+- ✓ `meet summarize` uses `recording_name` as Notion page title before `extract_title()` fallback — Phase 05 (NOTION-01)
+- ✓ `meet record [NAME]` optional name wired through record/stop: slug-prefixed WAV path, `recording_name`/`recording_slug` in state.json, propagated to session metadata on stop — Phase 03 (RECORD-01 to RECORD-04)
+- ✓ `slugify()` pure function + `get_recording_path_with_slug()` in `core/storage.py`, stdlib only — Phase 02 (SLUG-01, SLUG-02, RECORD-05)
 
-### Validated (Phase 06 — 2026-03-28)
-
-- ✓ `meet list` table shows a "Session ID" column with the full file stem (untruncated) for each session — Phase 06 (SESSID-01)
-- ✓ `meet list --json` output includes `session_id` field with value equal to the metadata file stem — Phase 06 (SESSID-02)
-- ✓ `meet summarize --session` help text reflects v1.2 slug-prefixed stem format (e.g. `team-standup-20260322-143000-abc12345`) — Phase 06 (SESSID-03)
-
-### Validated (Phase 05 — 2026-03-28)
-
-- ✓ `meet summarize` uses `recording_name` as the Notion page title when available; unnamed/pre-v1.2 sessions fall back to `extract_title()` unchanged — Phase 05 (NOTION-01)
-
-### Validated (Phase 04 — 2026-03-28)
-
-- ✓ `meet list` displays `recording_name` as the session title when set; unnamed/pre-v1.2 sessions fall back to existing title derivation unchanged — Phase 04 (LIST-01, LIST-02)
-
-### Validated (Phase 03 — 2026-03-28)
-
-- ✓ `meet record [NAME]` accepts optional name argument; slug computed via `slugify()` and stored as `recording_slug` in `state.json` alongside `recording_name` — Phase 03 (RECORD-01, RECORD-02)
-- ✓ Named session uses `get_recording_path_with_slug()` for WAV output path; unnamed sessions unchanged — Phase 03 (RECORD-03)
-- ✓ `meet stop` propagates `recording_name` and `recording_slug` from `state.json` to session metadata JSON — Phase 03 (RECORD-04)
-
-### Validated (Phase 02 — 2026-03-28)
-
-- ✓ `slugify(text)` pure function in `core/storage.py`: NFKD normalization, ASCII-safe, lowercase, colon→hyphen, 80-char max, `"untitled"` fallback — Phase 02 (SLUG-01, SLUG-02)
-- ✓ `get_recording_path_with_slug(name)` produces `{slug}-{timestamp}-{uuid8}.wav` path; unnamed sessions use existing `get_recording_path()` unchanged — Phase 02 (RECORD-05)
-- ✓ Zero new dependencies for slugification (stdlib `unicodedata` + `re` only) — Phase 02
 
 ### Validated (Phase 01 — 2026-03-27)
 
@@ -101,7 +83,9 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 - LLM prompt must prevent hallucination: "Base your notes ONLY on what is said in the transcript. Only include decisions and next steps if EXPLICITLY mentioned."
 - Whisper auto-detects language — omit language kwarg entirely when None (passing None defaults to English)
 - Package installed via `pip install -e .` in a fresh venv (Python ≥3.11, <3.14 recommended; 3.14 untested)
-- 208 tests passing at v1.0 ship
+- ~260+ tests across all phases (208 at v1.0, +~17 v1.1, +~35 v1.2)
+- v1.2 added: named recordings, session ID column in `meet list`, `--title` flag on `meet summarize`
+- Session metadata JSON: `recording_name`, `recording_slug`, `diarization_succeeded`, `diarized_transcript_path`, `notion_url`
 
 ## Constraints
 
@@ -137,21 +121,25 @@ A developer can run `meet record`, stop it, and get structured notes in Notion �
 | `run_diarization()` lazy-imports pyannote.audio.Pipeline | Avoids import-time cost for users without pyannote installed | ✓ Good — startup not affected |
 | torchaudio.list_audio_backends monkey-patch | pyannote.audio 3.x calls this at import time; removed in torchaudio≥2.9 | ✓ Good — fixed silent import failure |
 | pyannote.audio pin relaxed to `>=3.3.2,<5` | `==3.3.2` caused pip conflicts with torchaudio-resolved pyannote.core | ✓ Good — installs cleanly |
+| Optional positional `[NAME]` over `--name` flag for `meet record` | More natural CLI UX; optional positional matches common CLI conventions | ✓ Good — feels natural in use |
+| `slugify()` as pure function in `core/storage.py` | Testable without side effects; no I/O dependency | ✓ Good — TDD-friendly |
+| Falsy check (`if recording_name:`) across title derivation chain | Handles None, empty string, and missing key uniformly — consistent across phases 04, 05, 07 | ✓ Good — no edge case bugs |
+| Session ID column with no max_width (untruncated) | Stem must be copy-pasteable into `meet summarize --session`; truncation breaks round-trip | ✓ Good — avoids usability trap |
+| `notion_title` local variable in `--title` implementation | Avoids shadowing Click `title` parameter name | ✓ Good — clear naming |
+| `--title` not persisted to metadata | Runtime override only; metadata stays source of truth for `recording_name` | ✓ Good — clean separation |
 
-## Current Milestone: v1.2 Named Recordings
+## Current State
 
-**Goal:** Allow `meet record` to accept an optional name that propagates to all output files, metadata, and downstream tools.
+**Shipped:** v1.2 Named Recordings — 2026-03-29
+**Cumulative:** 3 milestones, 13 phases, 27 plans
 
-**Target features:**
-- `meet record [NAME]` — optional name argument at record time
-- Name stored in session metadata (state.json and session JSON)
-- Output files slugified from name (e.g. "1:1 with Gabriel" → `1-1-with-gabriel-<timestamp>.wav/.txt/.srt`)
-- `meet list` displays the recording name/title
-- Notion page title uses the recording name
+All three milestones complete. Tool is fully functional: audio capture → transcription → note generation → Notion export, with named recordings, speaker diarization, SRT output, session browsing, and Notion title control. Ready for v2.0 planning.
+
+**Test coverage:** ~260+ tests across all phases.
 
 ## Evolution
 
-**Last updated:** 2026-03-27 — v1.2 milestone started (Named recordings)
+**Last updated:** 2026-03-29 — v1.2 milestone complete (Named Recordings shipped)
 
 This document evolves at phase transitions and milestone boundaries.
 
@@ -169,4 +157,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 — Phase 06 complete (Session ID column in meet list, session_id in --json output, summarize --session help updated)*
+*Last updated: 2026-03-29 after v1.2 milestone — Named Recordings shipped*

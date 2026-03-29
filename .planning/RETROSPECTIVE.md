@@ -105,6 +105,54 @@
 
 ---
 
+## Milestone: v1.2 — Named Recordings
+
+**Shipped:** 2026-03-29
+**Phases:** 6 | **Plans:** 6 | **Timeline:** 2 days (2026-03-27 → 2026-03-29)
+
+### What Was Built
+
+- `slugify()` pure function + `get_recording_path_with_slug()` in `core/storage.py` — stdlib only, zero deps
+- `meet record [NAME]` optional name wired through record/stop: slug-prefixed WAV, `recording_name`/`recording_slug` in state.json and session metadata
+- `meet list` title derivation updated with `recording_name` priority guard — user-given name wins over LLM heading
+- `meet summarize` uses `recording_name` as Notion page title before `extract_title()` fallback
+- Untruncated "Session ID" column in `meet list` table and `--json` output for exact `--session` round-trips
+- `meet summarize --title` flag — runtime Notion page title override with 3-level priority chain
+
+### What Worked
+
+- **Single-plan phases** scaled cleanly — each phase was a focused, TDD-first implementation of one feature. Minimal overhead per phase without sacrificing quality.
+- **Falsy guard pattern** (`if recording_name:`) established in Phase 04 applied consistently across Phases 05 and 07 — the pattern transferred cleanly to subsequent plans.
+- **Debug session between phases** caught the transcribe-overwrites-recording_name bug before it propagated to Phase 07. Gap closure between phases prevented a harder-to-find bug later.
+- **Phase 06 (session ID)** was a pure "wire it through" task: untruncated column, exact stem in JSON. Clear scope led to fast execution (420s).
+
+### What Was Inefficient
+
+- **SUMMARY.md one_liner YAML fields** still not consistently filled — phases 04, 06, 07 had null or placeholder "One-liner:" values. This is the same issue from v1.0/v1.1. YAML frontmatter format needs to be enforced at plan completion.
+- **REQUIREMENTS.md scope drift** — phases 06 and 07 were added to the milestone after requirements were defined, so SESSID-* and TITLE-* requirements weren't in REQUIREMENTS.md. Archive required manual retroactive addition.
+- **Roadmap milestone scope** said "Phases 02-05" in the milestones table even after phases 06 and 07 were added. Should update the milestone header when scope expands.
+
+### Patterns Established
+
+- **Recording name priority chain**: `recording_name` > LLM heading > stem fallback. Applied consistently in `_derive_title()` (meet list) and Notion title derivation (meet summarize).
+- **Falsy guard for optional metadata fields**: `if field_value:` handles None, empty string, and missing key uniformly — no explicit `is not None` needed for optional metadata.
+- **`notion_title` local variable pattern**: when a Click param name conflicts with a local variable needed for logic, use a clear local alias (`notion_title`) before the block that uses it.
+- **Runtime-only override pattern**: `--title` is computed at summarize time, never written to metadata — clean separation between persistent state and runtime flags.
+
+### Key Lessons
+
+1. **SUMMARY.md YAML frontmatter enforcement**: The `one_liner` field in YAML is used by gsd-tools for MILESTONES.md and other tooling. If it's a placeholder, tooling degrades silently. Fix: treat an empty or "One-liner:" value as a plan completion blocker.
+2. **Update milestone scope when phases are added**: When `gsd:add-phase` adds phases to an in-progress milestone, the Milestones table header should also be updated to reflect the expanded range.
+3. **Requirements expand during execution**: Starting with 10 requirements and ending with 16 is normal — but they need to be tracked as they're added, not retroactively at milestone close.
+4. **Falsy check as a consistent convention**: Using `if field:` rather than `if field is not None:` for optional metadata fields is a deliberate UX choice — empty string and None are equivalent "absent" states.
+
+### Cost Observations
+
+- Sessions: ~7 plan executions over 2 days
+- Notable: 6 focused single-plan phases executed cleanly; debug session between phases 05 and 07 caught a subtle metadata-overwrite bug before it was built upon
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -113,6 +161,7 @@
 |-----------|--------|-------|------------|
 | v1.0 | 6 | 16 | Initial project — established all patterns |
 | v1.1 | 1 | 5 | Gap closure plan pattern + optional dependency pattern |
+| v1.2 | 6 | 6 | Single-plan phases; falsy guard convention; runtime-only override pattern |
 
 ### Cumulative Quality
 
@@ -120,6 +169,12 @@
 |-----------|-------|----------|
 | v1.0 | 208 | 2 days |
 | v1.1 | ~225 | 1 day |
+| v1.2 | ~260+ | 2 days |
+
+### Recurring Issues (Need Fixing)
+
+1. **SUMMARY.md `one_liner` YAML field** — consistently empty or placeholder across milestones; gsd-tools tooling silently degrades. Needs enforcement at plan completion.
+2. **REQUIREMENTS.md scope drift** — requirements added during milestone execution don't get tracked until milestone close. Track as you go.
 
 ### Top Lessons (Verified Across Milestones)
 
@@ -127,3 +182,4 @@
 2. Pitfalls list in the roadmap is more actionable than research docs for fast execution
 3. Gap closure as a named plan pattern keeps main plans clean and UAT failures resolvable without revisiting reviewed work
 4. Lazy-import optional dependencies — never at module level, always inside the function that uses them
+5. Falsy guard (`if field:`) is a consistent convention for optional metadata — empty string and None are equivalent absent states

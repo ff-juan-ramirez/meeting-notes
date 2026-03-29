@@ -1,5 +1,27 @@
 # Milestones
 
+## v1.2 Named Recordings (Shipped: 2026-03-29)
+
+**Phases completed:** 6 phases, 6 plans
+**Timeline:** 2026-03-27 → 2026-03-29 (2 days)
+**Files changed:** 94 files, +8,462 / -556 lines
+
+**Key accomplishments:**
+
+1. `slugify()` and `get_recording_path_with_slug()` pure functions using unicodedata+re stdlib — zero new dependencies, `{slug}-{timestamp}-{uuid8}.wav` stem for named recordings
+2. Optional `[NAME]` argument wired through `meet record`/`meet stop` lifecycle: slug-prefixed WAV path, `recording_name`/`recording_slug` in state.json, propagated to session metadata JSON on stop — 9 new tests
+3. `meet list` `_derive_title()` updated with recording_name guard clause — user-given name takes highest priority over LLM heading and stem fallback, 6 new TDD tests
+4. `meet summarize` uses `recording_name` as Notion page title before `extract_title()` fallback — unnamed and pre-v1.2 sessions unaffected
+5. Untruncated "Session ID" column added to `meet list` Rich table and `--json` output — exact stem for `meet summarize --session` round-trips (SESSID-01/02/03)
+6. `meet summarize --title` flag for runtime Notion page title override — 3-level priority chain: `--title` > `recording_name` > `extract_title()`, never persisted to metadata (TITLE-01/02/03)
+
+**Archive:**
+
+- `.planning/milestones/v1.2-ROADMAP.md` — full phase details
+- `.planning/milestones/v1.2-REQUIREMENTS.md` — all v1.2 requirements
+
+---
+
 ## v1.1 SRT Output and Speaker Diarization (Shipped: 2026-03-28)
 
 **Phases completed:** 1 phase, 5 plans

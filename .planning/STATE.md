@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Named Recordings
-status: Milestone complete
-last_updated: "2026-03-29T17:49:51.168Z"
+status: v1.2 milestone complete
+last_updated: "2026-03-29T18:34:48.432Z"
 progress:
   total_phases: 6
   completed_phases: 6
@@ -15,21 +15,20 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-27)
+See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** Phase 07 — for-the-notes-in-notion-if-the-user-specifies-a-title-i-want-that-title-to-be-in-the-notion-note-title
+**Current focus:** v1.2 shipped — planning next milestone via `/gsd:new-milestone`
 
 ## Current Position
 
-Phase: 07
-Plan: Not started
+Milestone v1.2 complete. No active phase.
 
 ## Current Status
 
 - [x] v1.0 MVP shipped 2026-03-24 (6 phases, 16 plans, 208 tests)
 - [x] v1.1 SRT + Speaker Diarization shipped 2026-03-28 (1 phase, 5 plans)
-- [ ] v1.2 Named Recordings — in progress
+- [x] v1.2 Named Recordings shipped 2026-03-29 (6 phases, 6 plans)
 
 ## Last Session
 
