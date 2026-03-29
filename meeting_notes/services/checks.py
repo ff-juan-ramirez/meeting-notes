@@ -434,7 +434,10 @@ class PyannoteCheck(HealthCheck):
 
     def check(self) -> CheckResult:
         try:
-            import pyannote.audio  # noqa: F401
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                import pyannote.audio  # noqa: F401
             return CheckResult(status=CheckStatus.OK, message="pyannote.audio importable")
         except ImportError:
             return CheckResult(
