@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** v2.0 Native Desktop GUI — Phase 08 next (GUI Foundation)
+**Current focus:** v2.0 Native Desktop GUI — Phase 01 next (GUI Foundation)
 
 ## Current Position
 
-Phase: 08 (not started)
+Phase: 01 (not started)
 Plan: —
-Status: Roadmap defined — ready for Phase 08 planning
-Last activity: 2026-03-30 — v2.0 roadmap created (5 phases, 44 requirements)
+Status: Roadmap defined — ready for Phase 01 planning
+Last activity: 2026-03-30 — v2.0 roadmap created (5 phases, 44 requirements); phase numbering reset to 1
 
 ```
 Progress: [----------] 0/5 phases complete
@@ -36,7 +36,7 @@ Progress: [----------] 0/5 phases complete
 - [x] v1.0 MVP shipped 2026-03-24 (6 phases, 16 plans, 208 tests)
 - [x] v1.1 SRT + Speaker Diarization shipped 2026-03-28 (1 phase, 5 plans)
 - [x] v1.2 Named Recordings shipped 2026-03-29 (6 phases, 6 plans)
-- [ ] v2.0 Native Desktop GUI in progress — Phase 08 next
+- [ ] v2.0 Native Desktop GUI in progress — Phase 01 next
 
 ## Last Session
 
@@ -153,7 +153,7 @@ Progress: [----------] 0/5 phases complete
 - Phase 1 added: SRT output and speaker diarization for transcription pipeline
 - Phase 6 added: Add session ID column to meet list (untruncated) and wire it as a selector for meet summarize --session
 - Phase 7 added: for the notes in notion if the user specifies a title i want that title to be in the notion note title
-- v2.0 roadmap added 2026-03-30: Phases 08-12 for Native Desktop GUI (44 requirements)
+- v2.0 roadmap added 2026-03-30: Phases 01-05 for Native Desktop GUI (44 requirements); v1.2 phases archived to .planning/milestones/v1.2-phases/
 
 ## Key Context for Future Sessions
 

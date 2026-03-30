@@ -9,7 +9,7 @@
 - ✅ **v1.0 MVP** — Phases 1-6 (shipped 2026-03-24)
 - ✅ **v1.1 SRT + Diarization** — Phase 01 (shipped 2026-03-28)
 - ✅ **v1.2 Named Recordings** — Phases 02-07 (shipped 2026-03-29)
-- 🔄 **v2.0 Native Desktop GUI** — Phases 08-12 (in progress)
+- 🔄 **v2.0 Native Desktop GUI** — Phases 01-05 (in progress)
 
 ---
 
@@ -54,17 +54,17 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 ### v2.0 Native Desktop GUI
 
-- [ ] **Phase 08: GUI Foundation** — MainWindow, sidebar, theme system, template service CRUD, `meet-gui` entry point
-- [ ] **Phase 09: Sessions & Dashboard** — Session list, detail panel, transcribe/summarize workers, dashboard stats
-- [ ] **Phase 10: Record** — RecordWorker, StopWorker, Idle/Recording/Stopping state machine
-- [ ] **Phase 11: Templates, Settings & Health Check** — Templates CRUD view, Settings view, DoctorWorker + Doctor view
-- [ ] **Phase 12: Polish & Packaging** — Cross-view navigation, error paths, PyInstaller `.app`, DMG installer
+- [ ] **Phase 01: GUI Foundation** — MainWindow, sidebar, theme system, template service CRUD, `meet-gui` entry point
+- [ ] **Phase 02: Sessions & Dashboard** — Session list, detail panel, transcribe/summarize workers, dashboard stats
+- [ ] **Phase 03: Record** — RecordWorker, StopWorker, Idle/Recording/Stopping state machine
+- [ ] **Phase 04: Templates, Settings & Health Check** — Templates CRUD view, Settings view, DoctorWorker + Doctor view
+- [ ] **Phase 05: Polish & Packaging** — Cross-view navigation, error paths, PyInstaller `.app`, DMG installer
 
 ---
 
 ## Phase Details
 
-### Phase 08: GUI Foundation
+### Phase 01: GUI Foundation
 **Goal**: The application skeleton launches and navigation works — all 6 screens are reachable via the sidebar, the theme is centralized, and the template service layer supports full CRUD
 **Depends on**: Nothing (first v2.0 phase)
 **Requirements**: GUI-01, GUI-02, GUI-03, GUI-04, GUI-05, TMPL-01, TMPL-02, TMPL-03, TMPL-04, TMPL-05, TMPL-06
@@ -77,9 +77,9 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 **Plans**: TBD
 **UI hint**: yes
 
-### Phase 09: Sessions & Dashboard
+### Phase 02: Sessions & Dashboard
 **Goal**: Users can browse all past sessions, view details, trigger transcription and summarization from the UI, and see aggregate stats on a dashboard
-**Depends on**: Phase 08
+**Depends on**: Phase 01
 **Requirements**: SESS-01, SESS-02, SESS-03, SESS-04, SESS-05, SESS-06, SESS-07, SESS-08, DASH-01, DASH-02, DASH-03, DASH-04
 **Success Criteria** (what must be TRUE):
   1. User can open the Sessions view and see a scrollable list of all past sessions with date, duration, title, and status
@@ -90,9 +90,9 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 **Plans**: TBD
 **UI hint**: yes
 
-### Phase 10: Record
+### Phase 03: Record
 **Goal**: Users can start and stop recordings from the GUI using the same underlying service layer as the CLI, with real-time elapsed time display and a clear state machine
-**Depends on**: Phase 08
+**Depends on**: Phase 01
 **Requirements**: REC-01, REC-02, REC-03, REC-04, REC-05
 **Success Criteria** (what must be TRUE):
   1. User can enter an optional title, click the record button, and see the view transition from Idle to Recording state
@@ -102,9 +102,9 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 **Plans**: TBD
 **UI hint**: yes
 
-### Phase 11: Templates, Settings & Health Check
+### Phase 04: Templates, Settings & Health Check
 **Goal**: Users can manage custom templates, edit all configuration fields, and run health checks with streaming results — all from the GUI
-**Depends on**: Phase 08
+**Depends on**: Phase 01
 **Requirements**: TPLV-01, TPLV-02, TPLV-03, TPLV-04, TPLV-05, TPLV-06, SETT-01, SETT-02, SETT-03, SETT-04, DOCT-01, DOCT-02, DOCT-03
 **Success Criteria** (what must be TRUE):
   1. User can view all templates in the Templates view with a badge distinguishing built-in from custom, and built-ins show a read-only warning banner with a Duplicate button
@@ -115,9 +115,9 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 **Plans**: TBD
 **UI hint**: yes
 
-### Phase 12: Polish & Packaging
+### Phase 05: Polish & Packaging
 **Goal**: The application is shippable — cross-view navigation works end-to-end, error paths surface clean messages, and the app bundles into a self-contained `.app` + DMG installer
-**Depends on**: Phase 09, Phase 10, Phase 11
+**Depends on**: Phase 02, Phase 03, Phase 04
 **Requirements**: PKG-01, PKG-02, PKG-03
 **Success Criteria** (what must be TRUE):
   1. User can click a session row on the Dashboard and arrive at the Sessions view with that session pre-selected
@@ -134,8 +134,8 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 1-6. v1.0 MVP phases | v1.0 | 16/16 | Complete | 2026-03-24 |
 | 01. SRT + Speaker Diarization | v1.1 | 5/5 | Complete | 2026-03-28 |
 | 02-07. Named Recordings | v1.2 | 6/6 | Complete | 2026-03-29 |
-| 08. GUI Foundation | v2.0 | 0/? | Not started | - |
-| 09. Sessions & Dashboard | v2.0 | 0/? | Not started | - |
-| 10. Record | v2.0 | 0/? | Not started | - |
-| 11. Templates, Settings & Health Check | v2.0 | 0/? | Not started | - |
-| 12. Polish & Packaging | v2.0 | 0/? | Not started | - |
+| 01. GUI Foundation | v2.0 | 0/? | Not started | - |
+| 02. Sessions & Dashboard | v2.0 | 0/? | Not started | - |
+| 03. Record | v2.0 | 0/? | Not started | - |
+| 04. Templates, Settings & Health Check | v2.0 | 0/? | Not started | - |
+| 05. Polish & Packaging | v2.0 | 0/? | Not started | - |
