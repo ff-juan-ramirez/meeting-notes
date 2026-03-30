@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Native Desktop GUI
-status: Defining requirements
+status: Roadmap defined — ready for Phase 08 planning
 last_updated: "2026-03-30T00:00:00.000Z"
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -15,28 +15,33 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-29)
+See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** v2.0 Native Desktop GUI — defining requirements
+**Current focus:** v2.0 Native Desktop GUI — Phase 08 next (GUI Foundation)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 08 (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-03-30 — Milestone v2.0 started
+Status: Roadmap defined — ready for Phase 08 planning
+Last activity: 2026-03-30 — v2.0 roadmap created (5 phases, 44 requirements)
+
+```
+Progress: [----------] 0/5 phases complete
+```
 
 ## Current Status
 
 - [x] v1.0 MVP shipped 2026-03-24 (6 phases, 16 plans, 208 tests)
 - [x] v1.1 SRT + Speaker Diarization shipped 2026-03-28 (1 phase, 5 plans)
 - [x] v1.2 Named Recordings shipped 2026-03-29 (6 phases, 6 plans)
+- [ ] v2.0 Native Desktop GUI in progress — Phase 08 next
 
 ## Last Session
 
-**Completed:** v1.2 requirements defined (10 reqs, 4 phases) — REQUIREMENTS.md + ROADMAP.md written
-**Date:** 2026-03-28
+**Completed:** v2.0 roadmap defined (5 phases, 44 requirements mapped) — ROADMAP.md + STATE.md written
+**Date:** 2026-03-30
 
 ## Decisions
 
@@ -148,6 +153,7 @@ Last activity: 2026-03-30 — Milestone v2.0 started
 - Phase 1 added: SRT output and speaker diarization for transcription pipeline
 - Phase 6 added: Add session ID column to meet list (untruncated) and wire it as a selector for meet summarize --session
 - Phase 7 added: for the notes in notion if the user specifies a title i want that title to be in the notion note title
+- v2.0 roadmap added 2026-03-30: Phases 08-12 for Native Desktop GUI (44 requirements)
 
 ## Key Context for Future Sessions
 
@@ -161,3 +167,12 @@ Last activity: 2026-03-30 — Milestone v2.0 started
 - Architecture: XDG Base Dir, pluggable health checks, process groups for ffmpeg, atomic state writes
 - Package installed via `pip install -e .` in a fresh venv (Python 3.14)
 - HealthCheck ABC pattern: subclass must implement check() -> CheckResult, register in HealthCheckSuite
+- v2.0 GUI: PySide6 only, no other Qt bindings; pyside6>=6.7 as optional dep [gui]
+- v2.0 GUI: All heavy ML imports (mlx_whisper, pyannote, torchaudio) stay out of startup path — imported inside worker run() methods only
+- v2.0 GUI: MVP (Model-View-Presenter): Views have zero business logic, Workers call service layer directly, MainWindow connects signals to slots
+- v2.0 GUI: All signals defined at class level using Signal(type); all receivers decorated with @Slot(type)
+- v2.0 GUI: Config loaded once at startup, passed as reference, saved explicitly by Settings view only
+- v2.0 GUI: meet CLI entry point must remain fully unchanged — GUI is purely additive
+- v2.0 GUI: Template CRUD lives in services/llm.py (list_templates, save_template, delete_template, duplicate_template)
+- v2.0 GUI: User templates stored at ~/.config/meeting-notes/templates/ — take precedence over built-ins
+- v2.0 GUI: PyInstaller spec file is build_gui.spec; DMG via brew-installed create-dmg

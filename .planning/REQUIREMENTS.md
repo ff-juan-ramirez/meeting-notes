@@ -106,60 +106,58 @@
 
 ## Traceability
 
-*Filled by roadmapper.*
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GUI-01 | — | Pending |
-| GUI-02 | — | Pending |
-| GUI-03 | — | Pending |
-| GUI-04 | — | Pending |
-| GUI-05 | — | Pending |
-| TMPL-01 | — | Pending |
-| TMPL-02 | — | Pending |
-| TMPL-03 | — | Pending |
-| TMPL-04 | — | Pending |
-| TMPL-05 | — | Pending |
-| TMPL-06 | — | Pending |
-| SESS-01 | — | Pending |
-| SESS-02 | — | Pending |
-| SESS-03 | — | Pending |
-| SESS-04 | — | Pending |
-| SESS-05 | — | Pending |
-| SESS-06 | — | Pending |
-| SESS-07 | — | Pending |
-| SESS-08 | — | Pending |
-| DASH-01 | — | Pending |
-| DASH-02 | — | Pending |
-| DASH-03 | — | Pending |
-| DASH-04 | — | Pending |
-| REC-01 | — | Pending |
-| REC-02 | — | Pending |
-| REC-03 | — | Pending |
-| REC-04 | — | Pending |
-| REC-05 | — | Pending |
-| TPLV-01 | — | Pending |
-| TPLV-02 | — | Pending |
-| TPLV-03 | — | Pending |
-| TPLV-04 | — | Pending |
-| TPLV-05 | — | Pending |
-| TPLV-06 | — | Pending |
-| SETT-01 | — | Pending |
-| SETT-02 | — | Pending |
-| SETT-03 | — | Pending |
-| SETT-04 | — | Pending |
-| DOCT-01 | — | Pending |
-| DOCT-02 | — | Pending |
-| DOCT-03 | — | Pending |
-| PKG-01 | — | Pending |
-| PKG-02 | — | Pending |
-| PKG-03 | — | Pending |
+| GUI-01 | Phase 08 | Pending |
+| GUI-02 | Phase 08 | Pending |
+| GUI-03 | Phase 08 | Pending |
+| GUI-04 | Phase 08 | Pending |
+| GUI-05 | Phase 08 | Pending |
+| TMPL-01 | Phase 08 | Pending |
+| TMPL-02 | Phase 08 | Pending |
+| TMPL-03 | Phase 08 | Pending |
+| TMPL-04 | Phase 08 | Pending |
+| TMPL-05 | Phase 08 | Pending |
+| TMPL-06 | Phase 08 | Pending |
+| SESS-01 | Phase 09 | Pending |
+| SESS-02 | Phase 09 | Pending |
+| SESS-03 | Phase 09 | Pending |
+| SESS-04 | Phase 09 | Pending |
+| SESS-05 | Phase 09 | Pending |
+| SESS-06 | Phase 09 | Pending |
+| SESS-07 | Phase 09 | Pending |
+| SESS-08 | Phase 09 | Pending |
+| DASH-01 | Phase 09 | Pending |
+| DASH-02 | Phase 09 | Pending |
+| DASH-03 | Phase 09 | Pending |
+| DASH-04 | Phase 09 | Pending |
+| REC-01 | Phase 10 | Pending |
+| REC-02 | Phase 10 | Pending |
+| REC-03 | Phase 10 | Pending |
+| REC-04 | Phase 10 | Pending |
+| REC-05 | Phase 10 | Pending |
+| TPLV-01 | Phase 11 | Pending |
+| TPLV-02 | Phase 11 | Pending |
+| TPLV-03 | Phase 11 | Pending |
+| TPLV-04 | Phase 11 | Pending |
+| TPLV-05 | Phase 11 | Pending |
+| TPLV-06 | Phase 11 | Pending |
+| SETT-01 | Phase 11 | Pending |
+| SETT-02 | Phase 11 | Pending |
+| SETT-03 | Phase 11 | Pending |
+| SETT-04 | Phase 11 | Pending |
+| DOCT-01 | Phase 11 | Pending |
+| DOCT-02 | Phase 11 | Pending |
+| DOCT-03 | Phase 11 | Pending |
+| PKG-01 | Phase 12 | Pending |
+| PKG-02 | Phase 12 | Pending |
+| PKG-03 | Phase 12 | Pending |
 
 **Coverage:**
 - v2.0 requirements: 44 total
-- Mapped to phases: 0
-- Unmapped: 44 ⚠️ (roadmapper will fill)
+- Mapped to phases: 44
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-30*
-*Last updated: 2026-03-30 after initial definition*
+*Last updated: 2026-03-30 — traceability filled by roadmapper*
