@@ -1,39 +1,39 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: Milestone complete
-last_updated: "2026-03-28T02:49:40.983Z"
+milestone: v1.2
+milestone_name: Named Recordings
+status: v1.2 milestone complete
+last_updated: "2026-03-29T18:34:48.432Z"
 progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 5
-  completed_plans: 5
+  total_phases: 6
+  completed_phases: 6
+  total_plans: 6
+  completed_plans: 6
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-24)
+See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** Phase 01 — srt-output-and-speaker-diarization-for-transcription-pipeline
+**Current focus:** v1.2 shipped — planning next milestone via `/gsd:new-milestone`
+
+## Current Position
+
+Milestone v1.2 complete. No active phase.
 
 ## Current Status
 
 - [x] v1.0 MVP shipped 2026-03-24 (6 phases, 16 plans, 208 tests)
-  - [x] Phase 1: Audio Capture + Health Check Design (3/3)
-  - [x] Phase 2: Local Transcription (3/3)
-  - [x] Phase 3: Note Generation (3/3)
-  - [x] Phase 4: Notion Integration (2/2)
-  - [x] Phase 5: Integrated CLI (2/2)
-  - [x] Phase 6: Exportable Git Repo (3/3)
+- [x] v1.1 SRT + Speaker Diarization shipped 2026-03-28 (1 phase, 5 plans)
+- [x] v1.2 Named Recordings shipped 2026-03-29 (6 phases, 6 plans)
 
 ## Last Session
 
-**Completed:** Plan 01-00 — Wave 0 test stubs (17 stubs, 6 files)
-**Date:** 2026-03-27
+**Completed:** v1.2 requirements defined (10 reqs, 4 phases) — REQUIREMENTS.md + ROADMAP.md written
+**Date:** 2026-03-28
 
 ## Decisions
 
@@ -97,6 +97,17 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 - [Phase 01-04]: torchaudio.list_audio_backends monkey-patch: pyannote.audio 3.x calls this at import time but removed in torchaudio>=2.9; patch adds missing function with ['soundfile'] backend
 - [Phase 01-04]: pyannote.audio version pin relaxed from ==3.3.2 to >=3.3.2,<5 to avoid pip dependency conflict with torchaudio-resolved pyannote.core versions
 - [Phase 01-04]: meet init --update flag uses early-exit routing to _update_specific_fields before interactive config-exists check
+- [Phase 02]: slugify truncates at 80 chars with trailing hyphen strip (D-01)
+- [Phase 02]: get_recording_path_with_slug accepts str only not str|None (D-02) — called only when name is known
+- [Phase 02]: NFKD normalization for slugify Unicode handling (D-03) — unicodedata+re stdlib, zero new deps (SLUG-02)
+- [Phase 03-record-stop-command]: Optional positional NAME arg via @click.argument('name', required=False) — more natural than --name option for recording naming
+- [Phase 03-record-stop-command]: stop propagation uses .get() with if-guards — no key written for unnamed sessions, full backward compat (RECORD-04)
+- [Phase 04]: recording_name guard clause at top of _derive_title() before notes_path check — user-given name always wins (D-01)
+- [Phase 04]: Falsy check (if recording_name:) handles None, empty string, and missing key uniformly per D-03 discretion
+- [Phase 05]: recording_name guard uses falsy check (if recording_name) to uniformly handle None, empty string, missing key — consistent with Phase 04 D-03
+- [Phase 05]: session_metadata.get('recording_name') if session_metadata else None guards against pre-v1.2 sessions where read_state returns None for missing files
+- [Phase 06]: Session ID column added last (no max_width) — untruncated by design; session_id set to path.stem for exact --session round-trip; summarize help text updated to v1.2 slug-prefix format
+- [Phase 07]: [Phase 07-01]: --title flag uses falsy check; notion_title local var avoids shadowing Click param; session_metadata loaded before Notion push block
 
 ## Performance Metrics
 
@@ -122,10 +133,18 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 | Phase 01 | 02 | 720 | 2 | 6 |
 | Phase 01 P03 | 900 | 2 tasks | 6 files |
 | Phase 01 P04 | 480 | 2 tasks | 5 files |
+| Phase 02 P01 | 152 | 2 tasks | 2 files |
+| Phase 03-record-stop-command P01 | 254 | 2 tasks | 3 files |
+| Phase 04 P01 | 54 | 2 tasks | 2 files |
+| Phase 05 P01 | 164 | 2 tasks | 2 files |
+| Phase 06 P01 | 420 | 1 tasks | 3 files |
+| Phase 07 P01 | 236 | 2 tasks | 2 files |
 
 ## Roadmap Evolution
 
 - Phase 1 added: SRT output and speaker diarization for transcription pipeline
+- Phase 6 added: Add session ID column to meet list (untruncated) and wire it as a selector for meet summarize --session
+- Phase 7 added: for the notes in notion if the user specifies a title i want that title to be in the notion note title
 
 ## Key Context for Future Sessions
 

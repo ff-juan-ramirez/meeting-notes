@@ -51,8 +51,9 @@ def resolve_transcript_by_stem(transcripts_dir: Path, stem: str) -> Path:
 @click.option("--template", default="meeting", type=click.Choice(["meeting", "minutes", "1on1"]),
               help="Note template (default: meeting)")
 @click.option("--session", default=None, help="Transcript filename stem (e.g. 20260322-143000-abc12345)")
+@click.option("--title", default=None, help="Override the Notion page title for this run")
 @click.pass_context
-def summarize(ctx: click.Context, template: str, session: str | None) -> None:
+def summarize(ctx: click.Context, template: str, session: str | None, title: str | None) -> None:
     """Generate structured notes from a transcript using Ollama llama3.1:8b."""
     quiet = ctx.obj.get("quiet", False) if ctx.obj else False
 
@@ -76,15 +77,6 @@ def summarize(ctx: click.Context, template: str, session: str | None) -> None:
         sys.exit(1)
 
     stem = transcript_path.stem
-
-    # --- Prefer diarized transcript when available (D-11) ---
-    metadata_path = metadata_dir / f"{stem}.json"
-    session_metadata = read_state(metadata_path)
-    if session_metadata and session_metadata.get("diarized_transcript_path"):
-        diarized_path = Path(session_metadata["diarized_transcript_path"])
-        if diarized_path.exists():
-            transcript_path = diarized_path
-
     transcript_text = transcript_path.read_text().strip()
 
     if not transcript_text:
@@ -142,19 +134,26 @@ def summarize(ctx: click.Context, template: str, session: str | None) -> None:
 
     # --- Notion push (per D-01, D-02, D-03, D-04, D-10, D-11) ---
 
+    session_metadata = read_state(metadata_path)
     notion_url = None
     if config.notion.token is None or config.notion.parent_page_id is None:
         if not quiet:
             console.print("[dim]Notion not configured — run meet init to set up.[/dim]")
     else:
         fallback_ts = datetime.now(timezone.utc).strftime("Meeting Notes — %Y-%m-%d %H:%M")
-        title = extract_title(notes, fallback_ts)
+        recording_name = session_metadata.get("recording_name") if session_metadata else None
+        if title:
+            notion_title = title
+        elif recording_name:
+            notion_title = recording_name
+        else:
+            notion_title = extract_title(notes, fallback_ts)
         try:
             notion_url = run_with_spinner(
                 lambda: create_page(
                     token=config.notion.token,
                     parent_page_id=config.notion.parent_page_id,
-                    title=title,
+                    title=notion_title,
                     notes_markdown=notes,
                 ),
                 "Saving to Notion...",

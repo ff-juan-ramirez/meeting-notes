@@ -15,7 +15,7 @@ from meeting_notes.core.state import (
     read_state,
     write_state,
 )
-from meeting_notes.core.storage import get_config_dir, get_data_dir
+from meeting_notes.core.storage import get_config_dir, get_data_dir, get_recording_path_with_slug, slugify
 from meeting_notes.services.audio import start_recording, stop_recording
 
 
@@ -28,8 +28,9 @@ def _get_config_path():
 
 
 @click.command()
+@click.argument("name", required=False, default=None)
 @click.pass_context
-def record(ctx: click.Context):
+def record(ctx: click.Context, name: str | None):
     """Start a recording session."""
     quiet = ctx.obj.get("quiet", False) if ctx.obj else False
     state_path = _get_state_path()
@@ -47,7 +48,15 @@ def record(ctx: click.Context):
             clear_state(state_path)
 
     config = Config.load(config_path)
-    proc, output_path = start_recording(config)
+
+    recording_name = name.strip() if name else None
+    recording_slug = slugify(recording_name) if recording_name else None
+
+    if recording_name:
+        output_path_pre = get_recording_path_with_slug(recording_name, config.storage_path)
+        proc, output_path = start_recording(config, output_path=output_path_pre)
+    else:
+        proc, output_path = start_recording(config)
 
     session_id = uuid4().hex
     state = {
@@ -56,10 +65,16 @@ def record(ctx: click.Context):
         "output_path": str(output_path),
         "start_time": datetime.now(timezone.utc).isoformat(),
     }
+    if recording_name:
+        state["recording_name"] = recording_name
+        state["recording_slug"] = recording_slug
     write_state(state_path, state)
 
     if not quiet:
-        console.print(f"[green]Recording started[/green] (PID: {proc.pid})")
+        if recording_name:
+            console.print(f'[green]Recording started:[/green] "{recording_name}" (PID: {proc.pid})')
+        else:
+            console.print(f"[green]Recording started[/green] (PID: {proc.pid})")
         console.print(f"Output: {output_path}")
         console.print("Run [bold]meet stop[/bold] to finish recording.")
 
@@ -117,6 +132,14 @@ def stop(ctx: click.Context):
 
         # Also write wav_path for sessions that may never reach transcription
         meta["wav_path"] = str(Path(output_path_str).resolve())
+
+        # Propagate recording name/slug from state to metadata (RECORD-04)
+        recording_name = existing.get("recording_name")
+        recording_slug = existing.get("recording_slug")
+        if recording_name:
+            meta["recording_name"] = recording_name
+        if recording_slug:
+            meta["recording_slug"] = recording_slug
 
         write_state(metadata_path, meta)
 

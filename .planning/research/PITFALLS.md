@@ -1,175 +1,371 @@
-# Pitfalls Research: meeting-notes
+# Pitfalls Research
 
-**Domain:** Local meeting transcription CLI — macOS/Apple Silicon
-**Date:** 2026-03-22
-**Note:** Does NOT repeat pitfalls already documented in PROJECT.md (device names unreliable, .m4a format, insanely-fast-whisper, llama3.2 too small, LLM hallucination prompt). These are additional, non-obvious pitfalls.
+**Domain:** Adding named recordings to an existing Python CLI meeting-notes tool
+**Researched:** 2026-03-27
+**Confidence:** HIGH — grounded in actual codebase (record.py, stop, transcribe.py, summarize.py, list.py, storage.py, state.py)
 
----
-
-## Phase 1 — Audio Capture
-
-### ffmpeg + avfoundation
-
-**P1: Device index order is volatile**
-- Warning signs: Recording produces silence after plugging/unplugging USB audio devices, or after macOS update
-- Cause: avfoundation re-enumerates devices; index 1 may no longer be BlackHole after USB audio or AirPods connect
-- Prevention: `meet doctor` must verify the device at index 1 IS BlackHole by parsing `ffmpeg -f avfoundation -list_devices` output — not just that the index exists
-- Phase: Phase 1 (doctor validation) + Phase 6 (doctor full implementation)
-
-**P2: amix requires matching sample rates — no auto-resampling**
-- Warning signs: Distorted or stuttering output WAV that still passes length checks
-- Cause: If BlackHole and microphone run at different native sample rates (e.g., 48kHz vs 44.1kHz), amix produces artifacts without an explicit `aformat` filter before mixing
-- Prevention: Add `-af aformat=sample_rates=16000` or explicit resampling before amix: `[0:a]aresample=16000[a0];[1:a]aresample=16000[a1];[a0][a1]amix=...`
-- Phase: Phase 1
-
-**P3: WAV header not written on crash or disk-full**
-- Warning signs: mlx-whisper fails with "invalid audio format" or "no such codec"; file size looks plausible
-- Cause: ffmpeg writes the WAV RIFF header (size fields) at the END of recording, not the beginning. If the process dies mid-recording, the header is malformed or zeroed
-- Prevention: Use `meet stop` which sends SIGTERM (graceful finish) rather than SIGKILL. Document clearly. `meet doctor` should check available disk space (>5GB warning)
-- Phase: Phase 1 (signal handling) + Phase 6 (disk space check)
-
-**P4: Microphone permission prompt interrupts first recording**
-- Warning signs: `meet record` starts but hangs; macOS shows system dialog "Allow access to microphone?"
-- Cause: First time any process accesses the mic, macOS requires explicit user approval
-- Prevention: `meet init` or `meet doctor` should trigger a short (~1s) test recording to force the permission prompt before the real meeting. Document this in setup wizard
-- Phase: Phase 1
-
-**P5: Audio routing changes when headphones are plugged in mid-session**
-- Warning signs: System audio track goes silent mid-recording; BlackHole still listed in devices but output is now going to headphones instead
-- Cause: macOS switches system output device automatically when headphones connect; BlackHole is no longer in the Multi-Output Device chain for the new output
-- Prevention: Document this limitation. Consider adding a warning in `meet record` output: "Ensure BlackHole Multi-Output Device is set as system output before recording."
-- Phase: Phase 1 (documentation + doctor)
+> This file covers pitfalls SPECIFIC TO the v1.2 Named Recordings milestone.
+> It does not repeat v1.1 pitfalls (device indices, mlx-whisper memory, Notion rate-limiting, etc.) already in the prior PITFALLS.md.
 
 ---
 
-## Phase 2 — Transcription
+## Critical Pitfalls
 
-### mlx-whisper
+### Pitfall 1: Filename Collision — Two Recordings with the Same Name
 
-**P6: Model download happens silently on first `meet transcribe` — no progress**
-- Warning signs: `meet transcribe` appears frozen for 5-10 minutes on first run
-- Cause: mlx-community/whisper-large-v3-turbo is ~3GB; HuggingFace download starts without any indication
-- Prevention: `meet doctor` must check if model is cached locally (`~/.cache/huggingface/hub/`). If not, warn user and offer to pre-download: `python -c "import mlx_whisper; mlx_whisper.transcribe('dummy.wav')"` or trigger download explicitly
-- Phase: Phase 2 + Phase 6 (doctor check)
+**What goes wrong:**
+Two recordings named "1:1 with Gabriel" both slugify to `1-1-with-gabriel`. The WAV, `.txt`, `.srt`, and `.json` metadata files for the second recording silently overwrite the first. The first session's data is permanently lost with no error, warning, or user prompt.
 
-**P7: Memory pressure on long recordings (>90 min)**
-- Warning signs: Transcription starts, then slows dramatically; Activity Monitor shows swap usage
-- Cause: mlx-whisper loads the full WAV (800MB-1.2GB for 2-hour meeting) + model weights simultaneously. On 8GB M-series Macs, this causes swap thrashing
-- Prevention: Warn user if recording is >90 minutes. Consider chunking: split WAV into 30-min segments, transcribe individually, concatenate. Document memory requirements (16GB recommended for meetings >1hr)
-- Phase: Phase 2
+**Why it happens:**
+`storage.py:get_recording_path()` currently generates `{timestamp}-{session_id}.wav`. The timestamp component makes collisions essentially impossible. When a name-based slug is prepended or replaces part of the filename, developers often place the slug BEFORE the timestamp, or worse, use the slug ALONE, losing the uniqueness guarantee.
 
-**P8: Silent audio segments produce gaps — no error raised**
-- Warning signs: Transcript missing sections; notes say "the meeting discussed X" with no substance
-- Cause: Whisper returns empty string for silence >2s. If audio routing failed (see P5), entire sections are empty. No exception is raised.
-- Prevention: After transcription, check if transcript is empty or <50 words — warn user. In `meet transcribe`, show character count of output
-- Phase: Phase 2
+Example of the unsafe pattern:
+```python
+# WRONG — collision-prone
+filename = f"{slugify(name)}.wav"
 
-**P9: Language misdetection on short clips or heavy accents**
-- Warning signs: Transcript contains garbled text mixing two languages; notes are nonsensical
-- Cause: Whisper auto-detects language but can misclassify with accented English or code-switching. No confidence score is exposed
-- Prevention: Allow users to pin language in config: `"whisper": {"language": null}` (null = auto, "en" = forced). Document in `meet init`
-- Phase: Phase 2
+# WRONG — still collision-prone if two recordings start in the same second
+filename = f"{slugify(name)}-{timestamp}.wav"
 
----
+# CORRECT — slug prefix, timestamp+uuid suffix preserved
+filename = f"{slugify(name)}-{timestamp}-{session_id}.wav"
+```
 
-## Phase 3 — Note Generation
+**How to avoid:**
+Always preserve the `{timestamp}-{session_id}` suffix from the existing `get_recording_path()` logic. The slug is a human-readable prefix; uniqueness is guaranteed by the existing suffix. The function signature should become `get_recording_path(name: str | None = None)`, and when name is provided, prepend `{slug}-` to the existing filename pattern.
 
-### Ollama
+**Warning signs:**
+- `get_recording_path()` is modified to accept a name but the existing timestamp+UUID suffix is removed or made optional
+- Tests only test "first recording with name X" and never test "two recordings with name X back-to-back"
+- The slug is used as the entire stem without a timestamp component
 
-**P10: Ollama isn't running — cryptic connection error**
-- Warning signs: `meet summarize` fails with `ConnectionRefusedError` or `requests.exceptions.ConnectionError`
-- Cause: Ollama daemon isn't started; user must manually run `ollama serve` or configure it to auto-start
-- Prevention: `meet doctor` must check `http://localhost:11434`. If down, show: "Ollama is not running. Start it with: `ollama serve`". Consider auto-starting Ollama via `subprocess.Popen(["ollama", "serve"])` if not running
-- Phase: Phase 3 + Phase 6 (doctor check)
-
-**P11: llama3.1:8b context window is ~128K tokens but generation degrades on very long transcripts**
-- Warning signs: Notes from long meetings are repetitive, cut off, or miss the beginning
-- Cause: While llama3.1:8b has a large context window, practical generation quality degrades on inputs >8K-12K tokens. A 2-hour meeting transcript is ~15K-20K tokens
-- Prevention: Measure transcript token count before sending. If >8K tokens, split transcript into chunks, summarize each chunk, then summarize summaries ("map-reduce" approach). Add `--chunk` flag
-- Phase: Phase 3
-
-**P12: Ollama hangs indefinitely on very large prompts**
-- Warning signs: `meet summarize` runs for >10 minutes with no output; process doesn't error out
-- Cause: Ollama has no default timeout; very large prompts can cause the model to load-swap indefinitely
-- Prevention: Set `timeout=120` on all HTTP requests to Ollama. If timeout is hit, show actionable error: "LLM timed out. Try `--chunk` flag or reduce transcript length."
-- Phase: Phase 3
-
-**P13: Model version changes silently on `ollama pull`**
-- Warning signs: Summaries that previously worked well start hallucinating or producing worse output
-- Cause: `ollama pull llama3.1:8b` updates to latest without pinning; prompt behavior can shift between model versions
-- Prevention: Document this. Consider checking model digest in `meet doctor` and warning if it changed. Log model version in metadata JSON per session
-- Phase: Phase 3
+**Phase to address:** Phase 1 (storage layer — the slug-filename contract must be locked before any other phase builds on it)
 
 ---
 
-## Phase 4 — Notion Integration
+### Pitfall 2: Slugification Edge Cases Produce Invalid or Ambiguous Filenames
 
-### notion-client
+**What goes wrong:**
+The name entered by the user contains characters that either produce an empty slug, an unexpectedly short slug, or a slug identical to another name's slug. The tool either crashes (if the slug is used as a filename component directly), silently creates a confusingly-named file, or the name is lost entirely.
 
-**P14: Notion block size limit is 2,000 characters**
-- Warning signs: Transcript appears truncated in Notion; no error from notion-client
-- Cause: Notion API enforces a 2,000-character limit per text block. notion-client doesn't auto-split
-- Prevention: When writing transcript or long note sections to Notion, split text into 1,900-char chunks and create multiple paragraph blocks
-- Phase: Phase 4
+**Known edge cases against the target format "1:1 with Gabriel":**
 
-**P15: Rate limiting causes silent failures on batch operations**
-- Warning signs: First page creates successfully; subsequent calls silently queue or fail; user sees partial results in Notion
-- Cause: Notion API rate limit is 3 requests/second. notion-client may retry silently or fail without useful error
-- Prevention: Add `time.sleep(0.4)` between all Notion API calls. Catch HTTP 429 and implement exponential backoff
-- Phase: Phase 4
+| Input | Naive slug (replace spaces with `-`) | Correct slug |
+|-------|--------------------------------------|--------------|
+| `1:1 with Gabriel` | `1:1-with-gabriel` (colon kept, invalid on some FS) | `1-1-with-gabriel` |
+| `Q1/Q2 planning` | `Q1/Q2-planning` (slash is path separator!) | `q1-q2-planning` |
+| `Résumé review` | `Résumé-review` (non-ASCII) | `resume-review` (ASCII-folded) |
+| `` (empty string) | `` (empty slug) | fallback to `untitled` |
+| `   ` (all spaces) | `` (empty after strip) | fallback to `untitled` |
+| `a` * 200 chars | 200-char slug (too long for filename stem) | truncated to 50 chars |
+| `---` | `---` (all separators, visually useless) | fallback to `untitled` |
+| `<>:"/\|?*` (Windows reserved chars) | multiple invalid chars | strip all non-alphanumeric/hyphen |
+| `con` / `nul` / `prn` | Windows reserved names (irrelevant here but slug collision risk) | not a macOS issue, ignore |
 
-**P16: Database property mismatch causes incomplete pages**
-- Warning signs: Notion page created but missing fields (Date, Template Type, etc.)
-- Cause: If user manually modified the target Notion database (deleted or renamed a property), notion-client silently skips missing fields
-- Prevention: `meet doctor` must verify the Notion database has all required properties. `meet init` should set up the database schema automatically
-- Phase: Phase 4 + Phase 6
+**Why it happens:**
+Developers implement slugification as a one-liner (`name.lower().replace(" ", "-")`) that handles the happy path but none of the edge cases. Colons, slashes, and unicode characters are not addressed. The function is rarely tested with adversarial inputs.
 
-**P17: Transcript text too large for a single Notion page**
-- Warning signs: `notion-client` raises `APIResponseError` with "body too large" or similar
-- Cause: Notion has undocumented page content size limits. A 2-hour transcript is ~30K words (~180K chars) which can exceed limits
-- Prevention: Store only the structured notes in Notion. Keep the full transcript locally. Add a "Transcript available locally" note in the Notion page with the local file path
-- Phase: Phase 4
+**How to avoid:**
+Implement a single `slugify(name: str) -> str` function in `core/storage.py` (or `core/naming.py`) with the following contract, tested exhaustively:
+
+```python
+import re
+import unicodedata
+
+def slugify(name: str, max_length: int = 50) -> str:
+    """Convert a human name to a safe filename slug.
+
+    Rules (applied in order):
+    1. Strip leading/trailing whitespace
+    2. NFKD normalize, then encode as ASCII ignoring non-ASCII (accent folding)
+    3. Lowercase
+    4. Replace any run of non-alphanumeric characters with a single hyphen
+    5. Strip leading/trailing hyphens
+    6. Truncate to max_length
+    7. If result is empty, return 'untitled'
+    """
+    name = name.strip()
+    name = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii")
+    name = name.lower()
+    name = re.sub(r"[^a-z0-9]+", "-", name)
+    name = name.strip("-")
+    name = name[:max_length]
+    name = name.strip("-")  # truncation may leave trailing hyphen
+    return name or "untitled"
+```
+
+**Warning signs:**
+- Slugify function uses only `str.replace()` without regex or unicodedata
+- No test covers `1:1` (colon), unicode input, empty string, all-spaces, very long strings, or all-punctuation inputs
+- The function is defined inline in `record.py` rather than in a shared utility module
+
+**Phase to address:** Phase 1 (core utility — slugify must be shared and tested before any command uses it)
+
+---
+
+### Pitfall 3: Name Lost Between `meet record` and `meet stop` — Metadata Never Sees It
+
+**What goes wrong:**
+`meet record` stores the name in `state.json`. `meet stop` reads `state.json`, computes the stem from `output_path` (not the name), and writes `metadata/{stem}.json`. If `meet stop` does not explicitly copy the `name` field from `state.json` to the metadata JSON, the name is silently lost and will never appear in `meet list`, `meet transcribe`, or Notion.
+
+**Why it happens:**
+Looking at the current `stop` command in `record.py` (lines 95–122): it reads `state.json` via `existing = read_state(state_path)`, extracts `output_path`, computes `stem`, reads or creates `metadata/{stem}.json`, adds `duration_seconds` and `wav_path`, then writes. A developer adding `name` to `state.json` in `meet record` will naturally forget to propagate it in `meet stop`, because `stop` only explicitly copies `output_path` and `start_time`. There is no general "copy all state fields to metadata" pattern — only specific fields are extracted.
+
+**How to avoid:**
+In `meet stop`, explicitly read `name` from `existing` (the state) and write it to the metadata dict:
+```python
+name = existing.get("name")  # None for unnamed sessions
+if name is not None:
+    meta["name"] = name
+```
+Do NOT use `existing.get("name", "")` — the distinction between `None` (no name) and `""` (empty name that should have been caught at input) is meaningful for backward compatibility.
+
+Write a test that: (1) invokes `meet record "My Meeting"`, (2) invokes `meet stop`, (3) reads the metadata JSON and asserts `name == "My Meeting"`.
+
+**Warning signs:**
+- `meet list` shows the correct name for sessions recorded after the feature ships, but never for sessions that went through an actual record→stop→list flow (only tested by writing metadata directly in tests, not through the real command flow)
+- `state.json` has `name` field but metadata JSON does not
+- Tests for `stop` do not assert on the `name` field in the output metadata
+
+**Phase to address:** Phase 1 (`meet record` + `meet stop` name propagation must be implemented and tested together as a unit)
 
 ---
 
-## Cross-Cutting Concerns
+### Pitfall 4: Backward Compatibility — Existing Sessions Have No Name Field
 
-**P18: Rich output breaks in non-TTY contexts (piped output, cron jobs)**
-- Warning signs: Log files contain ANSI escape codes; `meet list --json | jq` has color codes polluting JSON
-- Cause: Rich auto-detects TTY but can be unreliable in some terminal multiplexers (tmux, screen) or remote SSH sessions
-- Prevention: Always use `--quiet` flag in documentation for scripting. Check `sys.stdout.isatty()` explicitly before Rich output. Use `rich.console.Console(force_terminal=False)` in non-TTY paths. Ensure `--json` output NEVER includes ANSI codes
-- Phase: Phase 5 (CLI integration)
+**What goes wrong:**
+All sessions recorded before v1.2 have metadata JSON files without a `name` field. After shipping:
+- `meet list` crashes or shows `None` in the Name column instead of graceful fallback
+- `meet transcribe --session <old-stem>` fails because it tries to resolve by slug but the stem has no slug prefix
+- `meet summarize --session <old-stem>` fails similarly
+- `--json` output changes shape (new `name` field is `null` for old sessions), breaking any scripts that parse the output
 
-**P19: Python version: avoid 3.14, use 3.11 or 3.12**
-- Warning signs: `import mlx` fails; breaking changes in stdlib
-- Cause: Python 3.14 has breaking changes that affect ML dependency chains. 3.11/3.12 are the safest for the full dep tree (mlx-whisper, notion-client, click, rich)
-- Prevention: Add `python_requires = ">=3.11,<3.14"` in pyproject.toml. `meet doctor` should check Python version
-- Phase: Phase 6 (doctor)
+**Why it happens:**
+The feature is designed and tested only against new sessions. Old sessions are forgotten because the test suite creates fresh tmp_path fixtures and never simulates pre-existing metadata JSON without a `name` field.
 
-**P20: Dependency conflict between openai-whisper and mlx-whisper**
-- Warning signs: `import mlx_whisper` succeeds but uses wrong backend; transcription output is different from expected
-- Cause: Users who have `openai-whisper` installed alongside `mlx-whisper` may encounter import conflicts
-- Prevention: In setup docs and `meet init`, warn that `openai-whisper` must not be installed. `meet doctor` should check `pip list` for `openai-whisper` and warn
-- Phase: Phase 6 (doctor)
+**How to avoid:**
+
+1. **`meet list`** — treat `name` as optional. When `name` is absent or `None`, fall back to the existing stem-based title derivation (`_derive_title()`). Never access `meta["name"]` without `.get("name")`.
+
+2. **`meet transcribe --session` and `meet summarize --session`** — the `--session` argument is a stem, not a name. This contract MUST NOT CHANGE. Existing stems like `20260322-143000-abc12345` must continue to work. Named sessions have stems like `1-1-with-gabriel-20260327-103000-abc12345`; users pass the full stem. Do not attempt to resolve by slug alone.
+
+3. **`--json` output** — include `"name": null` for old sessions rather than omitting the key. This is a stable schema: callers can do `session.get("name")` without crashing.
+
+4. **Migration** — do NOT retroactively add `name: null` to all existing metadata JSON files. Absence of the key and presence of `null` must both be handled identically throughout the codebase.
+
+**Warning signs:**
+- Any code that uses `meta["name"]` instead of `meta.get("name")`
+- Tests that only create new sessions and never load pre-existing metadata without a `name` field
+- `meet list --json` output has `name` for new sessions but omits the key for old sessions (inconsistent schema)
+- `resolve_wav_by_stem` or `resolve_transcript_by_stem` is modified to accept a human name instead of a stem
+
+**Phase to address:** Phase 1 (implement), with a specific backward-compat test fixture representing a pre-v1.2 metadata file
+
+---
+
+### Pitfall 5: `meet transcribe` and `meet summarize` Stem Resolution Breaks for Named Sessions
+
+**What goes wrong:**
+`meet transcribe --session 1-1-with-gabriel` fails because no WAV file named `1-1-with-gabriel.wav` exists. The actual WAV is named `1-1-with-gabriel-20260327-103000-abc12345.wav`. The user is forced to copy-paste the full stem, which defeats the purpose of a human name.
+
+**Why it happens:**
+`resolve_wav_by_stem()` does an exact match (`recordings_dir / f"{stem}.wav"`). This was fine when stems were generated UUIDs. A developer adds named recordings and forgets to update the resolution logic, leaving users with a confusing experience: they named the session but still have to use the UUID stem to access it.
+
+**How to avoid:**
+Update `resolve_wav_by_stem()` to support prefix matching when an exact match fails:
+
+```python
+def resolve_wav_by_stem(recordings_dir: Path, stem: str) -> Path:
+    # Exact match first (backward compat + named sessions with full stem)
+    candidate = recordings_dir / f"{stem}.wav"
+    if candidate.exists():
+        return candidate
+    # Prefix match: find WAVs whose stem starts with slug-of-stem
+    matches = list(recordings_dir.glob(f"{stem}-*.wav"))
+    if len(matches) == 1:
+        return matches[0]
+    if len(matches) > 1:
+        # Ambiguous — most recent
+        return sorted(matches, key=lambda p: p.stat().st_mtime)[-1]
+    raise FileNotFoundError(f"No recording found for session: {stem}")
+```
+
+Apply the same pattern to `resolve_transcript_by_stem()` in `summarize.py`.
+
+**Warning signs:**
+- `meet transcribe --session 1-1-with-gabriel` returns "No recording found for session: 1-1-with-gabriel" even though a WAV with that prefix exists
+- Tests for `--session` only use exact stems and never test a slug prefix that requires glob matching
+- The slug prefix matching is implemented in `transcribe.py` but not in `summarize.py` (or vice versa), creating asymmetric behavior
+
+**Phase to address:** Phase 2 (`meet transcribe --session` with slug prefix) and Phase 3 (`meet summarize --session` with slug prefix), though the shared helper logic should be extracted in Phase 1
 
 ---
 
-## Priority Matrix
+### Pitfall 6: Notion Title Priority Conflict — Name vs. LLM-Generated H1
 
-| Pitfall | Severity | Likelihood | Address In |
-|---------|----------|------------|------------|
-| P1: Volatile device indices | High | Medium | Phase 1 doctor |
-| P2: amix sample rate mismatch | High | Low | Phase 1 ffmpeg command |
-| P3: WAV header on crash | High | Medium | Phase 1 signal handling |
-| P4: Mic permission prompt | Medium | High | Phase 1 init |
-| P6: Model download silent | Medium | High | Phase 2 doctor |
-| P10: Ollama not running | High | High | Phase 3 doctor |
-| P11: Context window degradation | Medium | Medium | Phase 3 chunking |
-| P12: Ollama timeout hang | High | Low | Phase 3 timeout |
-| P14: Notion block size limit | High | Medium | Phase 4 text splitting |
-| P15: Notion rate limiting | Medium | Low | Phase 4 backoff |
-| P18: Rich non-TTY output | Medium | Low | Phase 5 TTY check |
-| P19: Python version | High | Low | Phase 6 doctor + pyproject.toml |
+**What goes wrong:**
+`meet summarize` uses `extract_title()` to derive the Notion page title from the notes markdown (first H1, fallback to first non-empty line, fallback to timestamp). If a session has a user-provided name (`"1:1 with Gabriel"`), the Notion page title may still end up as whatever the LLM generated as its H1 heading — which could be "Meeting Notes" or "Discussion Summary". The user's intent (name the recording after the meeting) is lost.
+
+**Why it happens:**
+`extract_title()` in `notion.py` is content-driven, not metadata-driven. The `summarize` command does not read the `name` field from session metadata before calling `extract_title()`. Developers add the `name` field to metadata but forget to thread it through to the Notion title logic.
+
+The current code in `summarize.py` (lines 150–151):
+```python
+fallback_ts = datetime.now(timezone.utc).strftime("Meeting Notes — %Y-%m-%d %H:%M")
+title = extract_title(notes, fallback_ts)
+```
+
+There is no opportunity for the session name to influence `title` here.
+
+**How to avoid:**
+Read the session name from metadata before computing the title. Use the name as the FIRST priority, ahead of the LLM-generated H1:
+
+```python
+session_name = (session_metadata or {}).get("name")  # already loaded above
+fallback_ts = datetime.now(timezone.utc).strftime("Meeting Notes — %Y-%m-%d %H:%M")
+title = session_name or extract_title(notes, fallback_ts)
+```
+
+This respects user intent: if they named the session, that name is the Notion page title.
+
+**Warning signs:**
+- `meet summarize` test stubs out `extract_title()` but never asserts on the `title` passed to `create_page()` when `session_metadata` contains a `name`
+- A session named "1:1 with Gabriel" produces a Notion page titled "Meeting Notes — 2026-03-27 10:30"
+- `session_metadata` is loaded for `diarized_transcript_path` (already done in the code) but not for `name`
+
+**Phase to address:** Phase 3 (`meet summarize` — Notion title update), same phase that implements the Notion push enhancement
 
 ---
-*Researched: 2026-03-22*
+
+### Pitfall 7: `meet list` Title Column Ignores the `name` Field
+
+**What goes wrong:**
+`meet list` derives titles via `_derive_title()`, which reads from `notes_path` (LLM-generated H1) or falls back to the session stem. Even after named recordings are implemented, `meet list` shows `1-1-with-gabriel-20260327-103000-abc12345` in the Title column instead of `1:1 with Gabriel`, because `_derive_title()` does not read the `name` field from metadata.
+
+**Why it happens:**
+`_derive_title()` was written before the `name` field existed. Developers update `record.py` and `stop` to write the name, but forget to update `list.py`. The behavior difference between named and unnamed sessions in `meet list` is only visible by running the full flow, not through unit tests that mock metadata directly.
+
+**How to avoid:**
+Update `_derive_title()` to check `meta.get("name")` first:
+
+```python
+def _derive_title(meta: dict, stem: str) -> str:
+    # User-provided name takes priority (v1.2+)
+    name = meta.get("name")
+    if name:
+        return name
+    # LLM-generated title from notes
+    notes_path = meta.get("notes_path")
+    if notes_path and Path(notes_path).exists():
+        try:
+            notes_text = Path(notes_path).read_text()
+            return extract_title(notes_text, stem)
+        except Exception:
+            return stem
+    return stem
+```
+
+**Warning signs:**
+- `meet list` shows the stem (e.g. `1-1-with-gabriel-20260327-103000`) instead of the human name
+- Test for `_derive_title()` with a metadata dict containing `name` is missing
+- The `name` column in `meet list --json` output contains the stem rather than the human name
+
+**Phase to address:** Phase 4 (`meet list` display), but the `name` field in metadata must be written in Phase 1 before Phase 4 can read it
+
+---
+
+## Technical Debt Patterns
+
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Slugify inline in `record.py` as a lambda | Faster to implement | Not reusable in tests or other commands; different commands slugify differently | Never — extract to `core/storage.py` or `core/naming.py` |
+| Use slug alone as filename (no timestamp suffix) | Human-readable filenames | Silent data loss on collision; loses guaranteed uniqueness | Never |
+| Copy `name` to metadata only in `transcribe`, not `stop` | Less code in `stop` | Sessions that are never transcribed have no name in metadata; `meet list` can't display it | Never — name must be persisted at `stop` time |
+| Resolve `--session` by exact stem only (no prefix) | Zero code change to resolver | Users must paste full UUID stem, not slug; defeats purpose of named recordings | Never — implement prefix matching |
+| `meet list` title from stem when name exists in metadata | No change to list.py | Users see `1-1-with-gabriel-20260327-...` instead of `1:1 with Gabriel` | Never — check `name` field first |
+| Accept empty string as a valid name | Simpler validation | Empty slug → `untitled` → collision with all other unnamed sessions | Never — validate non-empty at CLI argument level |
+
+---
+
+## Integration Gotchas
+
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| Notion page title | Using `extract_title(notes, fallback)` regardless of session name | Check `session_metadata.get("name")` first; use it as title if present |
+| `meet list --json` schema | Adding `name` only for named sessions (key absent for old sessions) | Always include `"name": meta.get("name")` — value is `null` for old sessions, consistent schema |
+| `meet transcribe --session` | Requiring full stem `1-1-with-gabriel-20260327-103000-abc12345` | Support slug prefix matching via `glob(f"{stem}-*.wav")` |
+| `meet summarize --session` | Different resolution logic than `transcribe` | Extract shared resolver to avoid drift between commands |
+| `state.json` cleanup | `clear_state()` in `stop` destroys `name` before it reaches metadata | Always copy `name` from state to metadata BEFORE calling `clear_state()` |
+
+---
+
+## Performance Traps
+
+| Trap | Symptoms | Prevention | When It Breaks |
+|------|----------|------------|----------------|
+| `meet list` slug resolution on every list call | None at current scale (~100 sessions) | Not a trap at this scale; JSON scan is O(n) and n is small | Never becomes an issue for a local single-user tool |
+| Glob pattern matching in resolver (`f"{stem}-*.wav"`) | Could match unrelated files if stem is very short (e.g. `a-`) | Enforce minimum slug length (5 chars) or use full timestamp format in glob | Only if very short names are allowed; e.g. `meet record "hi"` → slug `hi` → glob `hi-*.wav` matches `hike-20260327-...wav` |
+
+---
+
+## UX Pitfalls
+
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| Name only shown in `meet list` after summarization | User records "1:1 with Gabriel", runs `meet list`, sees the stem instead of the name — name only appears after LLM summarization generates an H1 | Read `name` from metadata first; don't require summarization to show a human title |
+| User types `meet transcribe --session "1:1 with Gabriel"` (with spaces, quotes, colons) | Shell quotes are handled by the shell, but the stem resolution fails because the session was stored as `1-1-with-gabriel-...` | `--session` documentation must say "use the slug prefix" not "the original name"; or auto-slugify the `--session` argument before resolving |
+| Long name produces extremely long filename | `meet record "Q1 2026 Engineering All-Hands Planning Session with Product and Design Teams"` → 80-char slug prefix in filename | Truncate slug to 50 chars in `slugify()` |
+| Name contains only special characters | `meet record "???"` → slug is empty → falls back to `untitled` silently | Warn the user: "Name produced an empty slug. Saving as untitled." |
+
+---
+
+## "Looks Done But Isn't" Checklist
+
+- [ ] **Name in `meet list`:** Verify that sessions recorded before v1.2 (no `name` field in metadata) still show a title — not `None` or blank
+- [ ] **Name propagation through full flow:** Run `meet record "1:1 with Gabriel"` → `meet stop` → read metadata JSON → confirm `"name": "1:1 with Gabriel"` is present
+- [ ] **Collision safety:** Record two sessions with the same name back-to-back (within the same second) and confirm both WAV files exist with distinct filenames
+- [ ] **Slug resolution in `meet transcribe`:** Run `meet transcribe --session 1-1-with-gabriel` (slug prefix, not full stem) and confirm it resolves correctly
+- [ ] **Notion title uses name:** After `meet summarize` on a named session, confirm the Notion page title is the user-provided name, not the LLM's H1
+- [ ] **Empty/whitespace name rejected:** `meet record "   "` should error or warn — not silently create an `untitled` session
+- [ ] **`meet list --json` schema stability:** Confirm old sessions have `"name": null` (key present, value null) not missing key entirely
+- [ ] **SRT and `.txt` files use same slug-prefixed stem:** Confirm `1-1-with-gabriel-{timestamp}.txt`, `.srt`, and `.json` all share the same stem as the WAV
+
+---
+
+## Recovery Strategies
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| Filename collision (two sessions overwrite) | HIGH | No automatic recovery — data is gone. Restore from backup if available. Prevention is the only option. |
+| Name lost between `record` and `stop` | MEDIUM | Manually add `"name": "..."` to the metadata JSON file. `meet list` will pick it up on next run. |
+| Backward compat crash on old sessions | LOW | Add `.get("name")` guard at the crash site; re-run failed command. |
+| Notion title wrong (LLM H1 used instead of name) | LOW | Manually rename the Notion page. Future sessions unaffected once fix is shipped. |
+| Slug too permissive (colon in filename) | MEDIUM | Rename affected files manually; fix `slugify()` and re-record. Old files with invalid chars work on macOS but break portability. |
+
+---
+
+## Pitfall-to-Phase Mapping
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| P1: Filename collision | Phase 1 — `storage.py` slug+timestamp filename contract | Test: two records with same name → two distinct WAV files exist |
+| P2: Slugification edge cases | Phase 1 — `slugify()` utility with exhaustive tests | Test matrix: colon, slash, unicode, empty, all-spaces, 200-char, all-punctuation |
+| P3: Name lost between record and stop | Phase 1 — `meet stop` copies `name` from state to metadata | Test: record→stop→read metadata → name present |
+| P4: Backward compat (no name field) | Phase 1 — all readers use `.get("name")` | Test fixture: pre-v1.2 metadata JSON without `name` field runs through all commands without crash |
+| P5: Stem resolution breaks for named sessions | Phase 2+3 — resolver uses glob prefix matching | Test: `--session 1-1-with-gabriel` resolves without full stem |
+| P6: Notion title ignores session name | Phase 3 — `meet summarize` reads name from metadata before `extract_title()` | Test: summarize with named session → `create_page` called with `title=session_name` |
+| P7: `meet list` ignores name field | Phase 4 — `_derive_title()` checks `name` first | Test: `meet list` with named session metadata → name shown in Title column |
+
+---
+
+## Sources
+
+- Direct code analysis: `meeting_notes/cli/commands/record.py`, `stop`, `transcribe.py`, `summarize.py`, `list.py`
+- Direct code analysis: `meeting_notes/core/storage.py`, `meeting_notes/core/state.py`, `meeting_notes/services/notion.py`
+- Python `unicodedata` module documentation — NFKD normalization for accent folding
+- macOS filesystem behavior — HFS+/APFS allow colons in filenames via POSIX API but the shell interprets them; colons in filenames create confusion in shell scripts even if technically allowed
+- Existing PITFALLS.md (v1.1) — not duplicated here
+
+---
+*Pitfalls research for: Named recordings added to existing Python CLI meeting-notes tool (v1.2)*
+*Researched: 2026-03-27*

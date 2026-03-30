@@ -52,11 +52,13 @@ def _derive_status(meta: dict) -> str:
 
 
 def _derive_title(meta: dict, stem: str) -> str:
-    """Derive session title (per D-16, D-17).
+    """Derive session title.
 
-    Summarized: first # Heading from notes file via extract_title().
-    Otherwise: session stem.
+    Priority: recording_name (user-given) > LLM heading (from notes) > stem.
     """
+    recording_name = meta.get("recording_name")
+    if recording_name:
+        return recording_name
     notes_path = meta.get("notes_path")
     if notes_path and Path(notes_path).exists():
         try:
@@ -129,6 +131,7 @@ def list_sessions(ctx: click.Context, filter_status: str | None, output_json: bo
             table.add_column("Title")
             table.add_column("Status")
             table.add_column("Notion URL")
+            table.add_column("Session ID")
             console.print(table)
         return
 
@@ -156,6 +159,7 @@ def list_sessions(ctx: click.Context, filter_status: str | None, output_json: bo
             "date": _derive_date(meta),
             "duration_display": _format_duration(duration_seconds),
             "duration_seconds": duration_seconds,
+            "session_id": stem,
         })
 
     # --json path: clean JSON, no Rich, no ANSI (per D-19)
@@ -173,6 +177,7 @@ def list_sessions(ctx: click.Context, filter_status: str | None, output_json: bo
     table.add_column("Title", max_width=40)
     table.add_column("Status")
     table.add_column("Notion URL")
+    table.add_column("Session ID")
 
     for s in sessions:
         table.add_row(
@@ -181,6 +186,7 @@ def list_sessions(ctx: click.Context, filter_status: str | None, output_json: bo
             s.get("title", "\u2014"),
             s.get("status", "\u2014"),
             s.get("notion_url") or "\u2014",
+            s.get("session_id", "\u2014"),
         )
 
     console.print(table)

@@ -11,12 +11,15 @@ from meeting_notes.services.checks import (
     BlackHoleCheck,
     DiskSpaceCheck,
     FFmpegDeviceCheck,
+    HuggingFaceTokenCheck,
     MlxWhisperCheck,
     NotionDatabaseCheck,
     NotionTokenCheck,
     OllamaModelCheck,
     OllamaRunningCheck,
     OpenaiWhisperConflictCheck,
+    PyannoteCheck,
+    PyannoteModelCheck,
     PythonVersionCheck,
     WhisperModelCheck,
 )
@@ -43,6 +46,9 @@ def doctor(ctx: click.Context, verbose: bool):
     suite.register(WhisperModelCheck())
     suite.register(OllamaRunningCheck())
     suite.register(OllamaModelCheck())
+    suite.register(PyannoteCheck())
+    suite.register(HuggingFaceTokenCheck(config.huggingface.token))
+    suite.register(PyannoteModelCheck())
     suite.register(NotionTokenCheck(config.notion.token))
     suite.register(NotionDatabaseCheck(config.notion.token, config.notion.parent_page_id))
 

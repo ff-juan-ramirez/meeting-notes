@@ -7,6 +7,8 @@
 ## Milestones
 
 - ✅ **v1.0 MVP** — Phases 1-6 (shipped 2026-03-24)
+- ✅ **v1.1 SRT + Diarization** — Phase 01 (shipped 2026-03-28)
+- ✅ **v1.2 Named Recordings** — Phases 02-07 (shipped 2026-03-29)
 
 ---
 
@@ -26,33 +28,35 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 
 </details>
 
+<details>
+<summary>✅ v1.1 SRT Output and Speaker Diarization (Phase 01) — SHIPPED 2026-03-28</summary>
+
+- [x] Phase 01: SRT output and speaker diarization for transcription pipeline (5/5 plans) — completed 2026-03-28
+
+Full details: `.planning/milestones/v1.1-ROADMAP.md`
+
+</details>
+
+<details>
+<summary>✅ v1.2 Named Recordings (Phases 02-07) — SHIPPED 2026-03-29</summary>
+
+- [x] Phase 02: Storage Foundation (1/1 plans) — completed 2026-03-28
+- [x] Phase 03: Record/Stop Command (1/1 plans) — completed 2026-03-28
+- [x] Phase 04: meet list Display (1/1 plans) — completed 2026-03-28
+- [x] Phase 05: Notion Title Integration (1/1 plans) — completed 2026-03-28
+- [x] Phase 06: Session ID Column + meet list wiring (1/1 plans) — completed 2026-03-28
+- [x] Phase 07: --title flag for Notion page title override (1/1 plans) — completed 2026-03-29
+
+Full details: `.planning/milestones/v1.2-ROADMAP.md`
+
+</details>
+
 ---
 
 ## Progress
 
 | Phase | Milestone | Plans | Status   | Completed  |
 |-------|-----------|-------|----------|------------|
-| 1. Audio Capture + Health Check Design | v1.0 | 5/5 | Gap closure | — |
-| 2. Local Transcription | v1.0 | 3/3 | Complete | 2026-03-22 |
-| 3. Note Generation | v1.0 | 3/3 | Complete | 2026-03-22 |
-| 4. Notion Integration | v1.0 | 2/2 | Complete | 2026-03-23 |
-| 5. Integrated CLI | v1.0 | 2/2 | Complete | 2026-03-23 |
-| 6. Exportable Git Repo | v1.0 | 3/3 | Complete | 2026-03-23 |
-
-### Phase 1: SRT output and speaker diarization for transcription pipeline
-
-**Goal:** Extend `meet transcribe` to produce SRT subtitle files from Whisper segments and add pyannote-audio speaker diarization with graceful fallback. Every transcription produces both `.txt` and `.srt`. Diarized output uses `SPEAKER_XX:` prefixes. `meet summarize` prefers diarized transcripts when available.
-**Requirements**: D-01 through D-15 (SRT output, speaker diarization, diarized format, health checks)
-**Depends on:** v1.0 MVP
-**Plans:** 5 plans (4 complete + 1 gap closure)
-
-Plans:
-- [x] 01-00-PLAN.md — Wave 0: Nyquist test stubs for all phase tests (1/4 complete, 2026-03-27)
-- [x] 01-01-PLAN.md — SRT generation + transcribe_audio tuple return + CLI wiring
-- [x] 01-02-PLAN.md — HuggingFaceConfig + init wizard + pyannote health checks + deps
-- [x] 01-03-PLAN.md — Speaker diarization integration + summarize diarized preference
-- [x] 01-04-PLAN.md — Gap closure: doctor pyannote checks + init --update flag + pip reinstall
-
----
-*v1.0 shipped 2026-03-24 — see `.planning/MILESTONES.md` for details*
-*Next milestone phases will be added here via `/gsd:new-milestone`*
+| 1-6. v1.0 MVP phases | v1.0 | 16/16 | Complete | 2026-03-24 |
+| 01. SRT + Speaker Diarization | v1.1 | 5/5 | Complete | 2026-03-28 |
+| 02-07. Named Recordings | v1.2 | 6/6 | Complete | 2026-03-29 |

@@ -400,3 +400,149 @@ def test_no_metadata_dir_json(runner, tmp_path):
     assert result.exit_code == 0
     sessions = json.loads(result.output)
     assert sessions == []
+
+
+# ---------------------------------------------------------------------------
+# Tests: recording_name as highest-priority title source (LIST-01, LIST-02)
+# ---------------------------------------------------------------------------
+
+def test_named_session_shows_recording_name_as_title(runner, data_dir):
+    """Session with recording_name shows recording_name as title in table output (LIST-01)."""
+    stem = "20260322-143000-named01"
+    _write_metadata(data_dir, stem, {
+        "recording_name": "Weekly Standup",
+        "transcribed_at": "2026-03-22T14:30:00+00:00",
+    })
+
+    result = _invoke(runner, data_dir)
+    assert result.exit_code == 0
+    assert "Weekly Standup" in result.output
+
+
+def test_recording_name_wins_over_llm_heading(runner, data_dir):
+    """Session with recording_name AND notes file shows recording_name, not LLM heading (D-01)."""
+    stem = "20260322-143000-named02"
+    notes_path = _write_notes(data_dir, stem, "meeting", "# LLM Generated Heading\nContent.")
+    _write_metadata(data_dir, stem, {
+        "recording_name": "My Meeting",
+        "transcribed_at": "2026-03-22T14:30:00+00:00",
+        "notes_path": notes_path,
+        "summarized_at": "2026-03-22T14:35:00+00:00",
+    })
+
+    result = _invoke(runner, data_dir)
+    assert result.exit_code == 0
+    assert "My Meeting" in result.output
+    assert "LLM Generated Heading" not in result.output
+
+
+def test_no_recording_name_field_uses_llm_heading(runner, data_dir):
+    """Pre-v1.2 session with no recording_name field shows LLM heading from notes (LIST-02 regression)."""
+    stem = "20260322-143000-prev12"
+    notes_path = _write_notes(data_dir, stem, "meeting", "# Old Style Title\nContent.")
+    _write_metadata(data_dir, stem, {
+        "transcribed_at": "2026-03-22T14:30:00+00:00",
+        "notes_path": notes_path,
+        "summarized_at": "2026-03-22T14:35:00+00:00",
+    })
+
+    result = _invoke(runner, data_dir)
+    assert result.exit_code == 0
+    assert "Old Style Title" in result.output
+
+
+def test_recording_name_none_falls_through(runner, data_dir):
+    """Session with recording_name=None falls through to LLM heading (D-03)."""
+    stem = "20260322-143000-namenone"
+    notes_path = _write_notes(data_dir, stem, "meeting", "# Fallback Heading\nContent.")
+    _write_metadata(data_dir, stem, {
+        "recording_name": None,
+        "transcribed_at": "2026-03-22T14:30:00+00:00",
+        "notes_path": notes_path,
+        "summarized_at": "2026-03-22T14:35:00+00:00",
+    })
+
+    result = _invoke(runner, data_dir)
+    assert result.exit_code == 0
+    assert "Fallback Heading" in result.output
+
+
+def test_recording_name_empty_falls_through(runner, data_dir):
+    """Session with recording_name='' falls through to stem (D-03)."""
+    stem = "20260322-143000-nameempty"
+    _write_metadata(data_dir, stem, {
+        "recording_name": "",
+        "transcribed_at": "2026-03-22T14:30:00+00:00",
+    })
+
+    result = _invoke(runner, data_dir)
+    assert result.exit_code == 0
+    assert stem in result.output
+
+
+def test_json_output_includes_recording_name_and_title(runner, data_dir):
+    """meet list --json shows recording_name as top-level field and title equals recording_name (D-02)."""
+    stem = "20260322-143000-namedjson"
+    _write_metadata(data_dir, stem, {
+        "recording_name": "Sprint Review",
+        "transcribed_at": "2026-03-22T14:30:00+00:00",
+    })
+
+    result = _invoke(runner, data_dir, ["--json"])
+    assert result.exit_code == 0
+    sessions = json.loads(result.output)
+    assert len(sessions) == 1
+    assert sessions[0]["recording_name"] == "Sprint Review"
+    assert sessions[0]["title"] == "Sprint Review"
+
+
+# ---------------------------------------------------------------------------
+# Tests: Session ID column (SESSID-01, SESSID-02, SESSID-03)
+# ---------------------------------------------------------------------------
+
+def test_session_id_column_in_table(runner, data_dir):
+    """meet list table shows 'Session ID' header and the full stem in the Session ID column."""
+    stem = "20260322-143000-abc12345"
+    _write_metadata(data_dir, stem, {
+        "transcribed_at": "2026-03-22T14:30:00+00:00",
+    })
+
+    result = _invoke(runner, data_dir)
+    assert result.exit_code == 0
+    assert "Session ID" in result.output
+    assert stem in result.output
+
+
+def test_named_session_id_column(runner, data_dir):
+    """Session with recording_name shows full slug-prefixed stem in Session ID column."""
+    stem = "team-standup-20260322-143000-named01"
+    _write_metadata(data_dir, stem, {
+        "recording_name": "Team Standup",
+        "transcribed_at": "2026-03-22T14:30:00+00:00",
+    })
+
+    result = _invoke(runner, data_dir)
+    assert result.exit_code == 0
+    assert stem in result.output
+
+
+def test_json_output_includes_session_id(runner, data_dir):
+    """meet list --json includes session_id field equal to the metadata file stem."""
+    stem = "20260322-143000-jsonsid"
+    _write_metadata(data_dir, stem, {
+        "transcribed_at": "2026-03-22T14:30:00+00:00",
+    })
+
+    result = _invoke(runner, data_dir, ["--json"])
+    assert result.exit_code == 0
+    sessions = json.loads(result.output)
+    assert len(sessions) == 1
+    assert sessions[0]["session_id"] == stem
+
+
+def test_empty_table_has_session_id_header(runner, data_dir):
+    """meet list with empty metadata dir shows 'Session ID' in table column headers."""
+    # Remove all json files to get empty table (metadata dir exists but is empty)
+    result = _invoke(runner, data_dir)
+    assert result.exit_code == 0
+    assert "Session ID" in result.output

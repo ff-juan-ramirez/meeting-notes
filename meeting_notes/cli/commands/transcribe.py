@@ -7,7 +7,7 @@ import click
 
 from meeting_notes.cli.ui import console
 from meeting_notes.core.config import Config
-from meeting_notes.core.state import write_state
+from meeting_notes.core.state import read_state, write_state
 from meeting_notes.core.storage import ensure_dirs, get_config_dir, get_data_dir
 from meeting_notes.services.transcription import (
     WARN_DURATION_SECONDS,
@@ -150,10 +150,11 @@ def transcribe(ctx: click.Context, session: str | None) -> None:
     srt_path = transcripts_dir / f"{stem}.srt"
     srt_path.write_text(srt_content)
 
-    # --- Save metadata ---
+    # --- Save metadata (read-merge-write to preserve recording_name, duration_seconds, etc.) ---
     metadata_dir.mkdir(parents=True, exist_ok=True)
     metadata_path = metadata_dir / f"{stem}.json"
-    metadata = {
+    metadata = read_state(metadata_path) or {}
+    metadata.update({
         "wav_path": str(wav_path.resolve()),
         "transcript_path": str(transcript_path.resolve()),
         "srt_path": str(srt_path.resolve()),
@@ -163,7 +164,7 @@ def transcribe(ctx: click.Context, session: str | None) -> None:
         "diarization_succeeded": diarization_succeeded,
         "diarized_transcript_path": str(transcript_path.resolve()) if diarization_succeeded else None,
         "speaker_turns": speaker_turns,
-    }
+    })
     write_state(metadata_path, metadata)
 
     # --- Success output ---
