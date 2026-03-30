@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: Named Recordings
-status: v1.2 milestone complete
-last_updated: "2026-03-29T18:34:48.432Z"
+milestone: v2.0
+milestone_name: Native Desktop GUI
+status: Defining requirements
+last_updated: "2026-03-30T00:00:00.000Z"
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 6
-  completed_plans: 6
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
@@ -18,11 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** v1.2 shipped — planning next milestone via `/gsd:new-milestone`
+**Current focus:** v2.0 Native Desktop GUI — defining requirements
 
 ## Current Position
 
-Milestone v1.2 complete. No active phase.
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-30 — Milestone v2.0 started
 
 ## Current Status
 
