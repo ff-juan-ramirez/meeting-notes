@@ -64,15 +64,18 @@ All sizes in points (Qt uses pt, not px, for font sizes). Line heights applied v
 | h1 — screen title | Helvetica Neue | 20pt | bold (700) | 1.2 | `font-h1` |
 | h2 — section heading | Helvetica Neue | 13pt | bold (700) | 1.3 | `font-h2` |
 | body — default UI text | Helvetica Neue | 11pt | normal (400) | 1.5 | `font-body` |
-| small — metadata, timestamps, captions | Helvetica Neue | 9pt | normal (400) | 1.4 | `font-small` |
-| mono — transcript, notes, SRT content | Menlo | 10pt | normal (400) | 1.6 | `font-mono` |
+| mono — transcript, notes, SRT content, metadata, timestamps, captions | Menlo | 10pt | normal (400) | 1.6 | `font-mono` / `font-small` |
 
 Source: GUI-MILESTONE-PLAN.md FONTS dict + CONTEXT.md specifics section.
 
 Rules:
 - Only `h1` and `h2` use bold weight. All other roles use normal (400).
+- `font-small` is an alias for `font-mono` (10pt Menlo). Use it for metadata, timestamps,
+  and captions. The same 10pt Menlo size covers both monospace content areas and small
+  informational text.
 - `mono` is ONLY for `QPlainTextEdit` content areas that display transcript, notes, or SRT
-  text. Never use Menlo for UI labels, buttons, or metadata.
+  text, plus small metadata labels. Never use Menlo for primary UI labels, h1/h2 headings,
+  or primary action buttons.
 - Never hardcode font family strings outside `theme.py`.
 
 ---
@@ -95,7 +98,7 @@ Source: `GUI-MILESTONE-PLAN.md` COLORS dict + QMainWindow background from APP_ST
 
 | Role | Value | Usage |
 |------|-------|-------|
-| text_primary (on light) | `#1C1C1E` | All body/h1/h2/small text on `#F5F5F7` or `#F9F9FB` surfaces |
+| text_primary (on light) | `#1C1C1E` | All body/h1/h2 text on `#F5F5F7` or `#F9F9FB` surfaces |
 | text_primary (on dark) | `#FFFFFF` | Sidebar item labels, text on `#1C1C1E` background |
 
 ### Semantic Colors (10% accent + status)
@@ -206,7 +209,7 @@ Components that `theme.py` must style via QSS (Phase 01 only):
 | Primary button | `QPushButton[style="primary"]` | background: `#0A84FF`; color: white; border-radius: 6px; font-weight: bold; padding: 8px 16px |
 | Danger button | `QPushButton[style="danger"]` | background: `#FF3B30`; color: white; border-radius: 6px; font-weight: bold; padding: 8px 16px |
 | Card surface | `QFrame[style="card"]` | background: `#F9F9FB`; border: 1px solid `#E5E5EA`; border-radius: 8px |
-| QLineEdit | `QLineEdit` | background: `#F2F2F7`; border: 1px solid `#E5E5EA`; border-radius: 6px; padding: 6px 8px |
+| QLineEdit | `QLineEdit` | background: `#F2F2F7`; border: 1px solid `#E5E5EA`; border-radius: 6px; padding: 4px 8px |
 | QPlainTextEdit (mono) | `QPlainTextEdit[style="mono"]` | font-family: Menlo; font-size: 10pt; background: `#F2F2F7` |
 
 Factory functions required in `theme.py`:
@@ -233,7 +236,7 @@ Factory functions required in `theme.py`:
 | Decision | Source | Field(s) populated |
 |----------|--------|--------------------|
 | Font families (Helvetica Neue, Menlo) | CONTEXT.md specifics + GUI-MILESTONE-PLAN.md FONTS dict | Typography table |
-| Font sizes (20pt h1, 13pt h2, 11pt body, 9pt small, 10pt mono) | CONTEXT.md specifics + GUI-MILESTONE-PLAN.md FONTS dict | Typography table |
+| Font sizes (20pt h1, 13pt h2, 11pt body, 10pt mono/small) | CONTEXT.md specifics + GUI-MILESTONE-PLAN.md FONTS dict — 9pt small merged into 10pt mono per checker revision 2026-03-30 | Typography table |
 | COLORS dict (8 values) | GUI-MILESTONE-PLAN.md theme.py excerpt | Color table |
 | Window min/default dimensions | GUI-MILESTONE-PLAN.md + CONTEXT.md specifics | Spacing exceptions |
 | Sidebar item order (6 screens) | GUI-MILESTONE-PLAN.md screen specs | Interaction contract |
@@ -242,3 +245,4 @@ Factory functions required in `theme.py`:
 | QSS widget list | GUI-MILESTONE-PLAN.md APP_STYLESHEET stub | Component inventory |
 | Placeholder view copy | CONTEXT.md Claude's Discretion | Copywriting contract |
 | Template/settings/delete copy | REQUIREMENTS.md TPLV-06, SETT-02, SETT-03, TPLV-05 | Copywriting contract |
+| QLineEdit padding corrected to 4px 8px | checker revision 2026-03-30 — 6px vertical was not a multiple of 4 | Component inventory |
