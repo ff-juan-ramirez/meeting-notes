@@ -2,6 +2,14 @@ import pytest
 from pathlib import Path
 
 
+@pytest.fixture(scope="session")
+def qt_app():
+    """Session-scoped QApplication instance for PySide6 GUI tests."""
+    from PySide6.QtWidgets import QApplication
+    app = QApplication.instance() or QApplication([])
+    yield app
+
+
 @pytest.fixture
 def tmp_config_dir(tmp_path):
     """Temporary XDG_CONFIG_HOME for isolated config tests."""
