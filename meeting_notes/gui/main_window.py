@@ -70,8 +70,19 @@ class MainWindow(QMainWindow):
         # Connect sidebar selection to stack switch
         self._sidebar.currentRowChanged.connect(self._on_sidebar_changed)
 
+        # Cross-view navigation (Dashboard -> Sessions, Dashboard -> Record)
+        dashboard_view = self._views[0]
+        sessions_view = self._views[1]
+        dashboard_view.navigate_requested.connect(self.navigate_to)
+        dashboard_view.session_selected.connect(sessions_view.select_session)
+
         # Default to Dashboard (index 0)
         self._sidebar.setCurrentRow(0)
+
+    @Slot(int)
+    def navigate_to(self, index: int) -> None:
+        """Switch to the view at the given sidebar index."""
+        self._sidebar.setCurrentRow(index)
 
     @Slot(int)
     def _on_sidebar_changed(self, index: int):
