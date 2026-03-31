@@ -91,7 +91,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 
 Plans:
 - [ ] 02-01-PLAN.md -- Test stubs, theme QSS extensions, SessionRowWidget and StatusPill widgets
-- [ ] 02-02-PLAN.md -- TranscribeWorker and SummarizeWorker QThread classes
+- [x] 02-02-PLAN.md -- TranscribeWorker and SummarizeWorker QThread classes
 - [ ] 02-03-PLAN.md -- Sessions view full implementation + green tests
 - [ ] 02-04-PLAN.md -- Dashboard view, MainWindow navigation wiring, green tests + visual checkpoint
 

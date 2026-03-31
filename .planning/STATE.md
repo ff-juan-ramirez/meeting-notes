@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Native Desktop GUI
 status: Ready to plan
-last_updated: "2026-03-31T02:09:26.553Z"
+last_updated: "2026-03-31T14:25:37.965Z"
 progress:
-  total_phases: 5
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_phases: 6
+  completed_phases: 5
+  total_plans: 10
+  completed_plans: 7
 ---
 
 # Project State
@@ -115,6 +115,8 @@ Plan: Not started
 - [Phase 01]: GUI startup chain imports only PySide6, gui.*, core.config, core.storage — no ML modules (GUI-01)
 - [Phase 01-gui-foundation]: Import list_templates inside summarize() function body to avoid import-time side effects from get_config_dir() + mkdir
 - [Phase 01-gui-foundation]: USER_TEMPLATES_DIR created lazily inside list_templates() via mkdir(parents=True, exist_ok=True)
+- [Phase 02]: Lazy imports inside run(): all service/ML imports deferred to avoid loading mlx_whisper, pyannote, torchaudio at GUI startup
+- [Phase 02]: TranscribeWorker and SummarizeWorker write metadata JSON after work (read-merge-write pattern) — mirrors CLI commands
 
 ## Performance Metrics
 
@@ -148,6 +150,7 @@ Plan: Not started
 | Phase 07 P01 | 236 | 2 tasks | 2 files |
 | Phase 01 P02 | 420 | 2 tasks | 18 files |
 | Phase 01-gui-foundation P01 | 204 | 2 tasks | 4 files |
+| Phase 02 P02 | 103 | 2 tasks | 2 files |
 
 ## Roadmap Evolution
 
