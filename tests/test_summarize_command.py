@@ -563,6 +563,47 @@ def test_summarize_notion_spinner(runner, tmp_path):
     assert any("Saving to Notion" in m for m in spinner_messages)
 
 
+def test_summarize_invalid_template(runner, tmp_path):
+    """Invalid --template value exits 1 with 'Invalid template' in output."""
+    from meeting_notes.cli.commands.summarize import summarize
+
+    transcripts, notes, metadata = _make_env_dirs(tmp_path)
+    stem = "20260322-143000-abc12345"
+    _create_fake_transcript(transcripts, stem)
+
+    with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path):
+        result = runner.invoke(summarize, ["--template", "nonexistent_xyz"])
+
+    assert result.exit_code == 1
+    assert "Invalid template" in result.output
+
+
+def test_summarize_dynamic_template(runner, tmp_path, monkeypatch):
+    """User-created template is accepted by the CLI (TMPL-06)."""
+    from meeting_notes.cli.commands.summarize import summarize
+
+    # Create a user template in a temp dir
+    user_templates = tmp_path / "user-templates"
+    user_templates.mkdir()
+    (user_templates / "custom.txt").write_text("Custom template: {transcript}")
+
+    # Redirect USER_TEMPLATES_DIR so list_templates() finds our custom template
+    monkeypatch.setattr("meeting_notes.services.llm.USER_TEMPLATES_DIR", user_templates)
+
+    transcripts, notes, metadata = _make_env_dirs(tmp_path)
+    stem = "20260322-143000-abc12345"
+    _create_fake_transcript(transcripts, stem)
+
+    with patch("meeting_notes.cli.commands.summarize.get_data_dir", return_value=tmp_path), \
+         patch("meeting_notes.cli.commands.summarize.run_with_spinner", side_effect=lambda fn, msg, **kw: fn()), \
+         patch("meeting_notes.services.llm.requests.post", return_value=_make_ollama_mock()):
+        result = runner.invoke(summarize, ["--template", "custom"])
+
+    # Should NOT exit with "Invalid template" — custom template is valid
+    assert "Invalid template" not in result.output
+    assert result.exit_code == 0
+
+
 def test_summarize_preserves_phase3_metadata(runner, tmp_path):
     """After Notion push, metadata still contains notes_path, template, summarized_at, llm_model."""
     from meeting_notes.cli.commands.summarize import summarize

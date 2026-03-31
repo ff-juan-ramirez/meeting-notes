@@ -2,6 +2,8 @@
 import requests
 from pathlib import Path
 
+from meeting_notes.core.storage import get_config_dir
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -12,13 +14,68 @@ TOKEN_CHARS = 4  # chars per token estimate
 CHUNK_TOKEN_LIMIT = 6000  # tokens per chunk for map-reduce
 MAX_TOKENS_BEFORE_CHUNKING = 8000
 
-TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
-VALID_TEMPLATES = ("meeting", "minutes", "1on1")
+BUILTIN_TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
+USER_TEMPLATES_DIR = get_config_dir() / "templates"
 
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
+def list_templates() -> list[dict]:
+    """Return all templates: built-in + user-created.
+
+    Each dict: {name: str, path: Path, builtin: bool}
+    Built-ins are listed first (sorted), then user templates (sorted).
+    """
+    templates = []
+    for p in sorted(BUILTIN_TEMPLATES_DIR.glob("*.txt")):
+        templates.append({"name": p.stem, "path": p, "builtin": True})
+    USER_TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
+    for p in sorted(USER_TEMPLATES_DIR.glob("*.txt")):
+        templates.append({"name": p.stem, "path": p, "builtin": False})
+    return templates
+
+
+def load_template(template_name: str) -> str:
+    """Load template by name. User templates take precedence over built-ins.
+
+    Raises ValueError if template is not found in either location.
+    """
+    user_path = USER_TEMPLATES_DIR / f"{template_name}.txt"
+    if user_path.exists():
+        return user_path.read_text()
+    builtin_path = BUILTIN_TEMPLATES_DIR / f"{template_name}.txt"
+    if builtin_path.exists():
+        return builtin_path.read_text()
+    raise ValueError(f"Template not found: {template_name}")
+
+
+def save_template(name: str, content: str) -> Path:
+    """Save a user template. Raises ValueError if name collides with a built-in."""
+    if (BUILTIN_TEMPLATES_DIR / f"{name}.txt").exists():
+        raise ValueError(f"'{name}' is a built-in template. Use a different name.")
+    USER_TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
+    path = USER_TEMPLATES_DIR / f"{name}.txt"
+    path.write_text(content)
+    return path
+
+
+def delete_template(name: str) -> None:
+    """Delete a user template. Raises ValueError if it's built-in."""
+    if (BUILTIN_TEMPLATES_DIR / f"{name}.txt").exists():
+        raise ValueError(f"Cannot delete built-in template '{name}'.")
+    path = USER_TEMPLATES_DIR / f"{name}.txt"
+    if not path.exists():
+        raise FileNotFoundError(f"Template not found: {name}")
+    path.unlink()
+
+
+def duplicate_template(source_name: str, new_name: str) -> Path:
+    """Duplicate any template (built-in or user) to a new user template."""
+    content = load_template(source_name)
+    return save_template(new_name, content)
+
 
 def estimate_tokens(text: str) -> int:
     """Estimate token count as len(text) // 4 (per D-13)."""
@@ -41,18 +98,6 @@ def chunk_transcript(text: str) -> list[str]:
     if text:
         chunks.append(text)
     return chunks
-
-
-def load_template(template_name: str) -> str:
-    """Load a prompt template file by name.
-
-    Raises ValueError if template_name is not in VALID_TEMPLATES.
-    Raises FileNotFoundError if template file is missing.
-    """
-    if template_name not in VALID_TEMPLATES:
-        raise ValueError(f"Invalid template: {template_name}. Must be one of: {', '.join(VALID_TEMPLATES)}")
-    template_path = TEMPLATES_DIR / f"{template_name}.txt"
-    return template_path.read_text()
 
 
 def build_prompt(template_text: str, transcript: str) -> str:
