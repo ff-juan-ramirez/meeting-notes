@@ -12,7 +12,6 @@ from meeting_notes.core.storage import ensure_dirs, get_data_dir, get_config_dir
 from meeting_notes.services.llm import (
     OLLAMA_MODEL,
     MAX_TOKENS_BEFORE_CHUNKING,
-    VALID_TEMPLATES,
     build_prompt,
     chunk_transcript,
     estimate_tokens,
@@ -48,13 +47,20 @@ def resolve_transcript_by_stem(transcripts_dir: Path, stem: str) -> Path:
 # ---------------------------------------------------------------------------
 
 @click.command()
-@click.option("--template", default="meeting", type=click.Choice(["meeting", "minutes", "1on1"]),
+@click.option("--template", default="meeting",
               help="Note template (default: meeting)")
 @click.option("--session", default=None, help="Transcript filename stem (e.g. 20260322-143000-abc12345)")
 @click.pass_context
 def summarize(ctx: click.Context, template: str, session: str | None) -> None:
     """Generate structured notes from a transcript using Ollama llama3.1:8b."""
     quiet = ctx.obj.get("quiet", False) if ctx.obj else False
+
+    # --- Runtime template validation (TMPL-06) ---
+    from meeting_notes.services.llm import list_templates
+    valid_names = [t["name"] for t in list_templates()]
+    if template not in valid_names:
+        console.print(f"[red]Error:[/red] Invalid template '{template}'. Choose from: {', '.join(valid_names)}")
+        sys.exit(1)
 
     # --- Load config first so storage_path is available ---
     config_path = get_config_dir() / "config.json"

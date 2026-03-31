@@ -17,9 +17,6 @@ MAX_TOKENS_BEFORE_CHUNKING = 8000
 BUILTIN_TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
 USER_TEMPLATES_DIR = get_config_dir() / "templates"
 
-# Backward compat — summarize.py imports this; removed in Plan 01, Task 2
-VALID_TEMPLATES = ("meeting", "minutes", "1on1")
-
 
 # ---------------------------------------------------------------------------
 # Public API
