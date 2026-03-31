@@ -87,7 +87,14 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
   3. User can select a session and transcribe or summarize it from the detail panel while the UI remains responsive (no freeze)
   4. User can see the pipeline step indicator (Recorded → Transcribed → Summarized → Notion) with green fill for completed steps and click the Notion link to open the page in a browser
   5. User can open the Dashboard and see total session counts, sessions this week, the active recording state, and the 5 most recent sessions
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 02-01-PLAN.md -- Test stubs, theme QSS extensions, SessionRowWidget and StatusPill widgets
+- [ ] 02-02-PLAN.md -- TranscribeWorker and SummarizeWorker QThread classes
+- [ ] 02-03-PLAN.md -- Sessions view full implementation + green tests
+- [ ] 02-04-PLAN.md -- Dashboard view, MainWindow navigation wiring, green tests + visual checkpoint
+
 **UI hint**: yes
 
 ### Phase 03: Record
@@ -135,7 +142,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | 01. SRT + Speaker Diarization | v1.1 | 1/2 | Complete    | 2026-03-31 |
 | 02-07. Named Recordings | v1.2 | 6/6 | Complete | 2026-03-29 |
 | 01. GUI Foundation | v2.0 | 0/? | Not started | - |
-| 02. Sessions & Dashboard | v2.0 | 0/? | Not started | - |
+| 02. Sessions & Dashboard | v2.0 | 0/4 | Planning complete | - |
 | 03. Record | v2.0 | 0/? | Not started | - |
 | 04. Templates, Settings & Health Check | v2.0 | 0/? | Not started | - |
 | 05. Polish & Packaging | v2.0 | 0/? | Not started | - |
