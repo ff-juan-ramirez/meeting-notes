@@ -110,6 +110,69 @@ QPlainTextEdit[style="mono"] {
     border: 1px solid #E5E5EA;
     border-radius: 6px;
 }
+
+QFrame[style="pill-idle"] {
+    background: #E5E5EA;
+    border-radius: 12px;
+    padding: 4px 8px;
+}
+
+QFrame[style="pill-recording"] {
+    background: #FF3B30;
+    border-radius: 12px;
+    padding: 4px 8px;
+}
+
+QFrame[style="step-done"] {
+    background: #30D158;
+    border-radius: 12px;
+    min-width: 24px; min-height: 24px;
+    max-width: 24px; max-height: 24px;
+}
+
+QFrame[style="step-pending"] {
+    background: #F5F5F7;
+    border: 1px solid #E5E5EA;
+    border-radius: 12px;
+    min-width: 24px; min-height: 24px;
+    max-width: 24px; max-height: 24px;
+}
+
+QFrame[style="session-row"] {
+    background: #F9F9FB;
+    border: 1px solid #E5E5EA;
+    border-radius: 6px;
+    padding: 8px 16px;
+}
+
+QFrame[style="session-row"]:hover {
+    border: 1px solid #0A84FF;
+}
+
+QPushButton[style="secondary"] {
+    background: #F2F2F7;
+    color: #1C1C1E;
+    border-radius: 6px;
+    padding: 8px 16px;
+    border: 1px solid #E5E5EA;
+}
+
+QPushButton[style="secondary"]:hover {
+    background: #E5E5EA;
+}
+
+QTabWidget::pane {
+    border: 1px solid #E5E5EA;
+    border-radius: 6px;
+    background: #F2F2F7;
+}
+
+QComboBox {
+    background: #F2F2F7;
+    border: 1px solid #E5E5EA;
+    border-radius: 6px;
+    padding: 4px 8px;
+}
 """
 
 
