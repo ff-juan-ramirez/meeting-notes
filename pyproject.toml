@@ -15,6 +15,10 @@ dependencies = [
 
 [project.scripts]
 meet = "meeting_notes.cli.main:main"
+meet-gui = "meeting_notes.gui.app:main"
+
+[project.optional-dependencies]
+gui = ["pyside6>=6.7"]
 
 [build-system]
 requires = ["setuptools>=68"]
