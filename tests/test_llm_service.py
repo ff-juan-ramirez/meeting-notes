@@ -1,5 +1,6 @@
 """Unit tests for meeting_notes.services.llm."""
 import requests
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -8,12 +9,31 @@ from meeting_notes.services.llm import (
     OLLAMA_MODEL,
     OLLAMA_TIMEOUT,
     OLLAMA_URL,
+    BUILTIN_TEMPLATES_DIR,
+    USER_TEMPLATES_DIR,
     build_prompt,
     chunk_transcript,
+    delete_template,
+    duplicate_template,
     estimate_tokens,
     generate_notes,
+    list_templates,
     load_template,
+    save_template,
 )
+
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def user_templates_dir(tmp_path, monkeypatch):
+    """Redirect USER_TEMPLATES_DIR to a temp directory for isolation."""
+    d = tmp_path / "templates"
+    d.mkdir()
+    monkeypatch.setattr("meeting_notes.services.llm.USER_TEMPLATES_DIR", d)
+    return d
 
 
 # ---------------------------------------------------------------------------
@@ -61,6 +81,33 @@ def test_chunk_transcript_splits_on_newline():
 
 
 # ---------------------------------------------------------------------------
+# list_templates
+# ---------------------------------------------------------------------------
+
+def test_list_templates_builtins(user_templates_dir):
+    """list_templates() returns 3 dicts with builtin=True for meeting, minutes, 1on1."""
+    templates = list_templates()
+    builtin_names = {t["name"] for t in templates if t["builtin"]}
+    assert builtin_names == {"meeting", "minutes", "1on1"}
+    for t in templates:
+        assert "name" in t
+        assert "path" in t
+        assert "builtin" in t
+
+
+def test_list_templates_user(user_templates_dir):
+    """list_templates() includes user-created .txt files with builtin=False."""
+    (user_templates_dir / "custom.txt").write_text("my custom template")
+    templates = list_templates()
+    user_templates = [t for t in templates if not t["builtin"]]
+    assert len(user_templates) == 1
+    assert user_templates[0]["name"] == "custom"
+    assert user_templates[0]["builtin"] is False
+    # Total: 3 builtins + 1 user
+    assert len(templates) == 4
+
+
+# ---------------------------------------------------------------------------
 # load_template
 # ---------------------------------------------------------------------------
 
@@ -80,8 +127,15 @@ def test_load_template_1on1():
 
 
 def test_load_template_invalid():
-    with pytest.raises(ValueError, match="Invalid template"):
-        load_template("invalid")
+    with pytest.raises(ValueError, match="Template not found"):
+        load_template("nonexistent_template_xyz")
+
+
+def test_load_template_user_precedence(user_templates_dir):
+    """User template with same name as built-in takes precedence."""
+    (user_templates_dir / "meeting.txt").write_text("user override content")
+    result = load_template("meeting")
+    assert result == "user override content"
 
 
 def test_templates_contain_grounding_rule():
@@ -89,6 +143,62 @@ def test_templates_contain_grounding_rule():
     for name in ("meeting", "minutes", "1on1"):
         t = load_template(name)
         assert grounding_rule in t, f"Template '{name}' missing grounding rule"
+
+
+# ---------------------------------------------------------------------------
+# save_template
+# ---------------------------------------------------------------------------
+
+def test_save_template(user_templates_dir):
+    """save_template() creates file at USER_TEMPLATES_DIR/name.txt."""
+    path = save_template("custom", "my template content")
+    assert path == user_templates_dir / "custom.txt"
+    assert path.exists()
+    assert path.read_text() == "my template content"
+
+
+def test_save_template_builtin_collision(user_templates_dir):
+    """save_template() raises ValueError when name collides with a built-in."""
+    with pytest.raises(ValueError, match="built-in template"):
+        save_template("meeting", "some content")
+
+
+# ---------------------------------------------------------------------------
+# delete_template
+# ---------------------------------------------------------------------------
+
+def test_delete_template(user_templates_dir):
+    """delete_template() removes the user template file."""
+    (user_templates_dir / "custom.txt").write_text("to be deleted")
+    delete_template("custom")
+    assert not (user_templates_dir / "custom.txt").exists()
+
+
+def test_delete_template_builtin(user_templates_dir):
+    """delete_template() raises ValueError for built-in template names."""
+    with pytest.raises(ValueError, match="built-in"):
+        delete_template("meeting")
+
+
+def test_delete_template_not_found(user_templates_dir):
+    """delete_template() raises FileNotFoundError for non-existent user template."""
+    with pytest.raises(FileNotFoundError):
+        delete_template("nonexistent_xyz")
+
+
+# ---------------------------------------------------------------------------
+# duplicate_template
+# ---------------------------------------------------------------------------
+
+def test_duplicate_template(user_templates_dir):
+    """duplicate_template() creates user template with source template content."""
+    path = duplicate_template("meeting", "my-meeting")
+    assert path == user_templates_dir / "my-meeting.txt"
+    assert path.exists()
+    # Content should match the original meeting template
+    original = load_template("meeting")
+    # The user dir now has "my-meeting.txt" which is the duplicate
+    assert path.read_text() == original
 
 
 # ---------------------------------------------------------------------------
