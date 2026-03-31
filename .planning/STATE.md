@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Native Desktop GUI
 status: Phase complete — ready for verification
-last_updated: "2026-03-31T01:54:27.909Z"
+last_updated: "2026-03-31T01:54:33.198Z"
 progress:
   total_phases: 5
   completed_phases: 0
@@ -113,6 +113,8 @@ Plan: 2 of 2
 - [Phase 01]: PySide6 >= 6.7 added as optional dep under [gui] extras — pip install -e '.[gui]' for GUI, pip install -e . for CLI-only
 - [Phase 01]: APP_STYLESHEET applied once via app.setStyleSheet in app.py — no per-widget QSS except factory functions
 - [Phase 01]: GUI startup chain imports only PySide6, gui.*, core.config, core.storage — no ML modules (GUI-01)
+- [Phase 01-gui-foundation]: Import list_templates inside summarize() function body to avoid import-time side effects from get_config_dir() + mkdir
+- [Phase 01-gui-foundation]: USER_TEMPLATES_DIR created lazily inside list_templates() via mkdir(parents=True, exist_ok=True)
 
 ## Performance Metrics
 

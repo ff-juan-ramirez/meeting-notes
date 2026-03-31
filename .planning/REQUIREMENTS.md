@@ -15,12 +15,12 @@
 
 ### Template Service (Core Change)
 
-- [ ] **TMPL-01**: `list_templates()` returns all built-in and user-created templates as `{name, path, builtin}` dicts
-- [ ] **TMPL-02**: `load_template()` checks user templates dir (`~/.config/meeting-notes/templates/`) before built-ins — user templates take precedence
-- [ ] **TMPL-03**: `save_template(name, content)` writes a `.txt` file to the user templates dir; raises `ValueError` if name collides with a built-in
-- [ ] **TMPL-04**: `delete_template(name)` removes a user template; raises `ValueError` for built-in names
-- [ ] **TMPL-05**: `duplicate_template(source_name, new_name)` duplicates any template (built-in or user) to a new user template
-- [ ] **TMPL-06**: `meet summarize` CLI validates template name via `list_templates()` instead of the hardcoded tuple
+- [x] **TMPL-01**: `list_templates()` returns all built-in and user-created templates as `{name, path, builtin}` dicts
+- [x] **TMPL-02**: `load_template()` checks user templates dir (`~/.config/meeting-notes/templates/`) before built-ins — user templates take precedence
+- [x] **TMPL-03**: `save_template(name, content)` writes a `.txt` file to the user templates dir; raises `ValueError` if name collides with a built-in
+- [x] **TMPL-04**: `delete_template(name)` removes a user template; raises `ValueError` for built-in names
+- [x] **TMPL-05**: `duplicate_template(source_name, new_name)` duplicates any template (built-in or user) to a new user template
+- [x] **TMPL-06**: `meet summarize` CLI validates template name via `list_templates()` instead of the hardcoded tuple
 
 ### Sessions View
 
@@ -113,12 +113,12 @@
 | GUI-03 | Phase 01 | Complete |
 | GUI-04 | Phase 01 | Complete |
 | GUI-05 | Phase 01 | Complete |
-| TMPL-01 | Phase 01 | Pending |
-| TMPL-02 | Phase 01 | Pending |
-| TMPL-03 | Phase 01 | Pending |
-| TMPL-04 | Phase 01 | Pending |
-| TMPL-05 | Phase 01 | Pending |
-| TMPL-06 | Phase 01 | Pending |
+| TMPL-01 | Phase 01 | Complete |
+| TMPL-02 | Phase 01 | Complete |
+| TMPL-03 | Phase 01 | Complete |
+| TMPL-04 | Phase 01 | Complete |
+| TMPL-05 | Phase 01 | Complete |
+| TMPL-06 | Phase 01 | Complete |
 | SESS-01 | Phase 02 | Pending |
 | SESS-02 | Phase 02 | Pending |
 | SESS-03 | Phase 02 | Pending |
