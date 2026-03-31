@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Native Desktop GUI
-status: Ready to plan
-last_updated: "2026-03-31T14:25:37.965Z"
+status: Executing Phase 02
+last_updated: "2026-03-31T20:10:00Z"
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 10
-  completed_plans: 7
+  completed_plans: 10
 ---
 
 # Project State
@@ -18,12 +18,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** A developer can run `meet record`, stop it, and get structured notes in Notion — all without touching the internet or installing meeting bots.
-**Current focus:** Phase 01 — gui-foundation
+**Current focus:** Phase 02 — sessions-dashboard
 
 ## Current Position
 
-Phase: 02
-Plan: Not started
+Phase: 02 (sessions-dashboard) — EXECUTING
+Plan: 3 of 4 complete
 
 ## Current Status
 
@@ -34,8 +34,8 @@ Plan: Not started
 
 ## Last Session
 
-**Completed:** v2.0 roadmap defined (5 phases, 44 requirements mapped) — ROADMAP.md + STATE.md written
-**Date:** 2026-03-30
+**Completed:** Completed 02-sessions-dashboard/02-03-PLAN.md — SessionsView + 12 green tests
+**Date:** 2026-03-31
 
 ## Decisions
 
@@ -117,6 +117,9 @@ Plan: Not started
 - [Phase 01-gui-foundation]: USER_TEMPLATES_DIR created lazily inside list_templates() via mkdir(parents=True, exist_ok=True)
 - [Phase 02]: Lazy imports inside run(): all service/ML imports deferred to avoid loading mlx_whisper, pyannote, torchaudio at GUI startup
 - [Phase 02]: TranscribeWorker and SummarizeWorker write metadata JSON after work (read-merge-write pattern) — mirrors CLI commands
+- [Phase 02]: processEvents() required after worker.wait() — Qt cross-thread signals are queued and need event loop processing
+- [Phase 02]: FakeWorker class (not MagicMock) for worker tests — avoids PySide6 signal type mismatches
+- [Phase 02]: blockSignals(True/False) around QListWidget clear/repopulate — prevents spurious currentRowChanged during list rebuild
 
 ## Performance Metrics
 
@@ -151,6 +154,7 @@ Plan: Not started
 | Phase 01 P02 | 420 | 2 tasks | 18 files |
 | Phase 01-gui-foundation P01 | 204 | 2 tasks | 4 files |
 | Phase 02 P02 | 103 | 2 tasks | 2 files |
+| Phase 02-sessions-dashboard P03 | 2100 | 2 tasks | 3 files |
 
 ## Roadmap Evolution
 
