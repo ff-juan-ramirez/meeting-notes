@@ -4,7 +4,7 @@
 
 A 100% local CLI tool that captures audio from any video call (Zoom, Google Meet, Teams) without bots or browser extensions, transcribes it locally with Whisper, generates structured meeting notes using a local LLM, and saves them to Notion. No cloud, no third-party services, no data leaves the machine.
 
-**Status:** v2.0 in progress — Native Desktop GUI milestone started 2026-03-30.
+**Status:** v2.0 in progress — Phase 02 complete 2026-03-31 (Sessions & Dashboard views functional).
 
 ## Current Milestone: v2.0 Native Desktop GUI
 
