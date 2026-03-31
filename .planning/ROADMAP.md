@@ -132,7 +132,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 | Phase | Milestone | Plans | Status | Completed |
 |-------|-----------|-------|--------|-----------|
 | 1-6. v1.0 MVP phases | v1.0 | 16/16 | Complete | 2026-03-24 |
-| 01. SRT + Speaker Diarization | v1.1 | 5/5 | Complete | 2026-03-28 |
+| 01. SRT + Speaker Diarization | v1.1 | 1/2 | In Progress|  |
 | 02-07. Named Recordings | v1.2 | 6/6 | Complete | 2026-03-29 |
 | 01. GUI Foundation | v2.0 | 0/? | Not started | - |
 | 02. Sessions & Dashboard | v2.0 | 0/? | Not started | - |

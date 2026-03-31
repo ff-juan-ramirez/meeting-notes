@@ -7,11 +7,11 @@
 
 ### Foundation & Entry Point
 
-- [ ] **GUI-01**: User can launch `meet-gui` and see the main window in < 2 seconds (no ML imports at startup)
-- [ ] **GUI-02**: User can navigate between all 6 screens via the sidebar (Dashboard, Sessions, Record, Templates, Settings, Health Check)
-- [ ] **GUI-03**: All visual constants (colors, fonts, QSS) are centralized in `gui/theme.py` — no magic strings in other files
-- [ ] **GUI-04**: `pyside6>=6.7` is installable as an optional dep: `pip install -e ".[gui]"` — base `pip install -e .` installs CLI only
-- [ ] **GUI-05**: The `meet` CLI entry point remains unchanged and fully functional after all GUI changes
+- [x] **GUI-01**: User can launch `meet-gui` and see the main window in < 2 seconds (no ML imports at startup)
+- [x] **GUI-02**: User can navigate between all 6 screens via the sidebar (Dashboard, Sessions, Record, Templates, Settings, Health Check)
+- [x] **GUI-03**: All visual constants (colors, fonts, QSS) are centralized in `gui/theme.py` — no magic strings in other files
+- [x] **GUI-04**: `pyside6>=6.7` is installable as an optional dep: `pip install -e ".[gui]"` — base `pip install -e .` installs CLI only
+- [x] **GUI-05**: The `meet` CLI entry point remains unchanged and fully functional after all GUI changes
 
 ### Template Service (Core Change)
 
@@ -108,11 +108,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GUI-01 | Phase 01 | Pending |
-| GUI-02 | Phase 01 | Pending |
-| GUI-03 | Phase 01 | Pending |
-| GUI-04 | Phase 01 | Pending |
-| GUI-05 | Phase 01 | Pending |
+| GUI-01 | Phase 01 | Complete |
+| GUI-02 | Phase 01 | Complete |
+| GUI-03 | Phase 01 | Complete |
+| GUI-04 | Phase 01 | Complete |
+| GUI-05 | Phase 01 | Complete |
 | TMPL-01 | Phase 01 | Pending |
 | TMPL-02 | Phase 01 | Pending |
 | TMPL-03 | Phase 01 | Pending |
