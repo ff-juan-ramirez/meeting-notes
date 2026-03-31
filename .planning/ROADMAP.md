@@ -55,7 +55,7 @@ Full details: `.planning/milestones/v1.2-ROADMAP.md`
 ### v2.0 Native Desktop GUI
 
 - [x] **Phase 01: GUI Foundation** — MainWindow, sidebar, theme system, template service CRUD, `meet-gui` entry point (completed 2026-03-31)
-- [ ] **Phase 02: Sessions & Dashboard** — Session list, detail panel, transcribe/summarize workers, dashboard stats
+- [x] **Phase 02: Sessions & Dashboard** — Session list, detail panel, transcribe/summarize workers, dashboard stats (completed 2026-03-31)
 - [ ] **Phase 03: Record** — RecordWorker, StopWorker, Idle/Recording/Stopping state machine
 - [ ] **Phase 04: Templates, Settings & Health Check** — Templates CRUD view, Settings view, DoctorWorker + Doctor view
 - [ ] **Phase 05: Polish & Packaging** — Cross-view navigation, error paths, PyInstaller `.app`, DMG installer
@@ -142,7 +142,7 @@ Plans:
 | 01. SRT + Speaker Diarization | v1.1 | 1/2 | Complete    | 2026-03-31 |
 | 02-07. Named Recordings | v1.2 | 6/6 | Complete | 2026-03-29 |
 | 01. GUI Foundation | v2.0 | 0/? | Not started | - |
-| 02. Sessions & Dashboard | v2.0 | 0/4 | Planning complete | - |
+| 02. Sessions & Dashboard | v2.0 | 0/4 | Complete    | 2026-03-31 |
 | 03. Record | v2.0 | 0/? | Not started | - |
 | 04. Templates, Settings & Health Check | v2.0 | 0/? | Not started | - |
 | 05. Polish & Packaging | v2.0 | 0/? | Not started | - |
